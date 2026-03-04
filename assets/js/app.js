@@ -1,4 +1,4 @@
-/* Flashcards v4: Auto-Play nur bei chinesischer Antwort, Countdown 15s, Pinyin in Antwort verdeckt, ZH-Frage: Satz Hanzi+Pinyin, kleine Lücke nach Wortart */
+/* Flashcards v5: 20px Fonts, Auto-Play nur bei chinesischer Antwort, Countdown 15s, Pinyin in Antwort verborgen bis Reveal, ZH-Frage: Satz Hanzi+Pinyin, Buttons unten */
 // Excel (GitHub Pages)
 const EXCEL_URL = 'https://luoboteanjing-netizen.github.io/Chinesisch-Reader/data/Long-Chinesisch_Lektionen.xlsx';
 // Tab-Namen wie L 00 .. L 16
@@ -117,7 +117,7 @@ function setCard(entry){
     $('#promptWordSub').textContent = entry.pos ? entry.pos : '';
     $('#promptSent').textContent = entry.sent.de || '—';
 
-    // ANTWORT: Chinesisch Hanzi + (verdeckt bis Reveal) Pinyin
+    // ANTWORT: Chinesisch Hanzi + Pinyin (beides bis Reveal verdeckt)
     $('#solWord').innerHTML = formatZh(entry.word.zh, entry.word.py);
     $('#solSent').innerHTML = formatZh(entry.sent.zh, entry.sent.py);
   }
@@ -169,9 +169,9 @@ function formatZh(hz,py){
 }
 function formatPinyinAndPos(py, pos){
   const a = (py||'').trim(); const b = (pos||'').trim();
-  if(a && b) return `<span class="py">${a}</span><br><span class=\"prompt small\" style=\"display:inline-block;margin-top:2px;\">${b}</span>`;
+  if(a && b) return `<span class="py">${a}</span><br><span class=\"prompt small\" style=\"display:inline-block;margin-top:6px;\">${b}</span>`;
   if(a) return `<span class="py">${a}</span>`;
-  if(b) return `<span class=\"prompt small\" style=\"display:inline-block;margin-top:2px;\">${b}</span>`;
+  if(b) return `<span class=\"prompt small\" style=\"display:inline-block;margin-top:6px;\">${b}</span>`;
   return '';
 }
 
@@ -202,8 +202,7 @@ function playQuestion(){
     const w = state.current.word.de||''; const s = state.current.sent.de||'';
     speak(w,'de-DE'); setTimeout(()=> speak(s,'de-DE'), 700);
   } else {
-    // ZH→DE: IMMER Hanzi vorlesen
-    const w = state.current.word.zh||''; const s = state.current.sent.zh||'';
+    const w = state.current.word.zh||''; const s = state.current.sent.zh||''; // immer Hanzi
     speak(w,'zh-CN'); setTimeout(()=> speak(s,'zh-CN'), 700);
   }
 }
@@ -212,11 +211,9 @@ function playQuestion(){
 function playAnswer(){
   if(!state.current) return;
   if(state.mode==='de2zh'){
-    // Antwort ist Chinesisch: immer Hanzi sprechen
-    const w = state.current.word.zh||''; const s = state.current.sent.zh||'';
+    const w = state.current.word.zh||''; const s = state.current.sent.zh||''; // immer Hanzi
     speak(w,'zh-CN'); setTimeout(()=> speak(s,'zh-CN'), 700);
   } else {
-    // Antwort ist Deutsch
     const w = state.current.word.de||''; const s = state.current.sent.de||'';
     speak(w,'de-DE'); setTimeout(()=> speak(s,'de-DE'), 700);
   }
