@@ -13,7 +13,7 @@
   <main class="container">
     <header>
       <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
-      <p class="subtitle">Lektion wählen → Richtung wählen → Karte lernen (Wort + Satz)</p>
+      <p class="subtitle">Lektion wählen · Richtung & Reihenfolge wählen · Karte lernen</p>
     </header>
 
     <section class="card cfg">
@@ -66,8 +66,7 @@
         </div>
 
         <div class="pane">
-          <div class="lbl">Hinweis</div>
-          <div class="mini">Die Steuer‑Buttons <strong>Zurück / Aufdecken / Nächste</strong> findest du unter der Karte.</div>
+          <div class="mini">Tipp: Mit „Reihenfolge (Excel)“ kannst du Karte für Karte mit <strong>Zurück/Nächste</strong> durchgehen.</div>
         </div>
       </div>
     </section>
@@ -78,33 +77,23 @@
       <div id="promptBox" class="prompt-box">
         <div class="prompt-row">
           <div class="prompt-col">
-            <div class="prompt-label">Wort</div>
             <div id="promptWord" class="prompt big">—</div>
             <div id="promptWordSub" class="prompt sub small"> </div>
           </div>
         </div>
         <div class="prompt-row">
           <div class="prompt-col">
-            <div class="prompt-label">Beispielsatz</div>
             <div id="promptSent" class="prompt">—</div>
           </div>
         </div>
       </div>
 
       <div class="solution">
-        <div class="row space-between">
-          <div class="lbl">Lösung (Gegensprache)</div>
-          <div class="play-group">
-            <button id="btnPlay" class="btn ghost" title="Wort & Satz mit kleinem Delay abspielen">🔊 Abspielen</button>
-          </div>
-        </div>
         <div id="solBox" class="sol masked">
           <div class="sol-part">
-            <div class="sol-title">Wort</div>
             <div id="solWord" class="sol-text">—</div>
           </div>
           <div class="sol-part">
-            <div class="sol-title">Beispielsatz</div>
             <div id="solSent" class="sol-text">—</div>
           </div>
           <div class="mask-info">Wird in <span id="countdown">10</span> s aufgedeckt …</div>
@@ -115,6 +104,11 @@
         <button id="btnPrev" class="btn" disabled>◀ Zurück</button>
         <button id="btnReveal" class="btn ghost" disabled>Jetzt aufdecken 👁️</button>
         <button id="btnNext" class="btn" disabled>Nächste Karte ▶</button>
+      </div>
+
+      <div class="card-controls second">
+        <button id="btnPlayQ" class="btn ghost" disabled>🔊 Frage abspielen</button>
+        <button id="btnPlayA" class="btn ghost" disabled>🔊 Antwort abspielen</button>
       </div>
 
     </section>

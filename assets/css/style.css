@@ -25,7 +25,6 @@ header h1{margin:0 0 4px 0;font-size:28px}
 .row{display:flex;gap:12px;align-items:center}
 .space-between{justify-content:space-between}
 .prompt-box{border:1px dashed #303b49;border-radius:12px;padding:12px}
-.prompt-label{color:var(--muted);font-size:12px;margin-bottom:4px}
 .prompt{font-size:20px}
 .prompt.big{font-size:28px;font-weight:800}
 .prompt.sub{color:#c9d3df}
@@ -33,10 +32,11 @@ header h1{margin:0 0 4px 0;font-size:28px}
 .solution{margin-top:12px}
 .sol{position:relative;border:1px solid var(--border);border-radius:12px;padding:12px}
 .sol .sol-part{margin-bottom:10px}
-.sol .sol-title{color:var(--muted);font-size:12px;margin-bottom:2px}
 .sol .sol-text{font-size:20px;white-space:pre-wrap}
 .sol.masked{color:#1a222d;background:linear-gradient(90deg,#19202a,#141a22)}
 .mask-info{position:absolute;right:10px;bottom:6px;color:#8fa1b3;font-size:12px}
 .play-group{display:flex;gap:8px}
 .py{color:#8fa1b3;font-size:14px}
+.card-controls{display:flex;gap:12px;justify-content:center;margin-top:12px}
+.card-controls.second{margin-top:8px}
 @media(max-width:900px){.grid-3{grid-template-columns:1fr}}

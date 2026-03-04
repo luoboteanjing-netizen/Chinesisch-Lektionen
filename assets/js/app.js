@@ -1,4 +1,4 @@
-/* Flashcards: Reihenfolge-Optionen + POS + spezifisches Layout pro Richtung */
+/* Flashcards v3: Steuer-Buttons unten, Frage/Antwort ohne Labels, ZH-Frage Satz: Hanzi + Pinyin, TTS(ZH)=Hanzi, zusätzlicher Antwort-Abspiel-Button */
 // Excel (GitHub Pages)
 const EXCEL_URL = 'https://luoboteanjing-netizen.github.io/Chinesisch-Reader/data/Long-Chinesisch_Lektionen.xlsx';
 // Tab-Namen wie L 00 .. L 16
@@ -102,21 +102,21 @@ function setCard(entry){
   $('#countdown').textContent = '10';
 
   if(state.mode==='zh2de'){
-    // FRAGE: Wort in Hanzi, darunter Pinyin, darunter Wortart (POS), darunter Beispielsatz in Pinyin
-    $('#promptWord').innerHTML = formatZh(entry.word.zh, null); // nur Hanzi als groß
+    // FRAGE: Hanzi (groß), darunter Pinyin + POS, darunter Satz Hanzi + Pinyin
+    $('#promptWord').innerHTML = (entry.word.zh||'—');
     $('#promptWordSub').innerHTML = formatPinyinAndPos(entry.word.py, entry.pos);
-    $('#promptSent').innerHTML = formatOnlyPinyin(entry.sent.py);
+    $('#promptSent').innerHTML = formatZh(entry.sent.zh, entry.sent.py);
 
-    // ANTWORT: Deutsch (ohne POS) – Wort + Satz
+    // ANTWORT: Deutsch (ohne POS)
     $('#solWord').textContent = entry.word.de || '—';
     $('#solSent').textContent = entry.sent.de || '—';
   } else {
-    // FRAGE: Deutsch – Wort, darunter Wortart, darunter Beispielsatz (DE)
+    // FRAGE: Deutsch Wort, darunter POS, darunter deutscher Satz
     $('#promptWord').textContent = entry.word.de || '—';
     $('#promptWordSub').textContent = entry.pos ? entry.pos : '';
     $('#promptSent').textContent = entry.sent.de || '—';
 
-    // ANTWORT: Chinesisch – Wort Hanzi+Pinyin, Satz Hanzi+Pinyin (ohne POS)
+    // ANTWORT: Chinesisch Hanzi + Pinyin (ohne POS)
     $('#solWord').innerHTML = formatZh(entry.word.zh, entry.word.py);
     $('#solSent').innerHTML = formatZh(entry.sent.zh, entry.sent.py);
   }
@@ -125,7 +125,8 @@ function setCard(entry){
   state.countdownTimer = setInterval(()=>{ remain--; if(remain>=0) $('#countdown').textContent=String(remain); },1000);
   state.revealTimer = setTimeout(()=>{ solBox.classList.remove('masked'); clearTimers(); }, 10000);
 
-  $('#btnNext').disabled = false; $('#btnReveal').disabled = false; $('#btnPlay').disabled = false;
+  // Buttons aktivieren
+  $('#btnNext').disabled = false; $('#btnReveal').disabled = false; $('#btnPlayQ').disabled = false; $('#btnPlayA').disabled = false;
   $('#btnPrev').disabled = (state.order !== 'seq');
 }
 
@@ -158,12 +159,11 @@ function formatZh(hz,py){
 }
 function formatPinyinAndPos(py, pos){
   const a = (py||'').trim(); const b = (pos||'').trim();
-  if(a && b) return `<span class="py">${a}</span><br><span class="prompt small">${b}</span>`;
+  if(a && b) return `<span class="py">${a}</span><br><span class=\"prompt small\">${b}</span>`;
   if(a) return `<span class="py">${a}</span>`;
-  if(b) return `<span class="prompt small">${b}</span>`;
+  if(b) return `<span class=\"prompt small\">${b}</span>`;
   return '';
 }
-function formatOnlyPinyin(py){ return py ? `<span class="py">${py}</span>` : '—'; }
 
 // ===== TTS =====
 function refreshVoices(){ state.voices = window.speechSynthesis?.getVoices?.() || []; }
@@ -181,16 +181,34 @@ function speak(text, lang){
   u.lang=lang; u.rate=state.rate;
   const v = lang.startsWith('zh')? pickVoice('zh', state.voicePref.zh) : pickVoice('de', state.voicePref.de);
   if(v) u.voice=v;
+  speechSynthesis.cancel();
   speechSynthesis.speak(u);
 }
-function speakSeq(){
+
+// Abspielen der FRAGE (Quellsprache)
+function playQuestion(){
   if(!state.current) return;
   if(state.mode==='de2zh'){
     const w = state.current.word.de||''; const s = state.current.sent.de||'';
     speak(w,'de-DE'); setTimeout(()=> speak(s,'de-DE'), 700);
-  }else{
-    const w = state.current.word.zh||''; const s = state.current.sent.py||state.current.sent.zh||''; // beim Satz Pinyin bevorzugen
+  } else {
+    // ZH→DE: IMMER Hanzi vorlesen
+    const w = state.current.word.zh||''; const s = state.current.sent.zh||'';
     speak(w,'zh-CN'); setTimeout(()=> speak(s,'zh-CN'), 700);
+  }
+}
+
+// Abspielen der ANTWORT (Zielsprache)
+function playAnswer(){
+  if(!state.current) return;
+  if(state.mode==='de2zh'){
+    // Antwort ist Chinesisch: immer Hanzi sprechen
+    const w = state.current.word.zh||''; const s = state.current.sent.zh||'';
+    speak(w,'zh-CN'); setTimeout(()=> speak(s,'zh-CN'), 700);
+  } else {
+    // Antwort ist Deutsch
+    const w = state.current.word.de||''; const s = state.current.sent.de||'';
+    speak(w,'de-DE'); setTimeout(()=> speak(s,'de-DE'), 700);
   }
 }
 
@@ -212,5 +230,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   $('#btnNext').addEventListener('click', nextCard);
   $('#btnPrev').addEventListener('click', prevCard);
   $('#btnReveal').addEventListener('click', ()=>{ clearTimers(); $('#solBox').classList.remove('masked'); });
-  $('#btnPlay').addEventListener('click', speakSeq);
+  $('#btnPlayQ').addEventListener('click', playQuestion);
+  $('#btnPlayA').addEventListener('click', playAnswer);
 });
