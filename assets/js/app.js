@@ -1,163 +1,216 @@
-/* Tabellen-Trainer: zeigt Spalten 1..7 aus Excel je Zeile.
-   - Lektion wählbar (Tabs nach Namen L 00..L 16)
-   - Klick auf Wort/Satz: TTS (DE oder ZH)
-   - Übersetzung ist je nach Richtung versteckt und wird erst nach Klick angezeigt
-   - TTS-Stimme (m/w) + Rate einstellbar
-   - Excel-Parsing im Browser via SheetJS
-*/
-
-// ===== KONFIG =====
+/* Flashcards: Reihenfolge-Optionen + POS + spezifisches Layout pro Richtung */
+// Excel (GitHub Pages)
 const EXCEL_URL = 'https://luoboteanjing-netizen.github.io/Chinesisch-Reader/data/Long-Chinesisch_Lektionen.xlsx';
-const SHEET_NAME_PATTERN = /^L\s*\d{1,2}$/i; // L 00 .. L 16
+// Tab-Namen wie L 00 .. L 16
+const SHEET_NAME_PATTERN = /^L\s*\d{1,2}$/i;
 const MIN_LESSON = 0, MAX_LESSON = 16;
-const DATA_START_ROW = 3; // 1-basiert
+// Daten ab Zeile 3 (1-basiert)
+const DATA_START_ROW = 3;
+// Spalten (1-basiert) Wort / Satz / Wortart
+const COL_WORD = { de:1, py:2, zh:6 };
+const COL_SENT = { de:5, py:4, zh:7 };
+const COL_POS  = 3; // Wortart
 
-// Spaltenindizes (1-basiert) -> wir zeigen alle 1..7, markieren aber DE/ZH Rollen
-const COLS = { c1:1, c2:2, c3:3, c4:4, c5:5, c6:6, c7:7 };
-// Bedeutung: Wort: c1=DE, c2=PY, c6=HZ | Satz: c5=DE, c4=PY, c7=HZ
-
-// ===== STATE =====
 const state = {
-  mode:'de2zh', // de2zh oder zh2de
-  recognizing:false, recog:null, rate:0.95,
-  voicePref:{ zh:'female', de:'female' }, voices:[],
-  lessons:new Map(), selectedLessons:new Set(),
+  mode:'de2zh',
+  order:'random', // 'random' | 'seq'
+  rate:0.95,
+  voicePref:{ zh:'female', de:'female' },
+  voices:[],
+  lessons:new Map(), // Map<lesson,[{word:{de,py,zh}, sent:{de,py,zh}, pos:string}]>
+  selectedLessons:new Set(),
+  pool:[],
+  current:null,
+  idx:null, // nur für seq
+  revealTimer:null,
+  countdownTimer:null,
 };
 
-const $ = (s)=>document.querySelector(s);
+const $ = s=>document.querySelector(s);
 
-// ===== Excel laden =====
 async function loadExcel(){
-  const status=$('#excelStatus');
+  const status = $('#excelStatus');
   try{
-    status.textContent='Excel wird geladen…';
-    const res=await fetch(EXCEL_URL,{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status);
-    const buf=await res.arrayBuffer();
-    const wb=XLSX.read(buf,{type:'array'});
+    status.textContent = 'Excel wird geladen…';
+    const res = await fetch(EXCEL_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array'});
 
     state.lessons.clear();
     for(const name of wb.SheetNames){
       if(!SHEET_NAME_PATTERN.test(name)) continue;
       const m=name.match(/\d+/); if(!m) continue; const n=parseInt(m[0],10);
       if(!(n>=MIN_LESSON && n<=MAX_LESSON)) continue;
-      const sh=wb.Sheets[name]; if(!sh) continue;
-      const rows=XLSX.utils.sheet_to_json(sh,{header:1,blankrows:false}); if(!rows||!rows.length) continue;
-      const r0=DATA_START_ROW-1;
-      const lessonKey=String(n);
-      if(!state.lessons.has(lessonKey)) state.lessons.set(lessonKey,[]);
-
-      for(let r=r0;r<rows.length;r++){
-        const row=rows[r]||[];
-        // Speichere 1..7, auch wenn leer
-        const entry={
-          c1: String(row[COLS.c1-1]||'').trim(),
-          c2: String(row[COLS.c2-1]||'').trim(),
-          c3: String(row[COLS.c3-1]||'').trim(),
-          c4: String(row[COLS.c4-1]||'').trim(),
-          c5: String(row[COLS.c5-1]||'').trim(),
-          c6: String(row[COLS.c6-1]||'').trim(),
-          c7: String(row[COLS.c7-1]||'').trim()
+      const sh = wb.Sheets[name]; if(!sh) continue;
+      const rows = XLSX.utils.sheet_to_json(sh, {header:1, blankrows:false});
+      if(!rows || !rows.length) continue;
+      const r0 = DATA_START_ROW-1;
+      const key = String(n);
+      if(!state.lessons.has(key)) state.lessons.set(key, []);
+      for(let r=r0; r<rows.length; r++){
+        const row = rows[r]||[];
+        const w = {
+          de: String(row[COL_WORD.de-1]||'').trim(),
+          py: String(row[COL_WORD.py-1]||'').trim(),
+          zh: String(row[COL_WORD.zh-1]||'').trim(),
         };
-        // wenn komplett leer: überspringen
-        if(!entry.c1 && !entry.c2 && !entry.c3 && !entry.c4 && !entry.c5 && !entry.c6 && !entry.c7) continue;
-        state.lessons.get(lessonKey).push(entry);
+        const s = {
+          de: String(row[COL_SENT.de-1]||'').trim(),
+          py: String(row[COL_SENT.py-1]||'').trim(),
+          zh: String(row[COL_SENT.zh-1]||'').trim(),
+        };
+        const pos = String(row[COL_POS-1]||'').trim();
+        if(!(w.de||w.zh||s.de||s.zh)) continue;
+        state.lessons.get(key).push({word:w, sent:s, pos});
       }
     }
-
     populateLessonSelect();
     status.textContent = `Excel geladen (${state.lessons.size} Lektion(en)).`;
-  }catch(err){ status.textContent='Excel konnte nicht geladen werden: '+err.message; console.error(err); }
-}
-
-function populateLessonSelect(){
-  const sel=$('#lessonSelect'); sel.innerHTML='';
-  const keys=Array.from(state.lessons.keys()).map(k=>parseInt(k,10)).sort((a,b)=>a-b);
-  for(const k of keys){ const o=document.createElement('option'); o.value=String(k); o.textContent=`Lektion ${k} (${state.lessons.get(String(k)).length})`; sel.appendChild(o); }
-}
-
-// ===== Tabelle aufbauen =====
-function buildTable(){
-  const body=$('#dataBody'); body.innerHTML='';
-  const sel=state.selectedLessons; if(!sel.size) return;
-
-  // Welche Spalten sind je Richtung maskiert?
-  const maskZH = (state.mode==='de2zh'); // ZH-Spalten maskieren: 2,4,6,7
-  const maskDE = (state.mode==='zh2de'); // DE-Spalten maskieren: 1,5
-
-  for(const k of sel){
-    const rows = state.lessons.get(k)||[];
-    for(const e of rows){
-      const tr=document.createElement('tr');
-      // Helfer zum Erzeugen einer Zelle
-      const mk=(text,colIdx)=>{
-        const td=document.createElement('td');
-        td.className='cell';
-        td.dataset.col = String(colIdx);
-        td.textContent = text || '';
-
-        // Sprache bestimmen + Maskierung + Klick‑Verhalten
-        const isDE = (colIdx===1 || colIdx===5);
-        const isZH = (colIdx===6 || colIdx===7); // Hanzi
-        const isPY = (colIdx===2 || colIdx===4);
-
-        // Maskieren abhängig von Richtung
-        const shouldMask = (maskDE && isDE) || (maskZH && (isZH || isPY));
-        if(shouldMask){ td.classList.add('masked'); }
-
-        // Klickverhalten:
-        td.classList.add('clickable');
-        td.addEventListener('click', ()=>{
-          if(td.classList.contains('masked')){
-            td.classList.remove('masked');
-            return;
-          }
-          // Vorlesen
-          if(isDE){ speak(text, 'de-DE'); }
-          else if(isZH){ speak(text, 'zh-CN'); }
-          else if(isPY){
-            // Pinyin nicht gut von TTS unterstützt: versuche passendes Hanzi in gleicher Zeile
-            const hanzi = (colIdx===2? e.c6 : e.c7) || '';
-            if(hanzi) speak(hanzi, 'zh-CN');
-          }
-        });
-
-        return td;
-      };
-
-      tr.appendChild(mk(e.c1,1));
-      tr.appendChild(mk(e.c2,2));
-      tr.appendChild(mk(e.c3,3));
-      tr.appendChild(mk(e.c4,4));
-      tr.appendChild(mk(e.c5,5));
-      tr.appendChild(mk(e.c6,6));
-      tr.appendChild(mk(e.c7,7));
-      body.appendChild(tr);
-    }
+  }catch(err){
+    status.textContent = 'Excel konnte nicht geladen werden: '+err.message;
+    console.error(err);
   }
 }
 
+function populateLessonSelect(){
+  const sel = $('#lessonSelect'); sel.innerHTML='';
+  const keys = Array.from(state.lessons.keys()).map(k=>parseInt(k,10)).sort((a,b)=>a-b);
+  for(const k of keys){
+    const cnt = state.lessons.get(String(k)).length;
+    const opt = document.createElement('option');
+    opt.value=String(k); opt.textContent=`Lektion ${k} (${cnt})`;
+    sel.appendChild(opt);
+  }
+}
+
+function gatherPool(){
+  const out=[];
+  for(const k of state.selectedLessons){ const arr=state.lessons.get(k); if(arr) out.push(...arr); }
+  state.pool = out; // Excel-Reihenfolge
+  state.idx = null; // Reset
+}
+
+function clearTimers(){
+  if(state.revealTimer){ clearTimeout(state.revealTimer); state.revealTimer=null; }
+  if(state.countdownTimer){ clearInterval(state.countdownTimer); state.countdownTimer=null; }
+}
+
+function setCard(entry){
+  state.current = entry; clearTimers();
+  const solBox = $('#solBox'); solBox.classList.add('masked');
+  $('#countdown').textContent = '10';
+
+  if(state.mode==='zh2de'){
+    // FRAGE: Wort in Hanzi, darunter Pinyin, darunter Wortart (POS), darunter Beispielsatz in Pinyin
+    $('#promptWord').innerHTML = formatZh(entry.word.zh, null); // nur Hanzi als groß
+    $('#promptWordSub').innerHTML = formatPinyinAndPos(entry.word.py, entry.pos);
+    $('#promptSent').innerHTML = formatOnlyPinyin(entry.sent.py);
+
+    // ANTWORT: Deutsch (ohne POS) – Wort + Satz
+    $('#solWord').textContent = entry.word.de || '—';
+    $('#solSent').textContent = entry.sent.de || '—';
+  } else {
+    // FRAGE: Deutsch – Wort, darunter Wortart, darunter Beispielsatz (DE)
+    $('#promptWord').textContent = entry.word.de || '—';
+    $('#promptWordSub').textContent = entry.pos ? entry.pos : '';
+    $('#promptSent').textContent = entry.sent.de || '—';
+
+    // ANTWORT: Chinesisch – Wort Hanzi+Pinyin, Satz Hanzi+Pinyin (ohne POS)
+    $('#solWord').innerHTML = formatZh(entry.word.zh, entry.word.py);
+    $('#solSent').innerHTML = formatZh(entry.sent.zh, entry.sent.py);
+  }
+
+  let remain = 10;
+  state.countdownTimer = setInterval(()=>{ remain--; if(remain>=0) $('#countdown').textContent=String(remain); },1000);
+  state.revealTimer = setTimeout(()=>{ solBox.classList.remove('masked'); clearTimers(); }, 10000);
+
+  $('#btnNext').disabled = false; $('#btnReveal').disabled = false; $('#btnPlay').disabled = false;
+  $('#btnPrev').disabled = (state.order !== 'seq');
+}
+
+function nextCard(){
+  if(!state.pool.length){ alert('Bitte Lektionen wählen und übernehmen.'); return; }
+  if(state.order==='seq'){
+    if(state.idx===null) state.idx = 0; else state.idx = (state.idx + 1) % state.pool.length;
+    setCard(state.pool[state.idx]);
+  } else {
+    const entry = state.pool[Math.floor(Math.random()*state.pool.length)];
+    setCard(entry);
+  }
+}
+
+function prevCard(){
+  if(state.order!=='seq' || !state.pool.length) return;
+  if(state.idx===null) state.idx = 0; else state.idx = (state.idx - 1 + state.pool.length) % state.pool.length;
+  setCard(state.pool[state.idx]);
+}
+
+function startTraining(){
+  if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; }
+  if(state.order==='seq'){ state.idx = 0; setCard(state.pool[state.idx]); }
+  else { const entry = state.pool[Math.floor(Math.random()*state.pool.length)]; setCard(entry); }
+}
+
+function formatZh(hz,py){
+  const hanzi = (hz||'').trim(); const pinyin = (py||'').trim();
+  return pinyin ? `${hanzi}<br><span class="py">${pinyin}</span>` : (hanzi||'—');
+}
+function formatPinyinAndPos(py, pos){
+  const a = (py||'').trim(); const b = (pos||'').trim();
+  if(a && b) return `<span class="py">${a}</span><br><span class="prompt small">${b}</span>`;
+  if(a) return `<span class="py">${a}</span>`;
+  if(b) return `<span class="prompt small">${b}</span>`;
+  return '';
+}
+function formatOnlyPinyin(py){ return py ? `<span class="py">${py}</span>` : '—'; }
+
 // ===== TTS =====
 function refreshVoices(){ state.voices = window.speechSynthesis?.getVoices?.() || []; }
-function pickVoice(lang, gender){ if(!state.voices.length) return null; const list = state.voices.filter(v=> (v.lang||'').toLowerCase().startsWith(lang)); if(!list.length) return null; const want=(gender||'').toLowerCase(); const isF=s=>/female|weib|女/i.test(s); const isM=s=>/male|männ|男/i.test(s); const byName=list.filter(v=> want==='female'? isF(v.name+" "+v.voiceURI) : isM(v.name+" "+v.voiceURI)); return byName[0] || list.find(v=>v.default) || list[0]; }
-function speak(text, lang){ const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; u.rate=state.rate; const v = lang.startsWith('zh')? pickVoice('zh', state.voicePref.zh) : pickVoice('de', state.voicePref.de); if(v) u.voice=v; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+function pickVoice(lang, gender){
+  if(!state.voices.length) return null;
+  const list = state.voices.filter(v => (v.lang||'').toLowerCase().startsWith(lang));
+  if(!list.length) return null;
+  const want=(gender||'').toLowerCase();
+  const isF=s=>/female|weib|女/i.test(s); const isM=s=>/male|männ|男/i.test(s);
+  const byName = list.filter(v => want==='female' ? isF(v.name+" "+v.voiceURI) : isM(v.name+" "+v.voiceURI));
+  return byName[0] || list.find(v=>v.default) || list[0];
+}
+function speak(text, lang){
+  const u = new SpeechSynthesisUtterance(text||'');
+  u.lang=lang; u.rate=state.rate;
+  const v = lang.startsWith('zh')? pickVoice('zh', state.voicePref.zh) : pickVoice('de', state.voicePref.de);
+  if(v) u.voice=v;
+  speechSynthesis.speak(u);
+}
+function speakSeq(){
+  if(!state.current) return;
+  if(state.mode==='de2zh'){
+    const w = state.current.word.de||''; const s = state.current.sent.de||'';
+    speak(w,'de-DE'); setTimeout(()=> speak(s,'de-DE'), 700);
+  }else{
+    const w = state.current.word.zh||''; const s = state.current.sent.py||state.current.sent.zh||''; // beim Satz Pinyin bevorzugen
+    speak(w,'zh-CN'); setTimeout(()=> speak(s,'zh-CN'), 700);
+  }
+}
 
 // ===== UI =====
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded', ()=>{
   refreshVoices(); if('speechSynthesis' in window && typeof speechSynthesis.onvoiceschanged!=='undefined') speechSynthesis.onvoiceschanged = refreshVoices;
-  loadExcel().then(()=>{
-    // Default: alle Lektionen auswählen
-    const sel=$('#lessonSelect'); for(const opt of sel.options) opt.selected=true; commitLessons(); buildTable();
-  });
+  loadExcel();
 
-  document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', e=>{ state.mode=e.target.value; buildTable(); }));
+  document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', e=>{ state.mode=e.target.value; if(state.current) setCard(state.current); }));
+  document.querySelectorAll('input[name="order"]').forEach(r=> r.addEventListener('change', e=>{ state.order=e.target.value; state.idx=null; $('#btnPrev').disabled = (state.order!=='seq'); }));
   document.querySelectorAll('input[name="zhVoice"]').forEach(r=> r.addEventListener('change', e=> state.voicePref.zh=e.target.value));
   document.querySelectorAll('input[name="deVoice"]').forEach(r=> r.addEventListener('change', e=> state.voicePref.de=e.target.value));
-  $('#rateRange').addEventListener('input', e=>{ state.rate=parseFloat(e.target.value); $('#rateVal').textContent = `(${state.rate.toFixed(2)})`; });
-  $('#btnUseLessons').addEventListener('click', ()=>{ commitLessons(); buildTable(); });
-  $('#btnClearLessons').addEventListener('click', ()=>{ const s=$('#lessonSelect'); for(const o of s.options) o.selected=false; state.selectedLessons.clear(); buildTable(); });
-});
+  $('#rateRange').addEventListener('input', e=>{ state.rate=parseFloat(e.target.value); $('#rateVal').textContent=`(${state.rate.toFixed(2)})`; });
 
-function commitLessons(){
-  const sel=$('#lessonSelect'); state.selectedLessons.clear();
-  for(const o of sel.selectedOptions) state.selectedLessons.add(o.value);
-}
+  $('#btnUseLessons').addEventListener('click', ()=>{ const sel=$('#lessonSelect'); state.selectedLessons.clear(); for(const o of sel.selectedOptions) state.selectedLessons.add(o.value); gatherPool(); $('#btnStart').disabled = state.pool.length===0; });
+  $('#btnClearLessons').addEventListener('click', ()=>{ const sel=$('#lessonSelect'); for(const o of sel.options) o.selected=false; state.selectedLessons.clear(); gatherPool(); $('#btnStart').disabled = true; });
+
+  $('#btnStart').addEventListener('click', startTraining);
+  $('#btnNext').addEventListener('click', nextCard);
+  $('#btnPrev').addEventListener('click', prevCard);
+  $('#btnReveal').addEventListener('click', ()=>{ clearTimers(); $('#solBox').classList.remove('masked'); });
+  $('#btnPlay').addEventListener('click', speakSeq);
+});

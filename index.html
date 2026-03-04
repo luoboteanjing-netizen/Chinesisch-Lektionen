@@ -3,42 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chinesisch Trainer – Tabellenansicht (Reveal + TTS)</title>
+  <title>Chinesisch Flashcards – Wort + Beispielsatz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css"/>
+  <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
   <main class="container">
     <header>
-      <h1>Tabellen‑Trainer <span class="muted">Deutsch ↔ 中文</span></h1>
-      <p class="subtitle">Lektion wählbar · Tabellenansicht (Spalten 1–7) · Klick = Vorlesen · Übersetzung erst nach Klick sichtbar</p>
+      <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
+      <p class="subtitle">Lektion wählen → Richtung wählen → Karte lernen (Wort + Satz)</p>
     </header>
 
-    <section class="card">
+    <section class="card cfg">
       <div class="grid-3">
         <div class="pane">
-          <label class="lbl">Zielrichtung</label>
-          <div class="radio-row">
-            <label><input type="radio" name="mode" value="de2zh" checked> 🇩🇪 → 🇨🇳 (Deutsch → Chinesisch)</label>
-            <label><input type="radio" name="mode" value="zh2de"> 🇨🇳 → 🇩🇪 (Chinesisch → Deutsch)</label>
-          </div>
-        </div>
-
-        <div class="pane">
-          <label class="lbl">Lektionen (Mehrfachauswahl)</label>
-          <select id="lessonSelect" class="select" multiple size="7" title="Strg/Cmd oder lange tippen für Mehrfachauswahl"></select>
+          <div class="lbl">Lektion(en)</div>
+          <select id="lessonSelect" class="select" multiple size="8"></select>
           <div class="controls mt8">
             <button id="btnUseLessons" class="btn">Übernehmen</button>
             <button id="btnClearLessons" class="btn ghost">Leeren</button>
           </div>
-          <div class="mini mt8" id="excelStatus">Excel wird geladen…</div>
+          <div id="excelStatus" class="mini mt8">Excel wird geladen…</div>
         </div>
 
         <div class="pane">
-          <label class="lbl">TTS‑Einstellungen</label>
-          <div class="mini">Stimme (m/w) & Tempo</div>
+          <div class="lbl">Richtung</div>
+          <div class="radio-row">
+            <label><input type="radio" name="mode" value="de2zh" checked> 🇩🇪 → 🇨🇳 (DE→ZH)</label>
+            <label><input type="radio" name="mode" value="zh2de"> 🇨🇳 → 🇩🇪 (ZH→DE)</label>
+          </div>
+
+          <div class="lbl mt12">Reihenfolge</div>
+          <div class="radio-row">
+            <label><input type="radio" name="order" value="random" checked> Zufällig</label>
+            <label><input type="radio" name="order" value="seq"> Reihenfolge (Excel)</label>
+          </div>
+
+          <div class="lbl mt12">Abspieloptionen</div>
+          <div class="mini">Stimme & Tempo</div>
           <div class="voice-grid">
             <div>
               <div class="small">zh‑CN:</div>
@@ -56,28 +60,61 @@
             <input id="rateRange" type="range" min="0.6" max="1.3" step="0.05" value="0.95" />
           </div>
         </div>
+
+        <div class="pane">
+          <div class="lbl">Training</div>
+          <div class="stack">
+            <button id="btnStart" class="btn primary">Training starten ▶</button>
+            <div class="row">
+              <button id="btnPrev" class="btn" disabled>◀ Zurück</button>
+              <button id="btnNext" class="btn" disabled>Nächste Karte ▶</button>
+            </div>
+            <button id="btnReveal" class="btn ghost" disabled>Jetzt aufdecken 👁️</button>
+          </div>
+          <div class="mini mt8">Bei <strong>Reihenfolge (Excel)</strong> sind „Zurück“ und „Nächste“ Schritt‑für‑Schritt aktiv. Bei <strong>Zufällig</strong> ist „Zurück“ deaktiviert.</div>
+        </div>
       </div>
     </section>
 
-    <section class="card">
-      <div class="section-title">Tabelle (Spalten 1–7)</div>
-      <div class="table-wrap">
-        <table id="dataTable">
-          <thead>
-            <tr>
-              <th>1</th>
-              <th>2</th>
-              <th>3</th>
-              <th>4</th>
-              <th>5</th>
-              <th>6</th>
-              <th>7</th>
-            </tr>
-          </thead>
-          <tbody id="dataBody"></tbody>
-        </table>
+    <section class="card learn">
+      <div class="section-title">Karte</div>
+
+      <div id="promptBox" class="prompt-box">
+        <div class="prompt-row">
+          <div class="prompt-col">
+            <div class="prompt-label">Wort</div>
+            <div id="promptWord" class="prompt big">—</div>
+            <div id="promptWordSub" class="prompt sub small"> </div>
+          </div>
+        </div>
+        <div class="prompt-row">
+          <div class="prompt-col">
+            <div class="prompt-label">Beispielsatz</div>
+            <div id="promptSent" class="prompt">—</div>
+          </div>
+        </div>
       </div>
-      <div class="mini mt8">Tipp: Tippe auf ein deutsches <span class="tag de">DE</span> Wort/Satz oder ein chinesisches <span class="tag zh">中</span>, um es vorlesen zu lassen. Übersetzungen sind ausgeblendet und erscheinen erst nach Klick.</div>
+
+      <div class="solution">
+        <div class="row space-between">
+          <div class="lbl">Lösung (Gegensprache)</div>
+          <div class="play-group">
+            <button id="btnPlay" class="btn ghost" title="Wort & Satz mit kleinem Delay abspielen">🔊 Abspielen</button>
+          </div>
+        </div>
+        <div id="solBox" class="sol masked">
+          <div class="sol-part">
+            <div class="sol-title">Wort</div>
+            <div id="solWord" class="sol-text">—</div>
+          </div>
+          <div class="sol-part">
+            <div class="sol-title">Beispielsatz</div>
+            <div id="solSent" class="sol-text">—</div>
+          </div>
+          <div class="mask-info">Wird in <span id="countdown">10</span> s aufgedeckt …</div>
+        </div>
+      </div>
+
     </section>
   </main>
 
