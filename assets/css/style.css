@@ -10,7 +10,7 @@ header h1{margin:0 0 4px 0;font-size:28px}
 .section-title{font-weight:800;margin-bottom:8px}
 .lbl{display:block;margin-bottom:6px;color:var(--muted)}
 .hint{color:var(--muted);font-size:12px}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr;gap:16px} /* 2 Spalten, Hinweis-Pane entfernt */
 .pane{border:1px solid var(--border);border-radius:10px;padding:12px}
 .radio-row{display:flex;gap:18px;flex-wrap:wrap}
 .select{width:100%;background:#0f141b;border:1px solid #293241;color:var(--text);border-radius:8px;padding:10px;min-height:48px}
@@ -27,8 +27,7 @@ header h1{margin:0 0 4px 0;font-size:28px}
 .prompt-box{border:1px dashed #303b49;border-radius:12px;padding:12px}
 .prompt{font-size:20px}
 .prompt.big{font-size:28px;font-weight:800}
-.prompt.sub{color:#c9d3df}
-.prompt.small{font-size:14px}
+.prompt.sub{color:#c9d3df;margin-bottom:6px} /* kleine Lücke unter Wortart */
 .solution{margin-top:12px}
 .sol{position:relative;border:1px solid var(--border);border-radius:12px;padding:12px}
 .sol .sol-part{margin-bottom:10px}

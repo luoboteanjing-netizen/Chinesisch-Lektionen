@@ -1,4 +1,4 @@
-/* Flashcards v3: Steuer-Buttons unten, Frage/Antwort ohne Labels, ZH-Frage Satz: Hanzi + Pinyin, TTS(ZH)=Hanzi, zusätzlicher Antwort-Abspiel-Button */
+/* Flashcards v4: Auto-Play nur bei chinesischer Antwort, Countdown 15s, Pinyin in Antwort verdeckt, ZH-Frage: Satz Hanzi+Pinyin, kleine Lücke nach Wortart */
 // Excel (GitHub Pages)
 const EXCEL_URL = 'https://luoboteanjing-netizen.github.io/Chinesisch-Reader/data/Long-Chinesisch_Lektionen.xlsx';
 // Tab-Namen wie L 00 .. L 16
@@ -24,6 +24,7 @@ const state = {
   idx:null, // nur für seq
   revealTimer:null,
   countdownTimer:null,
+  countdownStart:15,
 };
 
 const $ = s=>document.querySelector(s);
@@ -99,7 +100,7 @@ function clearTimers(){
 function setCard(entry){
   state.current = entry; clearTimers();
   const solBox = $('#solBox'); solBox.classList.add('masked');
-  $('#countdown').textContent = '10';
+  $('#countdown').textContent = String(state.countdownStart);
 
   if(state.mode==='zh2de'){
     // FRAGE: Hanzi (groß), darunter Pinyin + POS, darunter Satz Hanzi + Pinyin
@@ -116,18 +117,27 @@ function setCard(entry){
     $('#promptWordSub').textContent = entry.pos ? entry.pos : '';
     $('#promptSent').textContent = entry.sent.de || '—';
 
-    // ANTWORT: Chinesisch Hanzi + Pinyin (ohne POS)
+    // ANTWORT: Chinesisch Hanzi + (verdeckt bis Reveal) Pinyin
     $('#solWord').innerHTML = formatZh(entry.word.zh, entry.word.py);
     $('#solSent').innerHTML = formatZh(entry.sent.zh, entry.sent.py);
   }
 
-  let remain = 10;
+  // Countdown 15s + Auto-Reveal
+  let remain = state.countdownStart;
   state.countdownTimer = setInterval(()=>{ remain--; if(remain>=0) $('#countdown').textContent=String(remain); },1000);
-  state.revealTimer = setTimeout(()=>{ solBox.classList.remove('masked'); clearTimers(); }, 10000);
+  state.revealTimer = setTimeout(()=>{ doReveal(); }, state.countdownStart*1000);
 
   // Buttons aktivieren
   $('#btnNext').disabled = false; $('#btnReveal').disabled = false; $('#btnPlayQ').disabled = false; $('#btnPlayA').disabled = false;
   $('#btnPrev').disabled = (state.order !== 'seq');
+}
+
+function doReveal(){
+  const solBox = $('#solBox');
+  solBox.classList.remove('masked');
+  clearTimers();
+  // Auto-Play NUR wenn Antwort Chinesisch (DE->ZH)
+  if(state.mode==='de2zh') playAnswer();
 }
 
 function nextCard(){
@@ -159,9 +169,9 @@ function formatZh(hz,py){
 }
 function formatPinyinAndPos(py, pos){
   const a = (py||'').trim(); const b = (pos||'').trim();
-  if(a && b) return `<span class="py">${a}</span><br><span class=\"prompt small\">${b}</span>`;
+  if(a && b) return `<span class="py">${a}</span><br><span class=\"prompt small\" style=\"display:inline-block;margin-top:2px;\">${b}</span>`;
   if(a) return `<span class="py">${a}</span>`;
-  if(b) return `<span class=\"prompt small\">${b}</span>`;
+  if(b) return `<span class=\"prompt small\" style=\"display:inline-block;margin-top:2px;\">${b}</span>`;
   return '';
 }
 
@@ -185,7 +195,7 @@ function speak(text, lang){
   speechSynthesis.speak(u);
 }
 
-// Abspielen der FRAGE (Quellsprache)
+// FRAGE abspielen (Quellsprache)
 function playQuestion(){
   if(!state.current) return;
   if(state.mode==='de2zh'){
@@ -198,7 +208,7 @@ function playQuestion(){
   }
 }
 
-// Abspielen der ANTWORT (Zielsprache)
+// ANTWORT abspielen (Zielsprache)
 function playAnswer(){
   if(!state.current) return;
   if(state.mode==='de2zh'){
@@ -229,7 +239,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   $('#btnStart').addEventListener('click', startTraining);
   $('#btnNext').addEventListener('click', nextCard);
   $('#btnPrev').addEventListener('click', prevCard);
-  $('#btnReveal').addEventListener('click', ()=>{ clearTimers(); $('#solBox').classList.remove('masked'); });
+  $('#btnReveal').addEventListener('click', ()=>{ doReveal(); });
   $('#btnPlayQ').addEventListener('click', playQuestion);
   $('#btnPlayA').addEventListener('click', playAnswer);
 });
