@@ -1,0 +1,35 @@
+/* Dark theme */
+:root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --danger:#f7768e; --border:#283344; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
+.container{max-width:1200px;margin:32px auto;padding:0 16px}
+header h1{margin:0 0 4px 0;font-size:28px}
+.muted{color:var(--muted);font-weight:600}
+.subtitle{margin:0 0 16px 0;color:var(--muted)}
+.card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:16px 16px 12px;margin-bottom:16px}
+.section-title{font-weight:800;margin-bottom:8px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.pane{border:1px solid var(--border);border-radius:10px;padding:12px}
+.lbl{display:block;margin-bottom:6px;color:var(--muted)}
+.radio-row{display:flex;gap:18px;flex-wrap:wrap}
+.select{width:100%;background:#0f141b;border:1px solid #293241;color:var(--text);border-radius:8px;padding:10px;min-height:48px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:#3b4a61}
+.btn.ghost{background:transparent}
+.mini{color:var(--muted);font-size:12px}
+.small{color:var(--muted);font-size:12px;margin-bottom:4px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:10px}
+#dataTable{width:100%;border-collapse:collapse}
+#dataTable th,#dataTable td{border-bottom:1px solid var(--border);padding:8px 10px}
+#dataTable thead th{position:sticky;top:0;background:#12161b}
+.cell{white-space:pre-wrap;line-height:1.45}
+.cell.masked{color:#1a222d;background:linear-gradient(90deg,#19202a,#141a22);position:relative}
+.cell.masked::after{content:'Tippen, um zu zeigen';position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8fa1b3;font-size:12px;}
+.cell.clickable{cursor:pointer}
+.tag{display:inline-block;padding:0 6px;border:1px solid var(--border);border-radius:6px;font-size:11px}
+.tag.de{color:#b2d3ff}
+.tag.zh{color:#ffd18b}
+@media(max-width:900px){.grid-3{grid-template-columns:1fr}}
