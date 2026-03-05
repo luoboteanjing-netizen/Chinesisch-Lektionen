@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chinesisch Flashcards – Wort + Beispielsatz (v5.4)</title>
+  <title>Chinesisch Flashcards – Wort + Beispielsatz (v5.5)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -14,6 +14,11 @@
     <header>
       <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
       <p class="subtitle">Lektion wählen · Richtung & Reihenfolge wählen · Karte lernen</p>
+      <div class="top-actions">
+        <button id="btnDebug" class="btn ghost">Debug</button>
+        <button id="btnExport" class="btn ghost">Fortschritt exportieren</button>
+        <label class="import-btn btn ghost">Fortschritt importieren<input id="fileImport" type="file" accept="application/json" hidden></label>
+      </div>
     </header>
 
     <section class="card cfg">
@@ -31,7 +36,6 @@
             <button id="btnUseLessons" class="btn">Übernehmen</button>
             <button id="btnClearLessons" class="btn ghost">Leeren</button>
           </div>
-          <div id="excelStatus" class="mini mt8">Bitte Excel laden …</div>
         </div>
 
         <div class="pane">
@@ -108,14 +112,48 @@
         <button id="btnReveal" class="btn ghost" disabled>Jetzt aufdecken 👁️</button>
         <button id="btnNext" class="btn" disabled>Nächste Karte ▶</button>
       </div>
-
+      
       <div class="card-controls second">
         <button id="btnPlayQ" class="btn ghost" disabled>🔊 Frage abspielen</button>
         <button id="btnPlayA" class="btn ghost" disabled>🔊 Antwort abspielen</button>
       </div>
 
+      <div class="card-controls third" id="evalRow" style="display:none">
+        <button id="btnKnow" class="btn">✅ Gewusst</button>
+        <button id="btnDunno" class="btn ghost">❌ Nicht gewusst</button>
+        <button id="btnUnsure" class="btn ghost">⚪ Unsicher</button>
+      </div>
+
+      <div id="sessionStats" class="stats-bar">—</div>
+
     </section>
   </main>
+
+  <!-- Debug Panel -->
+  <div id="debugPanel" class="debug hidden">
+    <div class="debug-head">
+      <div class="title">Debug</div>
+      <button id="btnCloseDebug" class="btn ghost">✕</button>
+    </div>
+    <div class="debug-body">
+      <div class="debug-section">
+        <div class="h">Einstellungen</div>
+        <pre id="dbgSettings"></pre>
+      </div>
+      <div class="debug-section">
+        <div class="h">Gefundene Lektionen</div>
+        <pre id="dbgLessons"></pre>
+      </div>
+      <div class="debug-section">
+        <div class="h">Stimmen (speechSynthesis.getVoices)</div>
+        <div id="dbgVoices"></div>
+      </div>
+      <div class="debug-section">
+        <div class="h">Fortschritt (Preview)</div>
+        <pre id="dbgProgress"></pre>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="assets/js/app.js"></script>
