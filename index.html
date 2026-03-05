@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chinesisch Flashcards – Wort + Beispielsatz (v5.3)</title>
+  <title>Chinesisch Flashcards – Wort + Beispielsatz (v5.4)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -19,13 +19,19 @@
     <section class="card cfg">
       <div class="grid-2">
         <div class="pane">
-          <div class="lbl">Lektion(en)</div>
+          <div class="lbl">Excel‑Quelle</div>
+          <div class="row excel-row">
+            <input id="excelPath" class="input" type="text" value="./data/Long-Chinesisch_Lektionen.xlsx" />
+            <button id="btnReloadExcel" class="btn">Neu laden</button>
+          </div>
+
+          <div class="lbl mt12">Lektion(en)</div>
           <select id="lessonSelect" class="select" multiple size="8"></select>
           <div class="controls mt8">
             <button id="btnUseLessons" class="btn">Übernehmen</button>
             <button id="btnClearLessons" class="btn ghost">Leeren</button>
           </div>
-          <div id="excelStatus" class="mini mt8">Excel wird geladen…</div>
+          <div id="excelStatus" class="mini mt8">Bitte Excel laden …</div>
         </div>
 
         <div class="pane">
@@ -39,18 +45,23 @@
           <div class="row voice-row">
             <div class="col">
               <div class="small">zh‑CN Stimme</div>
-              <select id="zhVoiceSelect" class="select"></select>
+              <label><input type="radio" name="zhVoiceGender" value="female" checked> w</label>
+              <label><input type="radio" name="zhVoiceGender" value="male"> m</label>
             </div>
             <div class="col">
               <div class="small">de‑DE Stimme</div>
-              <select id="deVoiceSelect" class="select"></select>
+              <label><input type="radio" name="deVoiceGender" value="female" checked> w</label>
+              <label><input type="radio" name="deVoiceGender" value="male"> m</label>
             </div>
           </div>
           <div class="mt8">
             <label class="lbl">Tempo <span id="rateVal" class="hint">(0.95)</span></label>
             <input id="rateRange" type="range" min="0.6" max="1.6" step="0.05" value="0.95" />
           </div>
-
+          <div class="mt8">
+            <label class="lbl">Tonhöhe <span id="pitchVal" class="hint">(1.00)</span></label>
+            <input id="pitchRange" type="range" min="0.7" max="1.5" step="0.05" value="1.00" />
+          </div>
           <div class="controls mt8">
             <button id="btnTestDE" class="btn ghost">DE testen</button>
             <button id="btnTestZH" class="btn ghost">中文测试</button>
