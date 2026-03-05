@@ -1,4 +1,4 @@
-/* Flashcards v5.3 – Stimmenauswahl per Dropdown, kein Auto-Reveal/Countdown; POS=16px; Fonts 20px */
+/* Flashcards v5.4 – data/Excel, kein Auto-Reveal, Radio (w/m) Stimmenauswahl, Pitch+Rate */
 :root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --danger:#f7768e; --border:#283344; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#0b0d10;color:#e6edf3;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
@@ -13,7 +13,7 @@ header h1{margin:0 0 4px 0;font-size:28px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .pane{border:1px solid #283344;border-radius:10px;padding:12px}
 .radio-row{display:flex;gap:18px;flex-wrap:wrap}
-.select{width:100%;background:#0f141b;border:1px solid #293241;color:#e6edf3;border-radius:8px;padding:10px;min-height:42px}
+.select, .input{width:100%;background:#0f141b;border:1px solid #293241;color:#e6edf3;border-radius:8px;padding:10px;min-height:42px}
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .stack{display:flex;flex-direction:column;gap:8px}
 .btn{background:#1b2330;color:#e6edf3;border:1px solid #293241;padding:10px 14px;border-radius:10px;cursor:pointer}
@@ -21,9 +21,9 @@ header h1{margin:0 0 4px 0;font-size:28px}
 .btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700}
 .btn.ghost{background:transparent}
 .mt8{margin-top:8px}.mt12{margin-top:12px}
-.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.voice-row{gap:12px}
+.voice-row{display:flex;gap:12px}
 .voice-row .col{flex:1}
+.excel-row{display:flex;gap:8px}
 .prompt-box{border:1px dashed #303b49;border-radius:12px;padding:12px}
 .prompt{font-size:20px}
 .prompt.big{font-size:20px;font-weight:800}
