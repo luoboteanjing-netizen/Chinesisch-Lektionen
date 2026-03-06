@@ -1,4 +1,4 @@
-/* r14: Start/Stop toggle for Training; scroll top on Stop */
+/* r15: Fix "Leeren"; show per-lesson Richtig/Falsch; 'Unsicher' nicht zählen */
 let EXCEL_URL = './data/Long-Chinesisch_Lektionen.xlsx';
 const SHEET_NAME_PATTERN = /^L\s*\d{1,2}$/i; const MIN_LESSON=0, MAX_LESSON=16; const DATA_START_ROW=3;
 const COL_WORD={de:1,py:2,zh:6}; const COL_SENT={de:5,py:4,zh:7}; const COL_POS=3;
@@ -13,6 +13,7 @@ const state={
   settings:{ mode:'de2zh', order:'random', rateDe:0.95, pitchDe:1.0, rateZh:0.95, pitchZh:1.0, lessons:[], browserVoiceZh:null, browserVoiceDe:null, autoplayGap:800 },
   session:{ total:0, done:0, known:0, unsure:0, unknown:0, ttrSum:0, ttrCount:0 },
   startedAt:null, revealedAt:null,
+  // progress.byLesson: { [lessonId]: { known:number, unknown:number } }
   progress:{ version:'v1', cards:{}, byLesson:{} },
   wakeLock:null,
   trainingOn:false
@@ -49,7 +50,9 @@ async function parseExcelBuffer(buf){ const wb=XLSX.read(buf,{type:'array'}); st
 
 async function loadExcel(){ try{ const res=await fetch(EXCEL_URL,{cache:'no-store'}); const buf=await res.arrayBuffer(); await parseExcelBuffer(buf); }catch(e){ console.error('Excel konnte nicht geladen werden:',e); alert('Konnte Datei nicht laden.'); } }
 
-function populateLessonSelect(){ const sel=$('#lessonSelect'); sel.innerHTML=''; const keys=Array.from(state.lessons.keys()).map(k=>parseInt(k,10)).sort((a,b)=>a-b); for(const k of keys){ const total=state.lessons.get(String(k)).length; const seen=(state.progress.byLesson?.[String(k)]?.seen)||0; const opt=document.createElement('option'); opt.value=String(k); opt.textContent=`Lektion ${k} (${total})` + (seen?` · ${Math.min(100, Math.floor(seen*100/Math.max(total,1)))}% gesehen`:''); if(state.settings.lessons?.includes(String(k))) opt.selected=true; sel.appendChild(opt); } }
+function ensureBL(lessonKey){ const bl=state.progress.byLesson; bl[lessonKey]=bl[lessonKey]||{ known:0, unknown:0 }; return bl[lessonKey]; }
+
+function populateLessonSelect(){ const sel=$('#lessonSelect'); sel.innerHTML=''; const keys=Array.from(state.lessons.keys()).map(k=>parseInt(k,10)).sort((a,b)=>a-b); for(const k of keys){ const total=state.lessons.get(String(k)).length; const bl=state.progress.byLesson?.[String(k)]||{known:0,unknown:0}; const known=bl.known||0, unknown=bl.unknown||0; const opt=document.createElement('option'); opt.value=String(k); opt.textContent=`Lektion ${k} (${total}) · Richtig ${known} · Falsch ${unknown}`; if(state.settings.lessons?.includes(String(k))) opt.selected=true; sel.appendChild(opt); } }
 
 function resetSessionStats(){ state.session={ total:state.pool.length, done:0, known:0, unsure:0, unknown:0, ttrSum:0, ttrCount:0 }; renderSessionStats(); }
 
@@ -65,31 +68,9 @@ function prevCard(){ if(state.order!=='seq' || !state.pool.length) return; if(st
 function scrollToTopHard(){ window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0; setTimeout(()=>{ window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0; }, 60); }
 function scrollToPageEnd(){ try{ window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, document.body.scrollHeight); } }
 
-function startTraining(){ // Start or Stop depending on state
-  if(!state.trainingOn){
-    // START
-    const sel=$('#lessonSelect'); state.selectedLessons.clear(); const picked=[]; for(const o of sel.selectedOptions){ state.selectedLessons.add(o.value); picked.push(o.value); }
-    state.settings.lessons=picked; saveSettings(); gatherPool(); if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; }
-    state.idx = (state.order==='seq') ? 0 : null; if(state.order==='seq') setCard(state.pool[state.idx]); else setCard(state.pool[Math.floor(Math.random()*state.pool.length)]);
-    state.trainingOn=true; updateTrainingBtn();
-    // Bei Start weiterhin ans Seitenende, damit Steuerung sichtbar ist
-    scrollToPageEnd(); setTimeout(scrollToPageEnd, 60);
-  } else {
-    // STOP
-    stopTraining();
-  }
-}
+function startTraining(){ if(!state.trainingOn){ const sel=$('#lessonSelect'); state.selectedLessons.clear(); const picked=[]; for(const o of sel.selectedOptions){ state.selectedLessons.add(o.value); picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPool(); if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; } state.idx = (state.order==='seq') ? 0 : null; if(state.order==='seq') setCard(state.pool[state.idx]); else setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); state.trainingOn=true; updateTrainingBtn(); scrollToPageEnd(); setTimeout(scrollToPageEnd, 60); } else { stopTraining(); } }
 
-function stopTraining(){ // clear current session UI, enable choosing lessons
-  state.trainingOn=false; updateTrainingBtn();
-  // disable core controls
-  $('#btnPrev').disabled=true; $('#btnReveal').disabled=true; $('#btnNext').disabled=true; $('#btnPlayQ').disabled=true; $('#btnPlayA').disabled=true; disableRating();
-  // mask solution and reset prompts
-  $('#solBox').classList.add('masked'); $('#promptWord').textContent='—'; $('#promptWordSub').innerHTML='&nbsp;'; $('#promptSent').textContent='—'; $('#solWord').textContent='—'; $('#solSent').textContent='—';
-  // Scroll zum Seitenanfang, damit Lektionen gut erreichbar sind
-  scrollToTopHard();
-}
-
+function stopTraining(){ state.trainingOn=false; updateTrainingBtn(); $('#btnPrev').disabled=true; $('#btnReveal').disabled=true; $('#btnNext').disabled=true; $('#btnPlayQ').disabled=true; $('#btnPlayA').disabled=true; disableRating(); $('#solBox').classList.add('masked'); $('#promptWord').textContent='—'; $('#promptWordSub').innerHTML='&nbsp;'; $('#promptSent').textContent='—'; $('#solWord').textContent='—'; $('#solSent').textContent='—'; scrollToTopHard(); }
 function updateTrainingBtn(){ const b=$('#btnStart'); if(!b) return; b.textContent = state.trainingOn? 'Training stoppen ■' : 'Training starten ▶'; }
 
 function doReveal(){ $('#solBox').classList.remove('masked'); state.revealedAt=Date.now(); const ttr=state.revealedAt-(state.startedAt||state.revealedAt); if(ttr>0){ state.session.ttrSum+=ttr; state.session.ttrCount+=1; } enableRating(); renderSessionStats(); }
@@ -98,7 +79,8 @@ function enableRating(){ $('#btnRateKnown').disabled=false; $('#btnRateUnsure').
 function disableRating(){ $('#btnRateKnown').disabled=true; $('#btnRateUnsure').disabled=true; $('#btnRateUnknown').disabled=true; }
 
 function rate(mark){ if(!state.current) return; state.session.done += 1; if(mark==='known') state.session.known += 1; else if(mark==='unsure') state.session.unsure += 1; else state.session.unknown += 1; renderSessionStats();
-  try{ const lessonKey = findLessonKeyOfCurrent(); if(lessonKey){ const bl=state.progress.byLesson; bl[lessonKey]=bl[lessonKey]||{seen:0}; bl[lessonKey].seen=(bl[lessonKey].seen||0)+1; saveProgress(); populateLessonSelect(); } }catch(e){}
+  try{ const lessonKey = findLessonKeyOfCurrent(); if(lessonKey){ const rec=ensureBL(lessonKey); if(mark==='known') rec.known += 1; else if(mark==='unknown') rec.unknown += 1; // 'unsure' nicht zählen
+    saveProgress(); populateLessonSelect(); } }catch(e){}
   disableRating(); nextCard(); }
 
 function findLessonKeyOfCurrent(){ for(const [k,arr] of state.lessons.entries()){ if(arr && arr.includes(state.current)) return k; } return null; }
@@ -121,8 +103,8 @@ function autoplayStep(){ if(!state.autoplay.on) return; if(!ensurePoolForAutopla
 function toggleAutoplay(){ if(!state.autoplay.on){ if(!ensurePoolForAutoplay()) return; setAutoplay(true); requestWakeLock(); scrollToPageEnd(); setTimeout(scrollToPageEnd, 60); autoplayStep(); } else { setAutoplay(false); } }
 function stopAutoplayOnUserAction(){ if(state.autoplay.on) setAutoplay(false); }
 
-// Wake Lock API (screen)
-async function requestWakeLock(){ try{ if('wakeLock' in navigator && !state.wakeLock){ state.wakeLock = await navigator.wakeLock.request('screen'); state.wakeLock.addEventListener?.('release', ()=>{ state.wakeLock=null; }); document.addEventListener('visibilitychange', onVisibilityChange, { passive:true }); } }catch(e){ /* silently ignore */ } }
+// Wake Lock API
+async function requestWakeLock(){ try{ if('wakeLock' in navigator && !state.wakeLock){ state.wakeLock = await navigator.wakeLock.request('screen'); state.wakeLock.addEventListener?.('release', ()=>{ state.wakeLock=null; }); document.addEventListener('visibilitychange', onVisibilityChange, { passive:true }); } }catch(e){} }
 function onVisibilityChange(){ if(document.visibilityState==='visible' && state.autoplay.on && !state.wakeLock){ requestWakeLock(); } }
 function releaseWakeLock(){ try{ if(state.wakeLock){ state.wakeLock.release?.(); } }catch(e){} finally{ state.wakeLock=null; document.removeEventListener('visibilitychange', onVisibilityChange); } }
 
@@ -169,7 +151,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   // Mode swap
   $('#btnSwapMode').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); state.mode = (state.mode==='de2zh')? 'zh2de':'de2zh'; state.settings.mode=state.mode; saveSettings(); renderModeUI(); if(state.current) setCard(state.current); });
 
-  // Flow
+  // Flow: Start/Stop button
   $('#btnStart').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); startTraining(); });
   $('#btnNext').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); nextCard(); });
   $('#btnPrev').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); prevCard(); });
@@ -181,6 +163,16 @@ window.addEventListener('DOMContentLoaded', ()=>{
   $('#btnRateKnown').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); rate('known'); });
   $('#btnRateUnsure').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); rate('unsure'); });
   $('#btnRateUnknown').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); rate('unknown'); });
+
+  // NEW: Lessons controls
+  $('#btnUseLessons').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); const sel=$('#lessonSelect'); const picked=[]; for(const o of sel.selectedOptions){ picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPoolFromSettings(); });
+  $('#btnClearLessons').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); // Clear pool & selection
+    state.selectedLessons.clear(); state.settings.lessons=[]; saveSettings(); state.pool=[]; state.idx=null; resetSessionStats();
+    // clear UI selection in list
+    const sel=$('#lessonSelect'); for(const o of sel.options){ o.selected=false; }
+    // disable training state (if active) and reset view
+    if(state.trainingOn) stopTraining();
+  });
 
   // Progress export/import
   $('#btnExport').addEventListener('click', ()=>{ const blob=new Blob([JSON.stringify(state.progress,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='progress.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); });
