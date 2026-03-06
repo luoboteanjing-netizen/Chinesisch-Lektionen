@@ -15,8 +15,9 @@
       <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
       <p class="subtitle">Lektion wählen · Richtung & Reihenfolge wählen · Karte lernen</p>
       <div class="top-actions">
-        <button id="btnExport" class="btn ghost small">Export</button>
-        <label class="import-btn btn ghost small">Import<input id="fileImport" type="file" accept="application/json" hidden></label>
+        <span class="muted small-label">Fortschritt:</span>
+        <label class="import-btn btn ghost small">Importieren<input id="fileImport" type="file" accept="application/json" hidden></label>
+        <button id="btnExport" class="btn ghost small">Exportieren</button>
       </div>
     </header>
 
@@ -39,12 +40,14 @@
 
         <div class="pane">
           <div class="lbl">Richtung</div>
-          <div class="radio-row">
-            <label><input type="radio" name="mode" value="de2zh" checked> 🇩🇪 → 🇨🇳 (DE→ZH)</label>
-            <label><input type="radio" name="mode" value="zh2de"> 🇨🇳 → 🇩🇪 (ZH→DE)</label>
+          <div class="mode-inline">
+            <div class="mode-item" id="modeTarget">🎯 Ziel: 🇨🇳 ZH</div>
+            <button id="btnSwapMode" class="btn ghost swap" title="Richtung umschalten">⇄</button>
+            <div class="mode-item" id="modeSource">Quelle: 🇩🇪 DE</div>
           </div>
+
           <div class="mt8">
-            <button id="btnVoices" class="btn ghost">Stimmen</button>
+            <button id="btnVoices" class="btn large">Stimmen auswählen</button>
           </div>
 
           <div class="mt8">

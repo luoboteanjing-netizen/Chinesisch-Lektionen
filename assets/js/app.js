@@ -1,5 +1,4 @@
-/* v5.5 Browser-optimiert: Stimmen-Panel, ZH-Filter, Persistenz konkreter Browserstimmen, Start-/Between-Delay, ohne Testbuttons im Haupt-UI */
-
+/* v5.5 Browser-optimiert + Fixes: Wort-Clip Fix, UI-Updates */
 let EXCEL_URL = './data/Long-Chinesisch_Lektionen.xlsx';
 const SHEET_NAME_PATTERN = /^L\s*\d{1,2}$/i; const MIN_LESSON=0, MAX_LESSON=16; const DATA_START_ROW=3;
 const COL_WORD={de:1,py:2,zh:6}; const COL_SENT={de:5,py:4,zh:7}; const COL_POS=3;
@@ -48,35 +47,50 @@ function populateLessonSelect(){ const sel=$('#lessonSelect'); sel.innerHTML='';
 
 function gatherPool(){ const out=[]; for(const k of state.selectedLessons){ const arr=state.lessons.get(k); if(arr) out.push(...arr); } state.pool=out; state.idx=null; state.session={ total:out.length, done:0, known:0, unsure:0, unknown:0, ttrSum:0, ttrCount:0 }; renderSessionStats(); }
 
-function setCard(entry){ state.current=entry; $('#solBox').classList.add('masked'); state.startedAt=Date.now(); state.revealedAt=null; if(state.mode==='zh2de'){ $('#promptWord').innerHTML=(entry.word.zh||'—'); $('#promptWordSub').innerHTML=formatPinyinAndPos(entry.word.py, entry.pos); $('#promptSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); $('#solWord').textContent=entry.word.de||'—'; $('#solSent').textContent=entry.sent.de||'—'; } else { $('#promptWord').textContent=entry.word.de||'—'; $('#promptWordSub').textContent=entry.pos?entry.pos:''; $('#promptSent').textContent=entry.sent.de||'—'; $('#solWord').innerHTML=formatZh(entry.word.zh, entry.word.py); $('#solSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); } $('#btnNext').disabled=false; $('#btnReveal').disabled=false; $('#btnPlayQ').disabled=false; $('#btnPlayA').disabled=false; }
+function setCard(entry){ state.current=entry; $('#solBox').classList.add('masked'); state.startedAt=Date.now(); state.revealedAt=null; if(state.mode==='zh2de'){ $('#promptWord').innerHTML=(entry.word.zh||'—'); $('#promptWordSub').innerHTML=formatPinyinAndPos(entry.word.py, entry.pos); $('#promptSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); $('#solWord').textContent=entry.word.de||'—'; $('#solSent').textContent=entry.sent.de||'—'; } else { $('#promptWord').textContent=entry.word.de||'—'; $('#promptWordSub').textContent=entry.pos?entry.pos:''; $('#promptSent').textContent=entry.sent.de||'—'; $('#solWord').innerHTML=formatZh(entry.word.zh, entry.word.py); $('#solSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); } $('#btnNext').disabled=false; $('#btnReveal').disabled=false; $('#btnPlayQ').disabled=false; $('#btnPlayA').disabled=false; renderModeUI(); }
 
 function nextCard(){ if(!state.pool.length) return alert('Bitte Lektionen wählen und übernehmen.'); if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); }
 function prevCard(){ if(!state.pool.length) return; if(state.idx==null) state.idx=0; else state.idx=(state.idx-1+state.pool.length)%state.pool.length; setCard(state.pool[state.idx]); }
 function startTraining(){ const sel=$('#lessonSelect'); state.selectedLessons.clear(); const picked=[]; for(const o of sel.selectedOptions){ state.selectedLessons.add(o.value); picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPool(); if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; } state.idx=0; setCard(state.pool[state.idx]); }
 
-function doReveal(){ $('#solBox').classList.remove('masked'); $('#evalRow')?.style?.setProperty('display','flex'); state.revealedAt=Date.now(); const ttr=state.revealedAt-(state.startedAt||state.revealedAt); if(ttr>0){ state.session.ttrSum+=ttr; state.session.ttrCount+=1; } renderSessionStats(); }
+function doReveal(){ $('#solBox').classList.remove('masked'); state.revealedAt=Date.now(); const ttr=state.revealedAt-(state.startedAt||state.revealedAt); if(ttr>0){ state.session.ttrSum+=ttr; state.session.ttrCount+=1; } renderSessionStats(); }
 
 function formatZh(hz,py){ const h=(hz||'').trim(); const p=(py||'').trim(); return p? `${h}<br><span class="py">${p}</span>` : (h||'—'); }
 function formatPinyinAndPos(py,pos){ const a=(py||'').trim(); const b=(pos||'').trim(); if(a&&b) return `<span class="py">${a}</span><br><span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; if(a) return `<span class="py">${a}</span>`; if(b) return `<span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; return ''; }
 
-const START_DELAY_MS=180; const BETWEEN_DELAY_MS=250; let _ttsPrimed=false; function ttsPrime(cb){ if(_ttsPrimed){ cb(); return; } setTimeout(()=>{ _ttsPrimed=true; cb(); }, START_DELAY_MS); }
-function ttsSpeak(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; u.rate=state.rate; u.pitch=state.pitch; const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { const L=(langKey==='zh')?'zh':'de'; const cand=(state.voices||[]).filter(v=>(v.lang||'').toLowerCase().startsWith(L)); u.voice=cand.find(v=>v.default)||cand[0]||null; } try{ speechSynthesis.cancel(); }catch(e){} speechSynthesis.speak(u); }
-function playQuestion(){ if(!state.current) return; if(state.mode==='de2zh'){ ttsPrime(()=>{ ttsSpeak(state.current.word.de,'de'); setTimeout(()=>ttsSpeak(state.current.sent.de,'de'), BETWEEN_DELAY_MS); }); } else { ttsPrime(()=>{ ttsSpeak(state.current.word.zh,'zh'); setTimeout(()=>ttsSpeak(state.current.sent.zh,'zh'), BETWEEN_DELAY_MS); }); } }
-function playAnswer(){ if(!state.current) return; if(state.mode==='de2zh'){ ttsPrime(()=>{ ttsSpeak(state.current.word.zh,'zh'); setTimeout(()=>ttsSpeak(state.current.sent.zh,'zh'), BETWEEN_DELAY_MS); }); } else { ttsPrime(()=>{ ttsSpeak(state.current.word.de,'de'); setTimeout(()=>ttsSpeak(state.current.sent.de,'de'), BETWEEN_DELAY_MS); }); } }
+// === TTS with proper canceling only once per sequence ===
+const START_DELAY_MS=180; const BETWEEN_DELAY_MS=250; let _ttsPrimed=false;
+function ttsPrime(cb){ if(_ttsPrimed){ cb(); return; } setTimeout(()=>{ _ttsPrimed=true; cb(); }, START_DELAY_MS); }
+function ttsSpeak(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; u.rate=state.rate; u.pitch=state.pitch; const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { const L=(langKey==='zh')?'zh':'de'; const cand=(state.voices||[]).filter(v=>(v.lang||'').toLowerCase().startsWith(L)); u.voice=cand.find(v=>v.default)||cand[0]||null; } speechSynthesis.speak(u); }
+
+function playSequence(firstText, firstLangKey, secondText, secondLangKey){
+  ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){} // cancel ONCE before the whole sequence
+    ttsSpeak(firstText, firstLangKey);
+    setTimeout(()=>{ ttsSpeak(secondText, secondLangKey); }, BETWEEN_DELAY_MS);
+  });
+}
+
+function playQuestion(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } else { playSequence(state.current.word.zh,'zh', state.current.sent.zh,'zh'); } }
+function playAnswer(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.zh,'zh', state.current.sent.zh,'zh'); } else { playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } }
 
 function renderSessionStats(){ const s=state.session; const avg=s.ttrCount? (s.ttrSum/s.ttrCount/1000).toFixed(1) : '—'; const acc=s.done? Math.round(100*s.known/s.done)+'%' : '—'; $('#sessionStats').textContent=`Karten: ${s.done}/${s.total} · Korrekt: ${acc} · Ø Aufdeck‑Zeit: ${avg}s`; }
+
+// === Mode inline UI ===
+function renderModeUI(){ const tgt=$('#modeTarget'), src=$('#modeSource'); if(state.mode==='de2zh'){ tgt.textContent='🎯 Ziel: 🇨🇳 ZH'; src.textContent='Quelle: 🇩🇪 DE'; } else { tgt.textContent='🎯 Ziel: 🇩🇪 DE'; src.textContent='Quelle: 🇨🇳 ZH'; } }
 
 window.addEventListener('DOMContentLoaded', ()=>{
   loadSettings(); loadProgress();
   $('#excelPath').value = state.settings.excelPath || EXCEL_URL;
-  document.querySelector(`input[name="mode"][value="${state.settings.mode||'de2zh'}"]`)?.click();
+  state.mode = state.settings.mode || 'de2zh'; renderModeUI();
   $('#rateRange').value=String(state.settings.rate||0.95); state.rate=Number($('#rateRange').value); $('#rateVal').textContent=`(${state.rate.toFixed(2)})`;
   $('#pitchRange').value=String(state.settings.pitch||1.0); state.pitch=Number($('#pitchRange').value); $('#pitchVal').textContent=`(${state.pitch.toFixed(2)})`;
 
   $('#btnReloadExcel').addEventListener('click', ()=> loadExcel());
   loadExcel();
 
-  document.querySelectorAll('input[name="mode"]').forEach(r=> r.addEventListener('change', e=>{ state.mode=e.target.value; state.settings.mode=state.mode; saveSettings(); if(state.current) setCard(state.current); }));
+  // Swap mode button
+  $('#btnSwapMode').addEventListener('click', ()=>{ state.mode = (state.mode==='de2zh')? 'zh2de':'de2zh'; state.settings.mode=state.mode; saveSettings(); renderModeUI(); if(state.current) setCard(state.current); });
+
   $('#rateRange').addEventListener('input', e=>{ state.rate=parseFloat(e.target.value); state.settings.rate=state.rate; $('#rateVal').textContent=`(${state.rate.toFixed(2)})`; saveSettings(); });
   $('#pitchRange').addEventListener('input', e=>{ state.pitch=parseFloat(e.target.value); state.settings.pitch=state.pitch; $('#pitchVal').textContent=`(${state.pitch.toFixed(2)})`; saveSettings(); });
 
