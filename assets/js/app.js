@@ -1,4 +1,4 @@
-/* r12: persistent progress restored + wake lock during Autoplay */
+/* r13: scroll to end on autoplay start; taller rating buttons via CSS */
 let EXCEL_URL = './data/Long-Chinesisch_Lektionen.xlsx';
 const SHEET_NAME_PATTERN = /^L\s*\d{1,2}$/i; const MIN_LESSON=0, MAX_LESSON=16; const DATA_START_ROW=3;
 const COL_WORD={de:1,py:2,zh:6}; const COL_SENT={de:5,py:4,zh:7}; const COL_POS=3;
@@ -91,7 +91,7 @@ function updateAutoplayBtn(){ const b=$('#btnAutoplay'); if(!b) return; b.textCo
 function speakPair(word, sent, langKey, done){ if(!state.autoplay.on) return; const u1 = buildUtterance(word, langKey); u1.onend = ()=>{ if(!state.autoplay.on) return; const t=setTimeout(()=>{ if(!state.autoplay.on) return; const u2=buildUtterance(sent, langKey); u2.onend=()=>{ if(!state.autoplay.on) return; done && done(); }; speechSynthesis.speak(u2); }, BETWEEN_DELAY_MS); state.autoplay.timers.push(t); }; speechSynthesis.speak(u1); }
 function ensurePoolForAutoplay(){ if(state.pool.length>0) return true; if(!state.settings.lessons || state.settings.lessons.length===0){ const sel=$('#lessonSelect'); const picked=[]; for(const o of sel?.selectedOptions||[]){ picked.push(o.value); } if(picked.length>0){ state.settings.lessons=picked; saveSettings(); } } gatherPoolFromSettings(); if(!state.pool.length){ alert('Bitte Lektion(en) wählen oder übernehmen, bevor Autoplay startet.'); return false; } if(state.order==='seq'){ state.idx=0; setCard(state.pool[state.idx]); } else { setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); } return true; }
 function autoplayStep(){ if(!state.autoplay.on) return; if(!ensurePoolForAutoplay()) { setAutoplay(false); return; } $('#solBox').classList.add('masked'); disableRating(); const qLang = (state.mode==='de2zh')? 'de':'zh'; const aLang = (state.mode==='de2zh')? 'zh':'de'; ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){}; speakPair(state.current.word[qLang], state.current.sent[qLang], qLang, ()=>{ if(!state.autoplay.on) return; $('#solBox').classList.remove('masked'); speakPair(state.current.word[aLang], state.current.sent[aLang], aLang, ()=>{ if(!state.autoplay.on) return; const t=setTimeout(()=>{ if(!state.autoplay.on) return; if(state.order==='seq'){ if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); } else { setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); } autoplayStep(); }, state.autoplay.gapMs); state.autoplay.timers.push(t); }); }); }); }
-function toggleAutoplay(){ if(!state.autoplay.on){ if(!ensurePoolForAutoplay()) return; setAutoplay(true); requestWakeLock(); autoplayStep(); } else { setAutoplay(false); } }
+function toggleAutoplay(){ if(!state.autoplay.on){ if(!ensurePoolForAutoplay()) return; setAutoplay(true); requestWakeLock(); scrollToPageEnd(); setTimeout(scrollToPageEnd, 60); autoplayStep(); } else { setAutoplay(false); } }
 function stopAutoplayOnUserAction(){ if(state.autoplay.on) setAutoplay(false); }
 
 // Wake Lock API (screen)
@@ -119,7 +119,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   $('#rateZhRange').value=String(state.rateZh); $('#rateZhVal').textContent=`(${state.rateZh.toFixed(2)})`;
   $('#pitchZhRange').value=String(state.pitchZh); $('#pitchZhVal').textContent=`(${state.pitchZh.toFixed(2)})`;
 
-  loadExcel(); // after excel parsed, populateLessonSelect() considers persisted progress
+  loadExcel();
 
   // Voice panels
   $('#btnVoiceDe').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); openVoicesPanelFor('de'); });
