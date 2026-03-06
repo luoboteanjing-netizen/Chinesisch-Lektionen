@@ -28,6 +28,7 @@
           <div class="row excel-row">
             <input id="excelPath" class="input" type="text" value="./data/Long-Chinesisch_Lektionen.xlsx" />
             <button id="btnReloadExcel" class="btn">Neu laden</button>
+            <input id="fileExcel" type="file" accept=".xlsx" hidden />
           </div>
 
           <div class="lbl mt12">Lektion(en)</div>
@@ -56,17 +57,24 @@
             <input id="gapRange" type="range" min="0.6" max="2.5" step="0.1" value="0.8" />
           </div>
 
-          <div class="mt8">
-            <button id="btnVoices" class="btn large">Stimmen auswählen</button>
+          <!-- Stimmen & per‑Sprache‑Regler -->
+          <div class="two-col mt12">
+            <button id="btnVoiceDe" class="btn large fit">DE Stimme auswählen</button>
+            <button id="btnVoiceZh" class="btn large fit">ZH Stimme auswählen</button>
           </div>
-
-          <div class="mt8">
-            <label class="lbl">Tempo <span id="rateVal" class="hint">(0.95)</span></label>
-            <input id="rateRange" type="range" min="0.6" max="1.6" step="0.05" value="0.95" />
-          </div>
-          <div class="mt8">
-            <label class="lbl">Tonhöhe <span id="pitchVal" class="hint">(1.00)</span></label>
-            <input id="pitchRange" type="range" min="0.7" max="1.5" step="0.05" value="1.00" />
+          <div class="two-col mt8">
+            <div class="voice-config">
+              <label class="lbl">DE Tempo <span id="rateDeVal" class="hint">(0.95)</span></label>
+              <input id="rateDeRange" type="range" min="0.6" max="1.6" step="0.05" value="0.95" />
+              <label class="lbl">DE Tonhöhe <span id="pitchDeVal" class="hint">(1.00)</span></label>
+              <input id="pitchDeRange" type="range" min="0.7" max="1.5" step="0.05" value="1.00" />
+            </div>
+            <div class="voice-config">
+              <label class="lbl">ZH Tempo <span id="rateZhVal" class="hint">(0.95)</span></label>
+              <input id="rateZhRange" type="range" min="0.6" max="1.6" step="0.05" value="0.95" />
+              <label class="lbl">ZH Tonhöhe <span id="pitchZhVal" class="hint">(1.00)</span></label>
+              <input id="pitchZhRange" type="range" min="0.7" max="1.5" step="0.05" value="1.00" />
+            </div>
           </div>
 
           <div class="stack mt12">
@@ -120,7 +128,7 @@
     </section>
   </main>
 
-  <!-- Stimmen-Panel -->
+  <!-- Stimmen-Panel (zielgerichtet: DE oder ZH) -->
   <div id="voicePanel" class="debug hidden">
     <div class="debug-head">
       <div class="title">Stimmen</div>
@@ -129,18 +137,29 @@
     <div class="debug-body">
       <div class="debug-section">
         <div class="h">Hinweis</div>
-        <p>Diese Liste zeigt die vom Browser bereitgestellten Stimmen. Wähle eine Stimme für Chinesisch (ZH) oder Deutsch (DE). Die Auswahl wird gespeichert.</p>
+        <p>Wähle eine Stimme für die aktuell geöffnete Sprache.</p>
       </div>
       <div class="debug-section">
-        <div class="h">Filter</div>
-        <label style="display:flex;align-items:center;gap:6px;margin:6px 0;">
-          <input id="dbgZhOnly" type="checkbox" />
-          <span>Nur chinesische Stimmen (zh) anzeigen</span>
-        </label>
-      </div>
-      <div class="debug-section">
-        <div class="h">Stimmen (speechSynthesis.getVoices)</div>
+        <div class="h">Stimmenliste</div>
         <div id="dbgVoices"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daten-Auswahl (wenn ./data/index.json vorhanden) -->
+  <div id="dataPanel" class="debug hidden">
+    <div class="debug-head">
+      <div class="title">Datenquelle wählen</div>
+      <button id="btnCloseData" class="btn ghost">✕</button>
+    </div>
+    <div class="debug-body">
+      <div class="debug-section">
+        <div class="h">Verfügbare Dateien in ./data/</div>
+        <div id="dataList"></div>
+      </div>
+      <div class="debug-section">
+        <div class="h">Oder lokale Datei öffnen</div>
+        <button id="btnPickLocal" class="btn">Lokale .xlsx auswählen</button>
       </div>
     </div>
   </div>
