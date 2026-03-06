@@ -1,4 +1,4 @@
-/* v5.5 Browser-optimiert + Fixes: Wort-Clip Fix, UI-Updates */
+/* v5.5 Browser-optimiert + Fixes r4 (Autoplay) */
 let EXCEL_URL = './data/Long-Chinesisch_Lektionen.xlsx';
 const SHEET_NAME_PATTERN = /^L\s*\d{1,2}$/i; const MIN_LESSON=0, MAX_LESSON=16; const DATA_START_ROW=3;
 const COL_WORD={de:1,py:2,zh:6}; const COL_SENT={de:5,py:4,zh:7}; const COL_POS=3;
@@ -6,10 +6,11 @@ const COL_WORD={de:1,py:2,zh:6}; const COL_SENT={de:5,py:4,zh:7}; const COL_POS=
 const LS_KEYS={ settings:'fc_settings_v1', progress:'fc_progress_v1' };
 
 const state={
-  mode:'de2zh', rate:0.95, pitch:1.0,
+  mode:'de2zh', order:'random', rate:0.95, pitch:1.0,
   lessons:new Map(), selectedLessons:new Set(), pool:[], idx:null, current:null,
   voices:[], browserVoice:{ zh:null, de:null },
-  settings:{ excelPath:'./data/Long-Chinesisch_Lektionen.xlsx', mode:'de2zh', rate:0.95, pitch:1.0, lessons:[], browserVoiceZh:null, browserVoiceDe:null },
+  autoplay:{ on:false, timers:[], gapMs:800 },
+  settings:{ excelPath:'./data/Long-Chinesisch_Lektionen.xlsx', mode:'de2zh', order:'random', rate:0.95, pitch:1.0, lessons:[], browserVoiceZh:null, browserVoiceDe:null, autoplayGap:800 },
   session:{ total:0, done:0, known:0, unsure:0, unknown:0, ttrSum:0, ttrCount:0 },
   startedAt:null, revealedAt:null,
   progress:{ version:'v1', cards:{}, byLesson:{} }
@@ -49,68 +50,114 @@ function gatherPool(){ const out=[]; for(const k of state.selectedLessons){ cons
 
 function setCard(entry){ state.current=entry; $('#solBox').classList.add('masked'); state.startedAt=Date.now(); state.revealedAt=null; if(state.mode==='zh2de'){ $('#promptWord').innerHTML=(entry.word.zh||'—'); $('#promptWordSub').innerHTML=formatPinyinAndPos(entry.word.py, entry.pos); $('#promptSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); $('#solWord').textContent=entry.word.de||'—'; $('#solSent').textContent=entry.sent.de||'—'; } else { $('#promptWord').textContent=entry.word.de||'—'; $('#promptWordSub').textContent=entry.pos?entry.pos:''; $('#promptSent').textContent=entry.sent.de||'—'; $('#solWord').innerHTML=formatZh(entry.word.zh, entry.word.py); $('#solSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); } $('#btnNext').disabled=false; $('#btnReveal').disabled=false; $('#btnPlayQ').disabled=false; $('#btnPlayA').disabled=false; renderModeUI(); }
 
-function nextCard(){ if(!state.pool.length) return alert('Bitte Lektionen wählen und übernehmen.'); if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); }
-function prevCard(){ if(!state.pool.length) return; if(state.idx==null) state.idx=0; else state.idx=(state.idx-1+state.pool.length)%state.pool.length; setCard(state.pool[state.idx]); }
-function startTraining(){ const sel=$('#lessonSelect'); state.selectedLessons.clear(); const picked=[]; for(const o of sel.selectedOptions){ state.selectedLessons.add(o.value); picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPool(); if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; } state.idx=0; setCard(state.pool[state.idx]); }
+function nextCard(){ if(!state.pool.length) return alert('Bitte Lektionen wählen und übernehmen.'); if(state.order==='seq'){ if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); } else { const e=state.pool[Math.floor(Math.random()*state.pool.length)]; setCard(e); } }
+function prevCard(){ if(state.order!=='seq' || !state.pool.length) return; if(state.idx==null) state.idx=0; else state.idx=(state.idx-1+state.pool.length)%state.pool.length; setCard(state.pool[state.idx]); }
+function startTraining(){ const sel=$('#lessonSelect'); state.selectedLessons.clear(); const picked=[]; for(const o of sel.selectedOptions){ state.selectedLessons.add(o.value); picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPool(); if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; } state.idx = (state.order==='seq') ? 0 : null; if(state.order==='seq') setCard(state.pool[state.idx]); else setCard(state.pool[Math.floor(Math.random()*state.pool.length)]);
+  try{ window.scrollTo({ top: 0, behavior: 'smooth' }); }catch(e){ window.scrollTo(0,0); }
+}
 
 function doReveal(){ $('#solBox').classList.remove('masked'); state.revealedAt=Date.now(); const ttr=state.revealedAt-(state.startedAt||state.revealedAt); if(ttr>0){ state.session.ttrSum+=ttr; state.session.ttrCount+=1; } renderSessionStats(); }
 
 function formatZh(hz,py){ const h=(hz||'').trim(); const p=(py||'').trim(); return p? `${h}<br><span class="py">${p}</span>` : (h||'—'); }
 function formatPinyinAndPos(py,pos){ const a=(py||'').trim(); const b=(pos||'').trim(); if(a&&b) return `<span class="py">${a}</span><br><span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; if(a) return `<span class="py">${a}</span>`; if(b) return `<span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; return ''; }
 
-// === TTS with proper canceling only once per sequence ===
-const START_DELAY_MS=180; const BETWEEN_DELAY_MS=250; let _ttsPrimed=false;
+// === TTS core (delays tuned) ===
+const START_DELAY_MS=150;   // priming delay
+const BETWEEN_DELAY_MS=800; // between word and sentence
+let _ttsPrimed=false;
 function ttsPrime(cb){ if(_ttsPrimed){ cb(); return; } setTimeout(()=>{ _ttsPrimed=true; cb(); }, START_DELAY_MS); }
-function ttsSpeak(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; u.rate=state.rate; u.pitch=state.pitch; const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { const L=(langKey==='zh')?'zh':'de'; const cand=(state.voices||[]).filter(v=>(v.lang||'').toLowerCase().startsWith(L)); u.voice=cand.find(v=>v.default)||cand[0]||null; } speechSynthesis.speak(u); }
 
-function playSequence(firstText, firstLangKey, secondText, secondLangKey){
-  ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){} // cancel ONCE before the whole sequence
-    ttsSpeak(firstText, firstLangKey);
-    setTimeout(()=>{ ttsSpeak(secondText, secondLangKey); }, BETWEEN_DELAY_MS);
-  });
-}
+function buildUtterance(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; u.rate=state.rate; u.pitch=state.pitch; const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { const L=(langKey==='zh')?'zh':'de'; const cand=(state.voices||[]).filter(v=>(v.lang||'').toLowerCase().startsWith(L)); u.voice=cand.find(v=>v.default)||cand[0]||null; } return u; }
+
+function ttsSpeak(text, langKey){ const u=buildUtterance(text, langKey); speechSynthesis.speak(u); return u; }
+
+function playSequence(firstText, firstLangKey, secondText, secondLangKey){ ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){}; ttsSpeak(firstText, firstLangKey); setTimeout(()=>{ ttsSpeak(secondText, secondLangKey); }, BETWEEN_DELAY_MS); }); }
 
 function playQuestion(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } else { playSequence(state.current.word.zh,'zh', state.current.sent.zh,'zh'); } }
 function playAnswer(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.zh,'zh', state.current.sent.zh,'zh'); } else { playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } }
 
+// === Autoplay ===
+function setAutoplay(on){ state.autoplay.on=on; if(!on){ try{ speechSynthesis.cancel(); }catch(e){} state.autoplay.timers.forEach(id=>clearTimeout(id)); state.autoplay.timers=[]; } updateAutoplayBtn(); }
+function updateAutoplayBtn(){ const b=$('#btnAutoplay'); if(!b) return; b.textContent = state.autoplay.on? 'Autoplay ■ Stop' : 'Autoplay ▶︎'; }
+
+function speakPair(word, sent, langKey, done){ if(!state.autoplay.on) return; // guard
+  // Wort
+  const u1 = buildUtterance(word, langKey);
+  u1.onend = ()=>{ if(!state.autoplay.on) return; const t=setTimeout(()=>{ if(!state.autoplay.on) return; const u2=buildUtterance(sent, langKey); u2.onend=()=>{ if(!state.autoplay.on) return; done && done(); }; speechSynthesis.speak(u2); }, BETWEEN_DELAY_MS); state.autoplay.timers.push(t); };
+  speechSynthesis.speak(u1);
+}
+
+function autoplayStep(){ if(!state.autoplay.on) return; if(!state.pool.length){ setAutoplay(false); alert('Bitte Lektion(en) wählen.'); return; }
+  if(!state.current){ if(state.order==='seq'){ state.idx=0; setCard(state.pool[state.idx]); } else { setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); } }
+  // Frage: Maske an, Frage sprechen (Wort->Satz)
+  $('#solBox').classList.add('masked');
+  const qLang = (state.mode==='de2zh')? 'de':'zh';
+  const aLang = (state.mode==='de2zh')? 'zh':'de';
+  ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){}; speakPair(state.current.word[qLang], state.current.sent[qLang], qLang, ()=>{
+    // Antwort: zeigen + sprechen
+    if(!state.autoplay.on) return; $('#solBox').classList.remove('masked'); speakPair(state.current.word[aLang], state.current.sent[aLang], aLang, ()=>{
+      if(!state.autoplay.on) return; const t=setTimeout(()=>{ if(!state.autoplay.on) return; // nächste Karte
+        if(state.order==='seq'){ if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); } else { setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); }
+        autoplayStep();
+      }, state.autoplay.gapMs); state.autoplay.timers.push(t);
+    });
+  }); });
+}
+
+function toggleAutoplay(){ if(!state.autoplay.on){ setAutoplay(true); autoplayStep(); } else { setAutoplay(false); } }
+
+function stopAutoplayOnUserAction(){ if(state.autoplay.on) setAutoplay(false); }
+
 function renderSessionStats(){ const s=state.session; const avg=s.ttrCount? (s.ttrSum/s.ttrCount/1000).toFixed(1) : '—'; const acc=s.done? Math.round(100*s.known/s.done)+'%' : '—'; $('#sessionStats').textContent=`Karten: ${s.done}/${s.total} · Korrekt: ${acc} · Ø Aufdeck‑Zeit: ${avg}s`; }
 
-// === Mode inline UI ===
-function renderModeUI(){ const tgt=$('#modeTarget'), src=$('#modeSource'); if(state.mode==='de2zh'){ tgt.textContent='🎯 Ziel: 🇨🇳 ZH'; src.textContent='Quelle: 🇩🇪 DE'; } else { tgt.textContent='🎯 Ziel: 🇩🇪 DE'; src.textContent='Quelle: 🇨🇳 ZH'; } }
+function renderModeUI(){ const left=$('#modeLeft'), right=$('#modeRight'); if(state.mode==='de2zh'){ left.textContent='🇩🇪 DE'; right.textContent='🇨🇳 ZH'; } else { left.textContent='🇨🇳 ZH'; right.textContent='🇩🇪 DE'; } $('#btnOrderToggle').textContent = 'Reihenfolge: ' + (state.order==='seq' ? 'Sequenziell' : 'Zufällig'); }
 
 window.addEventListener('DOMContentLoaded', ()=>{
   loadSettings(); loadProgress();
   $('#excelPath').value = state.settings.excelPath || EXCEL_URL;
-  state.mode = state.settings.mode || 'de2zh'; renderModeUI();
+  state.mode = state.settings.mode || 'de2zh';
+  state.order = state.settings.order || 'random';
+  state.autoplay.gapMs = typeof state.settings.autoplayGap==='number' ? state.settings.autoplayGap : 800;
+  renderModeUI(); updateAutoplayBtn();
+
+  // Set gap slider
+  const gapSec = (state.autoplay.gapMs/1000).toFixed(1); $('#gapRange').value = gapSec; $('#gapVal').textContent = `(${gapSec} s)`;
+
   $('#rateRange').value=String(state.settings.rate||0.95); state.rate=Number($('#rateRange').value); $('#rateVal').textContent=`(${state.rate.toFixed(2)})`;
   $('#pitchRange').value=String(state.settings.pitch||1.0); state.pitch=Number($('#pitchRange').value); $('#pitchVal').textContent=`(${state.pitch.toFixed(2)})`;
 
-  $('#btnReloadExcel').addEventListener('click', ()=> loadExcel());
+  $('#btnReloadExcel').addEventListener('click', ()=> { stopAutoplayOnUserAction(); loadExcel(); });
   loadExcel();
 
-  // Swap mode button
-  $('#btnSwapMode').addEventListener('click', ()=>{ state.mode = (state.mode==='de2zh')? 'zh2de':'de2zh'; state.settings.mode=state.mode; saveSettings(); renderModeUI(); if(state.current) setCard(state.current); });
+  // Swap mode / order / autoplay
+  $('#btnSwapMode').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); state.mode = (state.mode==='de2zh')? 'zh2de':'de2zh'; state.settings.mode=state.mode; saveSettings(); renderModeUI(); if(state.current) setCard(state.current); });
+  $('#btnOrderToggle').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); state.order = (state.order==='random')? 'seq':'random'; state.settings.order=state.order; saveSettings(); renderModeUI(); });
+  $('#btnAutoplay').addEventListener('click', toggleAutoplay);
 
-  $('#rateRange').addEventListener('input', e=>{ state.rate=parseFloat(e.target.value); state.settings.rate=state.rate; $('#rateVal').textContent=`(${state.rate.toFixed(2)})`; saveSettings(); });
-  $('#pitchRange').addEventListener('input', e=>{ state.pitch=parseFloat(e.target.value); state.settings.pitch=state.pitch; $('#pitchVal').textContent=`(${state.pitch.toFixed(2)})`; saveSettings(); });
+  // Gap slider
+  $('#gapRange').addEventListener('input', e=>{ const s=parseFloat(e.target.value)||0.8; state.autoplay.gapMs=Math.round(s*1000); state.settings.autoplayGap=state.autoplay.gapMs; $('#gapVal').textContent = `(${s.toFixed(1)} s)`; saveSettings(); });
+
+  // Rate & pitch
+  $('#rateRange').addEventListener('input', e=>{ stopAutoplayOnUserAction(); state.rate=parseFloat(e.target.value); state.settings.rate=state.rate; $('#rateVal').textContent=`(${state.rate.toFixed(2)})`; saveSettings(); });
+  $('#pitchRange').addEventListener('input', e=>{ stopAutoplayOnUserAction(); state.pitch=parseFloat(e.target.value); state.settings.pitch=state.pitch; $('#pitchVal').textContent=`(${state.pitch.toFixed(2)})`; saveSettings(); });
 
   // Stimmenpanel
-  $('#btnVoices')?.addEventListener('click', openVoicesPanel);
+  $('#btnVoices')?.addEventListener('click', ()=>{ stopAutoplayOnUserAction(); openVoicesPanel(); });
   $('#btnCloseVoices')?.addEventListener('click', ()=> $('#voicePanel').classList.add('hidden'));
   $('#dbgZhOnly')?.addEventListener('change', ()=> updateVoiceList());
 
-  // Voices laden + Event abonnieren
+  // Voices laden
   refreshVoices(); if('speechSynthesis' in window && typeof speechSynthesis.onvoiceschanged!=='undefined'){ speechSynthesis.onvoiceschanged=()=>{ refreshVoices(); }; }
 
-  // Flow
-  $('#btnStart').addEventListener('click', startTraining);
-  $('#btnNext').addEventListener('click', nextCard);
-  $('#btnPrev').addEventListener('click', prevCard);
-  $('#btnReveal').addEventListener('click', doReveal);
-  $('#btnPlayQ').addEventListener('click', playQuestion);
-  $('#btnPlayA').addEventListener('click', playAnswer);
+  // Flow (stop autoplay on manual actions)
+  $('#btnStart').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); startTraining(); });
+  $('#btnNext').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); nextCard(); });
+  $('#btnPrev').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); prevCard(); });
+  $('#btnReveal').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); doReveal(); });
+  $('#btnPlayQ').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); playQuestion(); });
+  $('#btnPlayA').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); playAnswer(); });
 
   // Export/Import
   $('#btnExport').addEventListener('click', ()=>{ const blob=new Blob([JSON.stringify(state.progress,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='progress.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); });
-  $('#fileImport').addEventListener('change', e=>{ const f=e.target.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const p=JSON.parse(r.result); if(p && p.version==='v1'){ state.progress=p; saveProgressDebounced(); populateLessonSelect(); alert('Fortschritt importiert.'); } else alert('Ungültiges Format.'); }catch(err){ alert('Import fehlgeschlagen: '+err.message); } }; r.readAsText(f); e.target.value=''; });
+  $('#fileImport').addEventListener('change', e=>{ stopAutoplayOnUserAction(); const f=e.target.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const p=JSON.parse(r.result); if(p && p.version==='v1'){ state.progress=p; saveProgressDebounced(); populateLessonSelect(); alert('Fortschritt importiert.'); } else alert('Ungültiges Format.'); }catch(err){ alert('Import fehlgeschlagen: '+err.message); } }; r.readAsText(f); e.target.value=''; });
 });

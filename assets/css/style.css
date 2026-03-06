@@ -1,4 +1,4 @@
-/* v5.5 Browser-optimiert + Fixes */
+/* r4 styles building on r3 */
 :root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --border:#283344; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
@@ -47,10 +47,12 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .name{font-weight:700}
 .import-btn{display:inline-flex;align-items:center;gap:6px}
 
-/* Mode inline row */
+/* Inline rows */
 .mode-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 10px;font-weight:600}
+.actions-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 10px;font-weight:700}
 .btn.swap{font-weight:800;padding:6px 10px}
+.gap-row input[type=range]{width:100%}
 
 @media(max-width:460px){ header h1{font-size:20px} .subtitle{font-size:12px} }
 @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
