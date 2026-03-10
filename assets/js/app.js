@@ -1,8 +1,7 @@
-/* Updated app.js: Dynamic sheet loading from all available L* sheets, names from A2 (cut first 2 chars) */
+/* Updated app.js: Dynamic loading of ALL sheets from sheet 2 onward (skip only master), names from A2 (cut first 2 chars) */
 
-// Constants (adapted from original)
+// Constants (updated: no SHEET_NAME_PATTERN)
 const EXCEL_URL = './data/Long-Chinesisch_Lektionen.xlsx';
-const SHEET_NAME_PATTERN = /^L/i; // Flexible: any starting with L
 const DATA_START_ROW = 3; // Row 3+ for data
 const LS_KEYS = { settings: 'fc_settings_v1', progress: 'fc_progress_v1' };
 
@@ -151,10 +150,10 @@ class Card {
   }
 }
 
-// Data loading - Updated for dynamic sheets and A2 names
+// Data loading - Updated: All sheets from index 1 (sheet 2+) dynamically, no name filter
 async function loadData() {
   try {
-    console.log('Starting loadData...');
+    console.log('Starting loadData... All sheets from 2+ will be processed.');
     const statusEl = $('#status') || document.getElementById('status') || els.lessonSelect; // Fallback
     statusEl.textContent = 'Lade Excel-Daten...';
 
@@ -167,25 +166,20 @@ async function loadData() {
     const sheetNames = wb.SheetNames;
     console.log('Available sheets:', sheetNames);
 
-    if (sheetNames.length < 2) throw new Error('Zu wenige Sheets.');
+    if (sheetNames.length < 2) throw new Error('Zu wenige Sheets (erwarte mind. 2: Master + Lektionen).');
 
     state.lessons.clear();
     let lessonIndex = 0;
     let totalCards = 0;
 
-    // Collect all matching sheets dynamically (skip master, match L*)
-    const matchingSheets = sheetNames
-      .filter(name => name !== 'Long - Master' && SHEET_NAME_PATTERN.test(name))
-      .map(name => ({ name, num: parseInt(name.match(/\d+/)?.[0] || '0', 10) })) // Extract num for sorting
-      .sort((a, b) => a.num - b.num); // Sort numerically (L00, L01, ..., L10, L16)
+    // Process ALL sheets starting from index 1 (sheet 2+), in workbook order
+    for (let i = 1; i < sheetNames.length; i++) {
+      const sheetName = sheetNames[i];
+      console.log(`Processing sheet ${i} ("${sheetName}") as lesson ${lessonIndex}...`);
 
-    console.log('Matching sheets:', matchingSheets.map(s => s.name));
-
-    for (const { name: sheetName } of matchingSheets) {
-      console.log(`Processing sheet: "${sheetName}"`);
       const sh = wb.Sheets[sheetName];
       if (!sh || !sh['!ref']) {
-        console.warn(`Skipping empty sheet: ${sheetName}`);
+        console.warn(`Skipping empty/missing sheet: ${sheetName}`);
         continue;
       }
 
@@ -194,7 +188,7 @@ async function loadData() {
       console.log(`Sheet "${sheetName}" has ${rows.length} rows (after blank skip)`);
 
       if (rows.length < DATA_START_ROW) { // Need at least up to row 2 (index 1)
-        console.warn(`Sheet too short: ${sheetName}`);
+        console.warn(`Sheet too short (< ${DATA_START_ROW} rows): ${sheetName}`);
         continue;
       }
 
@@ -203,9 +197,11 @@ async function loadData() {
       console.log(`A2 full: "${fullName}" (from col A)`);
       let lessonName = fullName.length >= 2 ? fullName.substring(2).trim() : '';
       if (!lessonName) {
-        // Fallback to sheet-derived
-        const num = parseInt(sheetName.match(/\d+/)?.[0] || lessonIndex, 10);
-        lessonName = `${String(num).padStart(2, '0')} - Unnamed`;
+        // Fallback to sheet name
+        lessonName = sheetName.trim();
+      }
+      if (!lessonName) {
+        lessonName = `Unnamed Lesson ${lessonIndex}`;
       }
       console.log(`Derived name: "${lessonName}"`);
 
@@ -245,12 +241,12 @@ async function loadData() {
         }
         lessonIndex++;
       } else {
-        console.warn(`No valid cards in: ${sheetName}`);
+        console.warn(`No valid cards in: ${sheetName} - skipping.`);
       }
     }
 
     if (state.lessons.size === 0) {
-      throw new Error('Keine Lektionen gefunden. Überprüfe Sheet-Namen (L*), A2 und Daten in Spalten B-H ab Zeile 3.');
+      throw new Error('Keine Lektionen gefunden. Überprüfe Sheets ab 2, A2-Werte und Daten in Spalten B-H ab Zeile 3.');
     }
 
     console.log(`Loaded ${state.lessons.size} lessons, ${totalCards} cards`);
@@ -271,7 +267,7 @@ async function loadData() {
   }
 }
 
-// Dynamic lesson select (new, clears and rebuilds)
+// Dynamic lesson select (unchanged)
 function updateLessonSelect() {
   console.log('Updating lesson select...');
   if (!els.lessonSelect) return;
@@ -305,10 +301,7 @@ function updateLessonSelect() {
   });
 }
 
-// Rest of original code: startTraining, showCard, TTS speak, event listeners, etc.
-// (Include all from original app.js after parseExcelBuffer, adapting state.lessons.get(index).cards for pool building, etc.)
-// For brevity, assume you paste the remaining original code here (from after the truncated for loop: card creation, pool build, UI updates, training functions, init).
-// Example adaptation for buildPool (inferred):
+// Example adaptation for buildCardPool (inferred; merge with original if different)
 function buildCardPool() {
   state.pool = [];
   state.selectedLessons.forEach(idx => {
@@ -325,6 +318,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadData();
   // Add original event listeners: mode change, start btn, etc.
   // e.g., $('#start-btn').addEventListener('click', startTraining);
+  // Paste your original's remaining code here (TTS speak, showCard, nextCard, rateCard, export, etc.)
+  // Adapt any references to lessons: use state.lessons.get(idx).cards, state.selectedLessons (Set), etc.
 });
 
-// For GitHub Pages absolute path, change EXCEL_URL to '/Chinesisch-Lektionen/data/Long-Chinesisch_Lektionen.xlsx' if needed.
+// For GitHub Pages, change EXCEL_URL to absolute if relative fails: '/Chinesisch-Lektionen/data/Long-Chinesisch_Lektionen.xlsx'
