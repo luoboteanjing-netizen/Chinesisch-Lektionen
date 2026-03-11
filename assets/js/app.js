@@ -40,38 +40,7 @@ function updateVoiceList(){ const box=$('#dbgVoices'); if(!box) return; box.inne
   });
 }
 
-
-function refreshVoices(){
-  let voices = window.speechSynthesis?.getVoices?.() || [];
-
-  // Remove duplicates (common on Android/Chrome)
-  const seen = new Set();
-  const cleaned = [];
-
-  voices.forEach(v=>{
-    const key = v.voiceURI || v.name;
-    if(!seen.has(key)){
-      seen.add(key);
-      cleaned.push(v);
-    }
-  });
-
-  state.voices = cleaned;
-
-  // restore saved voices
-  if(state.settings.browserVoiceZh){
-    const vz = cleaned.find(x => x.name===state.settings.browserVoiceZh || x.voiceURI===state.settings.browserVoiceZh);
-    if(vz) state.browserVoice.zh = vz;
-  }
-
-  if(state.settings.browserVoiceDe){
-    const vd = cleaned.find(x => x.name===state.settings.browserVoiceDe || x.voiceURI===state.settings.browserVoiceDe);
-    if(vd) state.browserVoice.de = vd;
-  }
-
-  updateVoiceList();
-}
-
+function refreshVoices(){ state.voices = window.speechSynthesis?.getVoices?.() || []; if(state.settings.browserVoiceZh){ const vz=state.voices.find(x=>x.name===state.settings.browserVoiceZh||x.voiceURI===state.settings.browserVoiceZh); if(vz) state.browserVoice.zh=vz; } if(state.settings.browserVoiceDe){ const vd=state.voices.find(x=>x.name===state.settings.browserVoiceDe||x.voiceURI===state.settings.browserVoiceDe); if(vd) state.browserVoice.de=vd; } updateVoiceList(); }
 
 let _voicesRetryT; function openVoicesPanelFor(target){ state.voicePanelTarget=target; refreshVoices(); if(!state.voices || state.voices.length===0){ clearTimeout(_voicesRetryT); let tries=0; const tick=()=>{ tries++; refreshVoices(); if(state.voices.length>0 || tries>=8) return; _voicesRetryT=setTimeout(tick,300); }; _voicesRetryT=setTimeout(tick,300); } $('#voicePanel').classList.remove('hidden'); }
 function closeVoices(){ $('#voicePanel').classList.add('hidden'); }
@@ -120,22 +89,69 @@ function formatZh(hz,py){ const h=(hz||'').trim(); const p=(py||'').trim(); retu
 function formatPinyinAndPos(py,pos){ const a=(py||'').trim(); const b=(pos||'').trim(); if(a&&b) return `<span class="py">${a}</span><br><span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; if(a) return `<span class="py">${a}</span>`; if(b) return `<span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; return ''; }
 
 const START_DELAY_MS=150; const BETWEEN_DELAY_MS=800; let _ttsPrimed=false; function ttsPrime(cb){ if(_ttsPrimed){ cb(); return; } setTimeout(()=>{ _ttsPrimed=true; cb(); }, START_DELAY_MS); }
-function buildUtterance(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; if(langKey==='zh'){ u.rate=state.rateZh; u.pitch=state.pitchZh; } else { u.rate=state.rateDe; u.pitch=state.pitchDe; } const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { 
-const cand=(state.voices||[]).filter(v=>{
-  if(langKey==='zh') return isZhVoice(v);
-  return isDeVoice(v);
-});
+function buildUtterance(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; if(langKey==='zh'){ u.rate=state.rateZh; u.pitch=state.pitchZh; } else { u.rate=state.rateDe; u.pitch=state.pitchDe; } const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { const L=(langKey==='zh')?'zh':'de'; const cand=(state.voices||[]).filter(v=>(v.lang||'').toLowerCase().startsWith(L)); u.voice=cand.find(v=>v.default)||cand[0]||null; } return u; }
 
-u.voice =
-  cand.find(v=>v.default) ||
-  cand.find(v=>(v.name||'').toLowerCase().includes('google')) ||
-  cand[0] ||
-  null;
- } return u; }
+/* --- Native Mandarin Voice Pack (optional cloud TTS with cache + fallback) --- */
+
+const VOICE_PACK = {
+  female1: "zh-CN-XiaoxiaoNeural",
+  female2: "zh-CN-XiaochenNeural",
+  male1: "zh-CN-YunxiNeural",
+  male2: "zh-CN-YunyangNeural"
+};
+
+// Set later if you use a proxy server
+const NATIVE_TTS_ENDPOINT = "";
+
+let nativeVoiceChoice = "female1";
+
+const nativeAudioCache = new Map();
+
+async function nativeMandarinSpeak(text){
+  if(!text) return;
+
+  if(!NATIVE_TTS_ENDPOINT){
+    const u = buildUtterance(text,'zh');
+    speechSynthesis.speak(u);
+    return;
+  }
+
+  const cacheKey = nativeVoiceChoice + "|" + text;
+
+  if(nativeAudioCache.has(cacheKey)){
+    const audio = new Audio(nativeAudioCache.get(cacheKey));
+    audio.play();
+    return;
+  }
+
+  try{
+    const res = await fetch(NATIVE_TTS_ENDPOINT,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json"},
+      body: JSON.stringify({
+        text:text,
+        voice: VOICE_PACK[nativeVoiceChoice]
+      })
+    });
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    nativeAudioCache.set(cacheKey,url);
+
+    const audio = new Audio(url);
+    audio.play();
+
+  }catch(e){
+    const u = buildUtterance(text,'zh');
+    speechSynthesis.speak(u);
+  }
+}
+
 function ttsSpeak(text, langKey){ const u=buildUtterance(text, langKey); speechSynthesis.speak(u); return u; }
 function playSequence(firstText, firstLangKey, secondText, secondLangKey){ ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){}; ttsSpeak(firstText, firstLangKey); setTimeout(()=>{ ttsSpeak(secondText, secondLangKey); }, BETWEEN_DELAY_MS); }); }
-function playQuestion(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } else { playSequence(state.current.word.zh,'zh', state.current.sent.zh,'zh'); } }
-function playAnswer(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.zh,'zh', state.current.sent.zh,'zh'); } else { playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } }
+function playQuestion(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } else { nativeMandarinSpeak(state.current.word.zh); setTimeout(()=>nativeMandarinSpeak(state.current.sent.zh),700); } }
+function playAnswer(){ if(!state.current) return; if(state.mode==='de2zh'){ nativeMandarinSpeak(state.current.word.zh); setTimeout(()=>nativeMandarinSpeak(state.current.sent.zh),700); } else { playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } }
 
 function setAutoplay(on){ state.autoplay.on=on; if(!on){ try{ speechSynthesis.cancel(); }catch(e){} state.autoplay.timers.forEach(id=>clearTimeout(id)); state.autoplay.timers=[]; releaseWakeLock(); } updateAutoplayBtn(); }
 function updateAutoplayBtn(){ const b=$('#btnAutoplay'); if(!b) return; b.textContent = state.autoplay.on? 'Autoplay ■ Stop' : 'Autoplay ▶︎'; }
