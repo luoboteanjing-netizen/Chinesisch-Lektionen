@@ -1,4 +1,5 @@
-/* r15.2.5 styles (Umschaltbtn größer,schriftgrößen angepasst, Abstände, Farbe) */
+/* r15.2.6 styles (Umschaltbtn größer, breiter,schriftgrößen angepasst, Abstände, Farbe) */
+/* r15 styles (same as r14) */
 :root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --border:#283344; --good:#7bd88f; --bad:#f7768e; --unsure:#ffbd6b; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
@@ -13,12 +14,14 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px;} /* Zusätzlicher Abstand für den Start-Button (z.B. "Training starten") */
 .btn.ghost{background:transparent}
 
-/* NEU: Größerer Swap/Direction-Button (für Umschalten der Richtung) */
+/* Breitere Swap/Direction-Button (für Umschalten der Richtung) */
 .btn.swap {
   font-weight: 700; /* Etwas leichter als 800, für Balance */
-  padding: 10px 16px; /* Geändert: Größerer Button (von 6px 10px) */
-  font-size: 16px; /* Geändert: Größere Schrift für den Button-Text */
+  padding: 10px 20px; /* Geändert: Noch breiter (von 10px 16px) – nutzt verfügbaren Platz */
+  font-size: 16px; /* Größere Schrift für den Button-Text */
   border-radius: 12px; /* Etwas abgerundeter für modernen Look */
+  min-width: 100px; /* NEU: Minimale Breite, damit er sich ausdehnt */
+  flex: 1 1 auto; /* NEU: Teilt Platz mit den Nachbarn */
 }
 
 /* Speziell für das Icon/Zeichen im Swap-Button (z.B. Pfeil-Symbol) */
@@ -26,14 +29,13 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .btn.swap i,
 .btn.swap svg,
 .btn.swap [class*="icon"] { /* Deckt Text-Icons, <i>-Tags, SVG ab */
-  font-size: 18px; /* Geändert: Größeres Symbol (von Default) */
+  font-size: 18px; /* Größeres Symbol (von Default) */
   line-height: 1.2; /* Bessere Zentrierung */
   transform: scale(1.1); /* Optional: Leichtes Skalieren für mehr Präsenz */
   display: inline-block;
   margin-right: 4px; /* Kleiner Abstand zum Text, falls vorhanden */
 }
 
-.btn.ghost{background:transparent}
 .card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
 .lbl{display:block;margin-bottom:6px;color:var(--muted)}
 .hint{color:var(--muted);font-size:12px}
@@ -67,9 +69,10 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:700}
 
-.mode-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.actions-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 10px;font-weight:700}
+.mode-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* NEU: Mehr Gap und space-around, um Platz zwischen den 3 Elementen (Sprach-Feldern + Swap) zu nutzen */
+.actions-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* NEU: Gleiches für actions-inline, falls dort die Row ist */
+.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto;} /* NEU: Breitere Sprach-Felder (ohne Funktion), teilen Platz */
+.btn.swap{font-weight:800;padding:6px 10px}
 .gap-row input[type=range]{width:100%}
 
 .two-col{display:flex; flex-wrap:wrap; gap:10px}
@@ -168,7 +171,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 /* Responsive Anpassung: Auf Mobile etwas kleiner für alle genannten Elemente */
-/* NEU: Responsive für Swap/Direction-Button auf Mobile */
 @media (max-width: 480px) {
   /* Kleinerer Abstand für "Training starten" auf Mobile */
   .top-actions {
@@ -179,9 +181,21 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
   }
   
-  /* Swap-Button auf Mobile: Etwas kleiner, aber immer noch berührbar */
+  /* NEU: Responsive für breitere Language/Swap-Elemente auf Mobile */
+  .mode-inline,
+  .actions-inline {
+    gap: 8px; /* Kleinerer Gap auf Mobile */
+    justify-content: space-between; /* Passt sich an, falls wrappt */
+  }
+  
+  .mode-item {
+    padding: 6px 12px; /* Etwas kompakter, aber immer noch breiter */
+    min-width: 70px; /* Reduziert, um in enger Row zu passen */
+  }
+  
   .btn.swap {
-    padding: 8px 12px; /* Geändert: Etwas kompakter auf Mobile */
+    padding: 8px 16px; /* Kompakter auf Mobile, aber breiter als Default */
+    min-width: 90px;
     font-size: 14px;
   }
   
