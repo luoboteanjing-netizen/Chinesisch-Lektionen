@@ -1,5 +1,4 @@
 /* r15.2.6 styles (Umschaltbtn größer, breiter,schriftgrößen angepasst, Abstände, Farbe) */
-/* r15 styles (same as r14) */
 :root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --border:#283344; --good:#7bd88f; --bad:#f7768e; --unsure:#ffbd6b; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
@@ -29,15 +28,16 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .btn.swap i,
 .btn.swap svg,
 .btn.swap [class*="icon"] { /* Deckt Text-Icons, <i>-Tags, SVG ab */
-  font-size: 20px; /* Geändert: Noch größer (von 18px) für bessere Sichtbarkeit */
+  font-size: 20px; /* Noch größer (von 18px) für bessere Sichtbarkeit */
   line-height: 1.2; /* Bessere Zentrierung */
-  transform: scale(1.2); /* Geändert: Stärkeres Skalieren für mehr Präsenz (von 1.1) */
+  transform: scale(1.2); /* Stärkeres Skalieren für mehr Präsenz (von 1.1) */
   display: inline-block;
   margin-right: 4px; /* Kleiner Abstand zum Text, falls vorhanden */
 }
 
 .card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
 .lbl{display:block;margin-bottom:6px;color:var(--muted)}
+
 .hint{color:var(--muted);font-size:12px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .pane{border:1px solid var(--border);border-radius:10px;padding:12px}
@@ -69,9 +69,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:700}
 
-.mode-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* Mehr Gap und space-around, um Platz zwischen den 3 Elementen zu nutzen */
-.actions-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* Gleiches für actions-inline, falls dort die Row ist */
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* NEU: Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
+.mode-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Geändert: Center für perfekte Ausrichtung unter dem Label */
+.actions-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline, falls dort die Row ist */
+.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:800;padding:6px 10px}
 .gap-row input[type=range]{width:100%}
 
@@ -87,6 +87,22 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 @media(max-width:460px){ header h1{font-size:20px} .subtitle{font-size:12px} }
 @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+/* NEU: Zentrierung für das "Richtung"-Label (über den Sprachfeldern und Swap-Button) */
+.lbl.direction-label, /* Falls es eine spezifische Klasse hat; andernfalls global für Labels vor .mode-inline */
+.mode-inline ~ .lbl,
+.actions-inline ~ .lbl,
+.lbl:has(+ .mode-inline) { /* Zielt auf Labels ab, die vor oder nach der Row stehen */
+  text-align: center; /* Zentriert den Text (z.B. "Richtung") */
+  margin-bottom: 8px; /* Etwas mehr Abstand zur Row darunter für Ausrichtung */
+  font-size: 14px; /* Einheitlich mit anderen Labels */
+  color: var(--muted);
+}
+
+/* Fallback: Globale Anpassung für .lbl, falls spezifische Selektoren nicht greifen (kann bei Bedarf entfernt werden) */
+.lbl {
+  text-align: center; /* Überschreibt für "Richtung"-Kontext; andere Labels bleiben linksbündig durch höhere Spezifität */
+}
 
 /* NEUE REGELN: Anpassung der Schriftgröße für ZH Tempo (Rate) und ZH Tonhöhe (Pitch) */
 #rateZhRange, #pitchZhRange {
@@ -112,6 +128,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* Kleinerer Abstand der Labels zu den Sliders (ZH und DE) */
 .voice-config .lbl { /* Überschreibt den globalen .lbl-Margin */
   margin-bottom: 2px; /* Stark reduziert: Labels sehr nah an den Sliders darunter */
+  text-align: left; /* Andere Labels (z.B. in Voice-Config) bleiben linksbündig */
 }
 
 #rateZhVal, #pitchZhVal { /* Werte-Anzeigen nah am Slider */
@@ -181,11 +198,28 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
   }
   
+  /* NEU: Zentrierung und Abstand für "Richtung"-Label auf Mobile */
+  .lbl.direction-label,
+  .mode-inline ~ .lbl,
+  .actions-inline ~ .lbl,
+  .lbl:has(+ .mode-inline) {
+    margin-bottom: 6px; /* Kleinerer Abstand auf Mobile */
+    text-align: center; /* Zentrierung bleibt */
+  }
+  
+  .lbl {
+    text-align: center; /* Fallback auf Mobile */
+  }
+  
+  .voice-config .lbl {
+    text-align: left; /* Voice-Labels bleiben linksbündig */
+  }
+  
   /* Responsive für breitere Language/Swap-Elemente auf Mobile */
   .mode-inline,
   .actions-inline {
     gap: 8px; /* Kleinerer Gap auf Mobile */
-    justify-content: space-between; /* Passt sich an, falls wrappt */
+    justify-content: center; /* Center für Ausrichtung unter dem Label */
   }
   
   .mode-item {
@@ -203,7 +237,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     font-size: 14px;
   }
   
-  /* NEU: Icon auf Mobile etwas kleiner, um nicht zu dominant zu sein */
+  /* Icon auf Mobile etwas kleiner, um nicht zu dominant zu sein */
   .btn.swap::before,
   .btn.swap i,
   .btn.swap svg,
