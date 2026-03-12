@@ -17,21 +17,21 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* Breitere Swap/Direction-Button (für Umschalten der Richtung) */
 .btn.swap {
   font-weight: 700; /* Etwas leichter als 800, für Balance */
-  padding: 10px 20px; /* Geändert: Noch breiter (von 10px 16px) – nutzt verfügbaren Platz */
+  padding: 10px 20px; /* Noch breiter – nutzt verfügbaren Platz */
   font-size: 16px; /* Größere Schrift für den Button-Text */
   border-radius: 12px; /* Etwas abgerundeter für modernen Look */
-  min-width: 100px; /* NEU: Minimale Breite, damit er sich ausdehnt */
-  flex: 1 1 auto; /* NEU: Teilt Platz mit den Nachbarn */
+  min-width: 100px; /* Minimale Breite, damit er sich ausdehnt */
+  flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
 }
 
-/* Speziell für das Icon/Zeichen im Swap-Button (z.B. Pfeil-Symbol) */
+/* Speziell für das Icon/Zeichen im Swap-Button (z.B. Pfeil-Symbol) – größer gemacht */
 .btn.swap::before,
 .btn.swap i,
 .btn.swap svg,
 .btn.swap [class*="icon"] { /* Deckt Text-Icons, <i>-Tags, SVG ab */
-  font-size: 18px; /* Größeres Symbol (von Default) */
+  font-size: 20px; /* Geändert: Noch größer (von 18px) für bessere Sichtbarkeit */
   line-height: 1.2; /* Bessere Zentrierung */
-  transform: scale(1.1); /* Optional: Leichtes Skalieren für mehr Präsenz */
+  transform: scale(1.2); /* Geändert: Stärkeres Skalieren für mehr Präsenz (von 1.1) */
   display: inline-block;
   margin-right: 4px; /* Kleiner Abstand zum Text, falls vorhanden */
 }
@@ -69,9 +69,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:700}
 
-.mode-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* NEU: Mehr Gap und space-around, um Platz zwischen den 3 Elementen (Sprach-Feldern + Swap) zu nutzen */
-.actions-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* NEU: Gleiches für actions-inline, falls dort die Row ist */
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto;} /* NEU: Breitere Sprach-Felder (ohne Funktion), teilen Platz */
+.mode-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* Mehr Gap und space-around, um Platz zwischen den 3 Elementen zu nutzen */
+.actions-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: space-around;} /* Gleiches für actions-inline, falls dort die Row ist */
+.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* NEU: Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:800;padding:6px 10px}
 .gap-row input[type=range]{width:100%}
 
@@ -181,7 +181,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
   }
   
-  /* NEU: Responsive für breitere Language/Swap-Elemente auf Mobile */
+  /* Responsive für breitere Language/Swap-Elemente auf Mobile */
   .mode-inline,
   .actions-inline {
     gap: 8px; /* Kleinerer Gap auf Mobile */
@@ -191,6 +191,10 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   .mode-item {
     padding: 6px 12px; /* Etwas kompakter, aber immer noch breiter */
     min-width: 70px; /* Reduziert, um in enger Row zu passen */
+    display: flex; /* Bleibt flex für Zentrierung */
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* Zentrierung bleibt auf Mobile */
   }
   
   .btn.swap {
@@ -199,12 +203,13 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     font-size: 14px;
   }
   
+  /* NEU: Icon auf Mobile etwas kleiner, um nicht zu dominant zu sein */
   .btn.swap::before,
   .btn.swap i,
   .btn.swap svg,
   .btn.swap [class*="icon"] {
-    font-size: 16px; /* Kleineres Icon auf Mobile */
-    transform: scale(1.0); /* Kein extra Scale, um Platz zu sparen */
+    font-size: 18px; /* Reduziert auf Mobile (von 20px) */
+    transform: scale(1.1); /* Leichter Scale (von 1.2) */
   }
   
   .voice-btn,
