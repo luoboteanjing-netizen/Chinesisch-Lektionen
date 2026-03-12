@@ -5,53 +5,75 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .container{max-width:1100px;margin:24px auto;padding:0 12px}
 header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .subtitle{margin:0 0 8px 0;color:var(--muted);font-size:14px}
-.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px; margin-top:16px;} /* Größerer Abstand nach oben für "Training starten"-Bereich */
+.top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px; margin-top:16px;} /* Etwas mehr Gap (10px) für bessere Gruppierung (Training + Autoplay) */
+/* NEU: Kinder der Row flexibel machen, um Wrap zu vermeiden (schrumpfen proportional) */
+.top-actions > * {
+  flex-shrink: 1; /* Ermöglicht Schrumpfen bei Text-Änderungen, statt Wrap */
+}
 .small-label{font-size:12px;margin-right:2px}
-.btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:10px;cursor:pointer}
+.btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:10px;cursor:pointer; flex-shrink: 1;} /* Global: Buttons schrumpfen leicht bei Bedarf */
 .btn.small{padding:6px 10px;font-size:12px}
 .btn.large{padding:10px 16px;font-size:14px;font-weight:600}
-.btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px;} /* Zusätzlicher Abstand für den Start-Button (z.B. "Training starten") */
+.btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px; flex: 0 1 auto; white-space: nowrap; transition: all 0.2s ease; max-width: none;} /* Training-Button: Kompakter, verhindert Text-Umbruch bei "Stop" – Übergang für Smoothness */
 .btn.ghost{background:transparent}
 
-/* Breitere und höhere Swap/Direction-Button (integriert "Richtung" + Icon-Stack) */
+/* FIX: Speziell für Training-Button – kompakte Breite (nicht 100% oder flex:1), unabhängig von Parent */
+#btnStart {
+  width: auto !important; /* FIX: Nur Inhaltsbreite (Text + Padding) */
+  flex: none !important; /* Kein Grow/Shrink über Inhalt */
+  display: inline-block !important; /* Inline, um in Row zu passen */
+  max-width: none !important; /* Entfernt Breitenbeschränkungen */
+  min-width: 120px; /* Minimale Breite für "Training stoppen ■" */
+}
+
+/* NEU: Gruppe für Training + Autoplay (unter Sliders) – Flex-Row für nebeneinander */
+.training-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center; /* Zentriert die Gruppe */
+  margin-top: 12px; /* Abstand zu Sliders oben */
+  flex-wrap: nowrap; /* NEU: Immer single-line auf Desktop (kein Wrap für die beiden Buttons) */
+}
+
+/* NEU: Autoplay als Primary (wenn Klasse hinzugefügt): Farblich identisch zum Training-Button */
+#btnAutoplay.primary {
+  background: #7aa2f7 !important;
+  border-color: #7aa2f7 !important;
+  color: #081018 !important;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all 0.2s ease; /* Smooth bei Text-Wechsel (z.B. "Stop") */
+  flex: 0 1 auto; /* Kompakt, dynamisch */
+  width: auto !important; /* FIX: Gleiche kompakte Breite wie Training */
+  display: inline-block !important;
+  max-width: none !important;
+}
+
+/* Dynamisch breiterer Autoplay-Button (ca. 15% breiter als Standard, aber flexibel – passt sich an Nachbarn an) */
+#btnAutoplay {
+  min-width: 110px; /* NEU: Etwas schmaler (110px statt 130px), damit + Training immer in einer Zeile passt (~230px Gesamt) */
+  padding: 8px 16px; /* Etwas mehr horizontaler Innenabstand, aber flexibel */
+  flex: 0 1 auto; /* Grow:0 (wächst nicht über Basis), Shrink:1 (schrumpft bei Engpass), Basis:auto (passt zu Inhalt) – verhindert Wrap */
+  white-space: nowrap; /* Verhindert Text-Umbruch (z.B. "Autoplay ▶︎" oder "Autoplay ■ Stop") */
+  font-weight: 600; /* Leicht bolder für Prominenz (wird zu 700 bei .primary) */
+}
+
+/* Breitere und höhere Swap/Direction-Button (mit "< Richtung >" als zentriertem Text, kein Icon) */
 .btn.swap {
-  font-weight: 700; /* Etwas leichter als 800, für Balance */
-  padding: 12px 20px; /* Geändert: Höheres Padding (top/bottom mehr für Stack, spart externen Platz) */
-  font-size: 16px; /* Größere Schrift für den Button-Text (falls nötig) */
+  font-weight: 700; /* Bold für den Text */
+  padding: 12px 20px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
+  font-size: 14px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
   border-radius: 12px; /* Etwas abgerundeter für modernen Look */
   min-width: 100px; /* Minimale Breite, damit er sich ausdehnt */
-  min-height: 60px; /* NEU: Höher für den internen Stack (Richtung + Icon) */
+  min-height: 40px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
   flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
-  display: flex; /* NEU: Flexbox für vertikalen Stack */
-  flex-direction: column; /* NEU: Vertikal stapeln */
-  align-items: center; /* Zentriert horizontal */
-  justify-content: center; /* Zentriert vertikal */
-  gap: 4px; /* NEU: Kleiner Abstand zwischen "Richtung" und Icon */
-  text-align: center; /* Zentriert Text im Button */
-}
-
-/* Styling für das integrierte "Richtung"-Label (oben im Button) */
-.btn.swap .swap-label {
-  font-size: 12px; /* NEU: Kleiner, dezenter (muted-Farbe) */
-  color: var(--muted); /* Hellgrau, wie Labels */
-  font-weight: 600; /* Leicht fett für Überschrift-Feeling */
-  margin: 0; /* Kein extra Margin */
-  line-height: 1.1; /* Kompakt */
-}
-
-/* Styling für das Icon/Zeichen (darunter im Button) – größer gemacht */
-.btn.swap .swap-icon,
-.btn.swap::before,
-.btn.swap i,
-.btn.swap svg,
-.btn.swap [class*="icon"] { /* Deckt Childs, Text-Icons, <i>-Tags, SVG ab */
-  font-size: 20px; /* Noch größer für bessere Sichtbarkeit */
-  line-height: 1; /* Kompakt, ohne extra Höhe */
-  transform: scale(1.2); /* Stärkeres Skalieren für mehr Präsenz */
-  display: inline-block; /* Für Icons */
-  margin: 0; /* Kein extra Margin – Gap handhabt Abstand */
-  width: 100%; /* Volle Breite für Zentrierung */
-  text-align: center; /* Zentriert das Icon */
+  display: flex; /* Flexbox für perfekte Zentrierung */
+  align-items: center; /* Vertikal zentriert */
+  justify-content: center; /* Horizontal zentriert */
+  text-align: center; /* Text zentriert (Fallback) */
+  line-height: 1.2; /* Etwas mehr Zeilenhöhe für den Text */
+  white-space: nowrap; /* Verhindert Umbruch des Texts */
 }
 
 .card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
@@ -88,7 +110,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:700}
 
-.mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Geändert: Etwas mehr Gap (da Label weg), center für Ausrichtung */
+.mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
 .actions-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline */
 .mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:800;padding:6px 10px}
@@ -195,36 +217,45 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   /* Kleinerer Abstand für "Training starten" auf Mobile */
   .top-actions {
     margin-top: 12px; /* Reduziert, um Platz zu sparen */
+    gap: 6px; /* Kleinerer Gap auf Mobile, für mehr horizontale Flexibilität (vermeidet Wrap) */
+  }
+  
+  /* FIX: Auf Mobile: Training kompakt */
+  #btnStart {
+    min-width: 100px; /* Kleiner min-width auf Mobile */
+  }
+  
+  /* NEU: Gruppe auf Mobile: Stack vertikal */
+  .training-group {
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap; /* Auf Mobile: Erlaubt Wrap/Stack */
+    flex-direction: row; /* Bleibt horizontal, wrapt bei Bedarf */
   }
   
   .btn.primary {
     margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
+    flex: 0 1 auto; /* Bleibt kompakt auf Mobile */
   }
   
-  /* NEU: Responsive für integrierten Swap-Button auf Mobile (kompakter Stack) */
+  /* Responsive für Swap-Button mit Text auf Mobile (kompakter) */
   .btn.swap {
-    padding: 10px 16px; /* Etwas kompakter Höhen-Padding */
-    min-height: 50px; /* Reduziert für Mobile */
-    gap: 2px; /* Kleinerer Abstand zwischen Label und Icon */
+    padding: 10px 16px; /* Etwas kompakter Padding */
+    min-height: 40px; /* Reduziert für Mobile */
+    font-size: 13px; /* Kleinerer Text auf Mobile */
   }
   
-  .btn.swap .swap-label {
-    font-size: 11px; /* Kleiner auf Mobile */
-  }
-  
-  .btn.swap .swap-icon,
-  .btn.swap::before,
-  .btn.swap i,
-  .btn.swap svg,
-  .btn.swap [class*="icon"] {
-    font-size: 18px; /* Etwas kleiner Icon auf Mobile */
-    transform: scale(1.1);
+  /* NEU: Schmalerer Autoplay-Button auf Mobile (flexibel, passt sich an) */
+  #btnAutoplay {
+    min-width: 100px; /* NEU: Noch schmaler auf Mobile (100px), um in enger Row zu passen */
+    padding: 8px 14px; /* Weniger Padding für enge Screens */
+    flex: 0 1 auto; /* Bleibt flexibel – schrumpft bei Bedarf */
   }
   
   /* Responsive für Language/Swap-Row auf Mobile */
   .mode-inline,
   .actions-inline {
-    gap: 10px; /* Kleinerer Gap auf Mobile */
+    gap: 5px; /* Kleinerer Gap auf Mobile */
     justify-content: center; /* Center für Ausrichtung */
   }
   
