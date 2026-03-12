@@ -13,26 +13,45 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px;} /* Zusätzlicher Abstand für den Start-Button (z.B. "Training starten") */
 .btn.ghost{background:transparent}
 
-/* Breitere Swap/Direction-Button (für Umschalten der Richtung) */
+/* Breitere und höhere Swap/Direction-Button (integriert "Richtung" + Icon-Stack) */
 .btn.swap {
   font-weight: 700; /* Etwas leichter als 800, für Balance */
-  padding: 10px 20px; /* Noch breiter – nutzt verfügbaren Platz */
-  font-size: 16px; /* Größere Schrift für den Button-Text */
+  padding: 12px 20px; /* Geändert: Höheres Padding (top/bottom mehr für Stack, spart externen Platz) */
+  font-size: 16px; /* Größere Schrift für den Button-Text (falls nötig) */
   border-radius: 12px; /* Etwas abgerundeter für modernen Look */
   min-width: 100px; /* Minimale Breite, damit er sich ausdehnt */
+  min-height: 60px; /* NEU: Höher für den internen Stack (Richtung + Icon) */
   flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
+  display: flex; /* NEU: Flexbox für vertikalen Stack */
+  flex-direction: column; /* NEU: Vertikal stapeln */
+  align-items: center; /* Zentriert horizontal */
+  justify-content: center; /* Zentriert vertikal */
+  gap: 4px; /* NEU: Kleiner Abstand zwischen "Richtung" und Icon */
+  text-align: center; /* Zentriert Text im Button */
 }
 
-/* Speziell für das Icon/Zeichen im Swap-Button (z.B. Pfeil-Symbol) – größer gemacht */
+/* Styling für das integrierte "Richtung"-Label (oben im Button) */
+.btn.swap .swap-label {
+  font-size: 12px; /* NEU: Kleiner, dezenter (muted-Farbe) */
+  color: var(--muted); /* Hellgrau, wie Labels */
+  font-weight: 600; /* Leicht fett für Überschrift-Feeling */
+  margin: 0; /* Kein extra Margin */
+  line-height: 1.1; /* Kompakt */
+}
+
+/* Styling für das Icon/Zeichen (darunter im Button) – größer gemacht */
+.btn.swap .swap-icon,
 .btn.swap::before,
 .btn.swap i,
 .btn.swap svg,
-.btn.swap [class*="icon"] { /* Deckt Text-Icons, <i>-Tags, SVG ab */
-  font-size: 20px; /* Noch größer (von 18px) für bessere Sichtbarkeit */
-  line-height: 1.2; /* Bessere Zentrierung */
-  transform: scale(1.2); /* Stärkeres Skalieren für mehr Präsenz (von 1.1) */
-  display: inline-block;
-  margin-right: 4px; /* Kleiner Abstand zum Text, falls vorhanden */
+.btn.swap [class*="icon"] { /* Deckt Childs, Text-Icons, <i>-Tags, SVG ab */
+  font-size: 20px; /* Noch größer für bessere Sichtbarkeit */
+  line-height: 1; /* Kompakt, ohne extra Höhe */
+  transform: scale(1.2); /* Stärkeres Skalieren für mehr Präsenz */
+  display: inline-block; /* Für Icons */
+  margin: 0; /* Kein extra Margin – Gap handhabt Abstand */
+  width: 100%; /* Volle Breite für Zentrierung */
+  text-align: center; /* Zentriert das Icon */
 }
 
 .card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
@@ -69,8 +88,8 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:700}
 
-.mode-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Geändert: Center für perfekte Ausrichtung unter dem Label */
-.actions-inline{display:flex;gap:12px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline, falls dort die Row ist */
+.mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Geändert: Etwas mehr Gap (da Label weg), center für Ausrichtung */
+.actions-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline */
 .mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 16px;font-weight:700; min-width:80px; flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:800;padding:6px 10px}
 .gap-row input[type=range]{width:100%}
@@ -87,22 +106,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 @media(max-width:460px){ header h1{font-size:20px} .subtitle{font-size:12px} }
 @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
-
-/* NEU: Zentrierung für das "Richtung"-Label (über den Sprachfeldern und Swap-Button) */
-.lbl.direction-label, /* Falls es eine spezifische Klasse hat; andernfalls global für Labels vor .mode-inline */
-.mode-inline ~ .lbl,
-.actions-inline ~ .lbl,
-.lbl:has(+ .mode-inline) { /* Zielt auf Labels ab, die vor oder nach der Row stehen */
-  text-align: center; /* Zentriert den Text (z.B. "Richtung") */
-  margin-bottom: 8px; /* Etwas mehr Abstand zur Row darunter für Ausrichtung */
-  font-size: 14px; /* Einheitlich mit anderen Labels */
-  color: var(--muted);
-}
-
-/* Fallback: Globale Anpassung für .lbl, falls spezifische Selektoren nicht greifen (kann bei Bedarf entfernt werden) */
-.lbl {
-  text-align: center; /* Überschreibt für "Richtung"-Kontext; andere Labels bleiben linksbündig durch höhere Spezifität */
-}
 
 /* NEUE REGELN: Anpassung der Schriftgröße für ZH Tempo (Rate) und ZH Tonhöhe (Pitch) */
 #rateZhRange, #pitchZhRange {
@@ -198,28 +201,31 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
   }
   
-  /* NEU: Zentrierung und Abstand für "Richtung"-Label auf Mobile */
-  .lbl.direction-label,
-  .mode-inline ~ .lbl,
-  .actions-inline ~ .lbl,
-  .lbl:has(+ .mode-inline) {
-    margin-bottom: 6px; /* Kleinerer Abstand auf Mobile */
-    text-align: center; /* Zentrierung bleibt */
+  /* NEU: Responsive für integrierten Swap-Button auf Mobile (kompakter Stack) */
+  .btn.swap {
+    padding: 10px 16px; /* Etwas kompakter Höhen-Padding */
+    min-height: 50px; /* Reduziert für Mobile */
+    gap: 2px; /* Kleinerer Abstand zwischen Label und Icon */
   }
   
-  .lbl {
-    text-align: center; /* Fallback auf Mobile */
+  .btn.swap .swap-label {
+    font-size: 11px; /* Kleiner auf Mobile */
   }
   
-  .voice-config .lbl {
-    text-align: left; /* Voice-Labels bleiben linksbündig */
+  .btn.swap .swap-icon,
+  .btn.swap::before,
+  .btn.swap i,
+  .btn.swap svg,
+  .btn.swap [class*="icon"] {
+    font-size: 18px; /* Etwas kleiner Icon auf Mobile */
+    transform: scale(1.1);
   }
   
-  /* Responsive für breitere Language/Swap-Elemente auf Mobile */
+  /* Responsive für Language/Swap-Row auf Mobile */
   .mode-inline,
   .actions-inline {
-    gap: 8px; /* Kleinerer Gap auf Mobile */
-    justify-content: center; /* Center für Ausrichtung unter dem Label */
+    gap: 10px; /* Kleinerer Gap auf Mobile */
+    justify-content: center; /* Center für Ausrichtung */
   }
   
   .mode-item {
@@ -229,21 +235,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     align-items: center;
     justify-content: center;
     text-align: center; /* Zentrierung bleibt auf Mobile */
-  }
-  
-  .btn.swap {
-    padding: 8px 16px; /* Kompakter auf Mobile, aber breiter als Default */
-    min-width: 90px;
-    font-size: 14px;
-  }
-  
-  /* Icon auf Mobile etwas kleiner, um nicht zu dominant zu sein */
-  .btn.swap::before,
-  .btn.swap i,
-  .btn.swap svg,
-  .btn.swap [class*="icon"] {
-    font-size: 18px; /* Reduziert auf Mobile (von 20px) */
-    transform: scale(1.1); /* Leichter Scale (von 1.2) */
   }
   
   .voice-btn,
