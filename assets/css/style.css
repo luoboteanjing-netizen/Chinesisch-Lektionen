@@ -1,16 +1,16 @@
-/* r15 styles (same as r14) */
+/* r15.2.4 styles (schriftgrößen angepasst, Abstände, Farbe) */
 :root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --border:#283344; --good:#7bd88f; --bad:#f7768e; --unsure:#ffbd6b; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
 .container{max-width:1100px;margin:24px auto;padding:0 12px}
 header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .subtitle{margin:0 0 8px 0;color:var(--muted);font-size:14px}
-.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px; margin-top:16px;} /* NEU: Größerer Abstand nach oben für "Training starten"-Bereich */
 .small-label{font-size:12px;margin-right:2px}
 .btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:10px;cursor:pointer}
 .btn.small{padding:6px 10px;font-size:12px}
 .btn.large{padding:10px 16px;font-size:14px;font-weight:600}
-.btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700}
+.btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px;} /* NEU: Zusätzlicher Abstand für den Start-Button (z.B. "Training starten") */
 .btn.ghost{background:transparent}
 .card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
 .lbl{display:block;margin-bottom:6px;color:var(--muted)}
@@ -63,3 +63,121 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 @media(max-width:460px){ header h1{font-size:20px} .subtitle{font-size:12px} }
 @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+/* NEUE REGELN: Anpassung der Schriftgröße für ZH Tempo (Rate) und ZH Tonhöhe (Pitch) */
+#rateZhRange, #pitchZhRange {
+  font-size: 16px; /* Größere Schrift für die Slider selbst (falls sie Labels haben) */
+}
+
+/* NEUE REGELN: Abstände anpassen für ZH-Sektion (und DE, falls ähnlich) */
+.voice-config {
+  gap: 10px; /* Erhöhtes Gap: Mehr Abstand zwischen allen Elementen (inkl. Button oben und Sliders) */
+}
+
+/* Speziell: Größerer Abstand direkt nach den Voice-Buttons (DE/ZH Stimme wählen) */
+.voice-btn + .voice-config,
+#btnVoiceDe + .voice-config,
+#btnVoiceZh + .voice-config {
+  margin-top: 8px; /* Zusätzlicher Abstand nach dem Button */
+}
+
+.voice-config > *:first-child { /* Erstes Element in der Config (z.B. Label "ZH Tempo") */
+  margin-top: 12px; /* Mehr Abstand zum Button darüber – das macht den Unterschied */
+}
+
+/* Kleinerer Abstand der Labels zu den Sliders (ZH und DE) */
+.voice-config .lbl { /* Überschreibt den globalen .lbl-Margin */
+  margin-bottom: 2px; /* Stark reduziert: Labels sehr nah an den Sliders darunter */
+}
+
+#rateZhVal, #pitchZhVal { /* Werte-Anzeigen nah am Slider */
+  margin-bottom: 0; /* Kein Abstand mehr – direkt über dem Slider */
+}
+
+#rateZhRange, #pitchZhRange,
+#rateDeRange, #pitchDeRange { /* Sliders selbst: Etwas Padding oben, um nahtlos zu wirken */
+  margin-top: 0;
+  padding-top: 2px; /* Minimaler Puffer, falls nötig */
+}
+
+/* NEUE REGEL: Desktop-Hintergrundfarbe ändern (nur ab 1024px Breite, Mobile bleibt schwarz) */
+@media (min-width: 1024px) {
+  :root {
+    --bg: #1a1a2e; /* Beispiel: Dunkles Blau-Grau für Desktop. Ändere das zu deiner gewünschten Farbe, z.B. #2d3748 für Grau */
+  }
+  
+  html, body {
+    background: var(--bg); /* Wendet die neue Variable an */
+  }
+}
+
+/* KONSISTENZ-REGELN: Einheitliche Schriftgröße (14px) für Labels und Buttons in Voice- und Gap-Bereichen */
+.voice-btn { /* Buttons: "DE Stimme", "ZH Stimme" */
+  font-size: 14px; /* Einheitlich: Passt zu Labels */
+  font-weight: 500; /* Optional: Etwas fett für Buttons */
+}
+
+.voice-config .lbl { /* Labels: "ZH Tempo", "ZH Tonhöhe", "DE Tempo" etc. */
+  font-size: 14px; /* Einheitlich */
+  color: var(--muted); /* Hellgrau, wie gewünscht */
+}
+
+.gap-row .lbl { /* Label: "Pausenzeit zwischen Karten" */
+  font-size: 14px; /* Einheitlich */
+  color: var(--muted);
+}
+
+/* NEU: Anzeigewerte auf 12px (kleiner als Labels/Buttons für Dezenz) */
+#rateZhVal, #pitchZhVal,
+#rateDeVal, #pitchDeVal { /* Anzeigewerte: "(0.95)", "(1.0)" etc. für DE/ZH */
+  font-size: 12px; /* Geändert: Kleiner für bessere Hierarchie */
+  font-weight: 500;
+}
+
+#gapVal { /* Anzeigewert: "(0.8 s)" für Pausenzeit */
+  font-size: 12px; /* Geändert: Gleich wie andere Anzeigewerte */
+  font-weight: 500;
+}
+
+/* Optional: Falls die gesamte Voice-Config-Sektion (DE/ZH) einheitlich sein soll */
+.voice-config .two-col > *,
+#voiceZhConfig > *,
+#voiceDeConfig > * { /* Alle Kinder in Voice-Panels – Labels bleiben 14px, Werte 12px */
+  font-size: 14px; /* Globale Einheitlichkeit für Nicht-Werte-Elemente */
+}
+
+/* Responsive Anpassung: Auf Mobile etwas kleiner für alle genannten Elemente */
+@media (max-width: 480px) {
+  /* NEU: Kleinerer Abstand für "Training starten" auf Mobile */
+  .top-actions {
+    margin-top: 12px; /* Reduziert, um Platz zu sparen */
+  }
+  
+  .btn.primary {
+    margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
+  }
+  
+  .voice-btn,
+  .voice-config .lbl,
+  .gap-row .lbl {
+    font-size: 13px; /* Labels/Buttons etwas kleiner auf Mobile */
+  }
+  
+  /* Anzeigewerte auf Mobile: 11px */
+  #rateZhVal, #pitchZhVal, #rateDeVal, #pitchDeVal,
+  #gapVal {
+    font-size: 11px; /* Geändert: Passt zur Skalierung */
+  }
+  
+  .voice-config {
+    gap: 6px; /* Auf Mobile Gap etwas reduzieren, um Platz zu sparen */
+  }
+  
+  .voice-config > *:first-child {
+    margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
+  }
+  
+  .voice-config .lbl {
+    margin-bottom: 3px; /* Etwas mehr Abstand auf kleinen Screens */
+  }
+}
