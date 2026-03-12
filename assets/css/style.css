@@ -1,16 +1,38 @@
-/* r15.2.4 styles (schriftgrößen angepasst, Abstände, Farbe) */
+/* r15.2.5 styles (Umschaltbtn größer,schriftgrößen angepasst, Abstände, Farbe) */
 :root{ --bg:#0b0d10; --card:#12161b; --muted:#8fa1b3; --text:#e6edf3; --accent:#7aa2f7; --border:#283344; --good:#7bd88f; --bad:#f7768e; --unsure:#ffbd6b; }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
 .container{max-width:1100px;margin:24px auto;padding:0 12px}
 header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .subtitle{margin:0 0 8px 0;color:var(--muted);font-size:14px}
-.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px; margin-top:16px;} /* NEU: Größerer Abstand nach oben für "Training starten"-Bereich */
+.top-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px; margin-top:16px;} /* Größerer Abstand nach oben für "Training starten"-Bereich */
 .small-label{font-size:12px;margin-right:2px}
 .btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:10px;cursor:pointer}
 .btn.small{padding:6px 10px;font-size:12px}
 .btn.large{padding:10px 16px;font-size:14px;font-weight:600}
-.btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px;} /* NEU: Zusätzlicher Abstand für den Start-Button (z.B. "Training starten") */
+.btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px;} /* Zusätzlicher Abstand für den Start-Button (z.B. "Training starten") */
+.btn.ghost{background:transparent}
+
+/* NEU: Größerer Swap/Direction-Button (für Umschalten der Richtung) */
+.btn.swap {
+  font-weight: 700; /* Etwas leichter als 800, für Balance */
+  padding: 10px 16px; /* Geändert: Größerer Button (von 6px 10px) */
+  font-size: 16px; /* Geändert: Größere Schrift für den Button-Text */
+  border-radius: 12px; /* Etwas abgerundeter für modernen Look */
+}
+
+/* Speziell für das Icon/Zeichen im Swap-Button (z.B. Pfeil-Symbol) */
+.btn.swap::before,
+.btn.swap i,
+.btn.swap svg,
+.btn.swap [class*="icon"] { /* Deckt Text-Icons, <i>-Tags, SVG ab */
+  font-size: 18px; /* Geändert: Größeres Symbol (von Default) */
+  line-height: 1.2; /* Bessere Zentrierung */
+  transform: scale(1.1); /* Optional: Leichtes Skalieren für mehr Präsenz */
+  display: inline-block;
+  margin-right: 4px; /* Kleiner Abstand zum Text, falls vorhanden */
+}
+
 .btn.ghost{background:transparent}
 .card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
 .lbl{display:block;margin-bottom:6px;color:var(--muted)}
@@ -48,7 +70,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .mode-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .actions-inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:6px 10px;font-weight:700}
-.btn.swap{font-weight:800;padding:6px 10px}
 .gap-row input[type=range]{width:100%}
 
 .two-col{display:flex; flex-wrap:wrap; gap:10px}
@@ -127,15 +148,15 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   color: var(--muted);
 }
 
-/* NEU: Anzeigewerte auf 12px (kleiner als Labels/Buttons für Dezenz) */
+/* Anzeigewerte auf 12px (kleiner als Labels/Buttons für Dezenz) */
 #rateZhVal, #pitchZhVal,
 #rateDeVal, #pitchDeVal { /* Anzeigewerte: "(0.95)", "(1.0)" etc. für DE/ZH */
-  font-size: 12px; /* Geändert: Kleiner für bessere Hierarchie */
+  font-size: 12px; /* Kleiner für bessere Hierarchie */
   font-weight: 500;
 }
 
 #gapVal { /* Anzeigewert: "(0.8 s)" für Pausenzeit */
-  font-size: 12px; /* Geändert: Gleich wie andere Anzeigewerte */
+  font-size: 12px; /* Gleich wie andere Anzeigewerte */
   font-weight: 500;
 }
 
@@ -147,14 +168,29 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 /* Responsive Anpassung: Auf Mobile etwas kleiner für alle genannten Elemente */
+/* NEU: Responsive für Swap/Direction-Button auf Mobile */
 @media (max-width: 480px) {
-  /* NEU: Kleinerer Abstand für "Training starten" auf Mobile */
+  /* Kleinerer Abstand für "Training starten" auf Mobile */
   .top-actions {
     margin-top: 12px; /* Reduziert, um Platz zu sparen */
   }
   
   .btn.primary {
     margin-top: 8px; /* Kleinerer Top-Margin auf Mobile */
+  }
+  
+  /* Swap-Button auf Mobile: Etwas kleiner, aber immer noch berührbar */
+  .btn.swap {
+    padding: 8px 12px; /* Geändert: Etwas kompakter auf Mobile */
+    font-size: 14px;
+  }
+  
+  .btn.swap::before,
+  .btn.swap i,
+  .btn.swap svg,
+  .btn.swap [class*="icon"] {
+    font-size: 16px; /* Kleineres Icon auf Mobile */
+    transform: scale(1.0); /* Kein extra Scale, um Platz zu sparen */
   }
   
   .voice-btn,
@@ -166,7 +202,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   /* Anzeigewerte auf Mobile: 11px */
   #rateZhVal, #pitchZhVal, #rateDeVal, #pitchDeVal,
   #gapVal {
-    font-size: 11px; /* Geändert: Passt zur Skalierung */
+    font-size: 11px; /* Passt zur Skalierung */
   }
   
   .voice-config {
