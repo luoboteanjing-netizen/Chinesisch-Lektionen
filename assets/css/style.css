@@ -11,7 +11,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   flex-shrink: 1; /* Ermöglicht Schrumpfen bei Text-Änderungen, statt Wrap */
 }
 .small-label{font-size:12px;margin-right:2px}
-.btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:10px;cursor:pointer; flex-shrink: 1;} /* Global: Buttons schrumpfen leicht bei Bedarf */
+.btn{background:#1b2330;color:var(--text);border:1px solid #293241;padding:8px 12px;border-radius:8px;cursor:pointer; flex-shrink: 1;} /* Global: Buttons schrumpfen leicht bei Bedarf */
 .btn.small{padding:6px 10px;font-size:12px}
 .btn.large{padding:10px 16px;font-size:14px;font-weight:600}
 .btn.primary{background:#7aa2f7;border-color:#7aa2f7;color:#081018;font-weight:700; margin-top:12px; flex: 0 1 auto; white-space: nowrap; transition: all 0.2s ease; max-width: none;} /* Training-Button: Kompakter, verhindert Text-Umbruch bei "Stop" – Übergang für Smoothness */
@@ -61,12 +61,12 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 /* Breitere und höhere Swap/Direction-Button (mit "< Richtung >" als zentriertem Text, kein Icon) */
 .btn.swap {
-  font-weight: 700; /* Bold für den Text */
-  padding: 12px 20px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
-  font-size: 14px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
-  border-radius: 12px; /* Etwas abgerundeter für modernen Look */
+  font-weight: 600; /* Bold für den Text */
+  padding: 8px 10px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
+  font-size: 16px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
+  border-radius: 8px; /* Etwas abgerundeter für modernen Look */
   min-width: 100px; /* Minimale Breite, damit er sich ausdehnt */
-  min-height: 32px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
+  min-height: 28px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
   flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
   display: flex; /* Flexbox für perfekte Zentrierung */
   align-items: center; /* Vertikal zentriert */
@@ -113,8 +113,8 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
 .actions-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline */
 /* NEU: Gleiche Höhe wie Swap-Button für die Sprache-Items (links/rechts) – höheres Padding und min-height */
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:700; min-width:80px; min-height:32px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
-.btn.swap{font-weight:800;padding:6px 10px}
+.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:700; min-width:80px; min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
+.btn.swap{font-weight:600;padding:8px 10px}
 .gap-row input[type=range]{width:100%}
 
 .two-col{display:flex; flex-wrap:wrap; gap:10px}
@@ -241,9 +241,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   
   /* Responsive für Swap-Button mit Text auf Mobile (kompakter) */
   .btn.swap {
-    padding: 10px 16px; /* Etwas kompakter Padding */
-    min-height: 32px; /* Reduziert für Mobile */
-    font-size: 13px; /* Kleinerer Text auf Mobile */
+    padding: 8px 10px; /* Etwas kompakter Padding */
+    min-height: 28px; /* Reduziert für Mobile */
+    font-size: 16px; /* Kleinerer Text auf Mobile */
   }
   
   /* NEU: Schmalerer Autoplay-Button auf Mobile (flexibel, passt sich an) */
@@ -256,7 +256,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   /* NEU: Sprache-Items auf Mobile: Kompakter (passt zu Swap-Reduktion) */
   .mode-item {
     padding: 10px 12px; /* Reduziertes Padding (10px vertikal), min-height:50px */
-    min-height: 32px; /* Gleiche Höhe wie Swap auf Mobile (50px) */
+    min-height: 28px; /* Gleiche Höhe wie Swap auf Mobile (50px) */
     min-width: 70px; /* Reduziert, um in enger Row zu passen */
     font-size: 13px; /* Etwas kleinere Schrift für Balance */
     display: flex; /* Bleibt flex für Zentrierung */
