@@ -11,19 +11,8 @@
    AUTOMATISCHE VERSIONIERUNG
    =========================== */
 
-function generateVersionStamp() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2, "0");
-    const da = String(d.getDate()).padStart(2, "0");
-    const h = String(d.getHours()).padStart(2, "0");
-    const mi = String(d.getMinutes()).padStart(2, "0");
-
-    return `${y}${m}${da}-${h}${mi}`;
-}
-
-const APP_VERSION = generateVersionStamp();
-
+/* === Version manuell definieren === */
+const APP_VERSION = "1.0.1";   // beim nächsten Release erhöhen
 
 const CSV_URL = "./data/Long-Chinesisch_Lektionen.csv";
 
@@ -58,7 +47,7 @@ const state = {
 
     current: null,
 	delayedSentenceTimer: null,
-	sentenceDelay: 5000,  // in Millisekunden
+	sentenceDelay: 3000,  // in Millisekunden
 
     voices: [],
     browserVoice: { zh: null, de: null },
@@ -1636,6 +1625,80 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
 	// ================================
 	const verElem = document.querySelector("#appVersion");
 	if (verElem) verElem.textContent = APP_VERSION;
+
+/* ============================================================
+   DRAG-TO-CLOSE – professionell wie in Mobile-Apps
+   ============================================================ */
+
+(function enableDragToClose() {
+    const menu = document.querySelector("#sideMenu");
+    if (!menu) return;
+
+    let startX = 0;
+    let currentX = 0;
+    let dragging = false;
+
+    function onStart(e) {
+        if (!menu.classList.contains("open")) return;
+
+        dragging = true;
+        menu.classList.add("dragging");
+
+        startX = e.touches ? e.touches[0].clientX : e.clientX;
+        currentX = startX;
+    }
+
+    function onMove(e) {
+        if (!dragging) return;
+
+        currentX = e.touches ? e.touches[0].clientX : e.clientX;
+        let diff = currentX - startX;
+
+        // ✅ Nur rechts wischen erlaubt diff > 0
+        if (diff > 0) {
+            // Ziehe das Menü entsprechend nach rechts hinaus
+            menu.style.right = `${-diff}px`;
+        }
+    }
+
+    function onEnd() {
+        if (!dragging) return;
+
+        dragging = false;
+        menu.classList.remove("dragging");
+
+        let diff = currentX - startX;
+
+        // ✅ Wenn genug nach rechts gewischt → Menü schließen
+        if (diff > 40) {
+            menu.classList.remove("open");
+        }
+
+        // Menü resetten
+        menu.style.right = "";
+    }
+
+    // Touch Events
+    menu.addEventListener("touchstart", onStart);
+    menu.addEventListener("touchmove", onMove);
+    menu.addEventListener("touchend", onEnd);
+
+    // Maus (für Desktop)
+    menu.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+})();
+
+/* ============================================
+   Overlay tap-to-close
+   ============================================ */
+const overlay = document.querySelector("#sideOverlay");
+
+if (overlay) {
+    overlay.addEventListener("click", () => {
+        sideMenu.classList.remove("open");
+    });
+}
 
     console.log("[INIT] Alles bereit ✅");
 });
