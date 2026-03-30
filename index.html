@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
     <!-- Deine CSS -->
-    <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" id="cssMain" href="assets/css/style.css">
 </head>
 
 <body>
@@ -37,6 +37,11 @@
         <label class="lbl">Satz‑Delay (Sekunden):</label>
         <input id="delayInput" type="number" min="0" max="15" step="0.5" value="5" class="menu-input">
     </div>
+	
+	<div class="menu-version">
+		Version: <span id="appVersion"></span>
+	</div>
+	
 </div>
 
     <main class="container">
@@ -218,7 +223,7 @@
     </div>
 </div>
 
-<script src="assets/js/app.js"></script>
+<script id="jsMain" src="assets/js/app.js"></script>
 
 </main>
 </body>
