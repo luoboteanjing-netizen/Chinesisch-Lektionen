@@ -1,293 +1,1615 @@
-/* r15.5 HSK: Fix "Leeren"; show per-lesson Richtig/Falsch; 'Unsicher' nicht zählen */
-let EXCEL_URL = './data/Long_Lektionen.xlsx';
-const DATA_START_ROW=3;
-const COL_WORD={de:1,py:2,zh:6}; const COL_SENT={de:5,py:4,zh:7}; const COL_POS=3;
-const LS_KEYS={ settings:'fc_settings_v1', progress:'fc_progress_v1' };
+/* ========================================================================== */
+/*                           FLASHCARDS – VERSION OPTION A                    */
+/*                       Repaired, Stabilized, Fully Functional               */
+/* ========================================================================== */
 
-const state={
-  mode:'de2zh', order:'random',
-  rateDe:0.95, pitchDe:1.0, rateZh:0.95, pitchZh:1.0,
-  lessons:new Map(), selectedLessons:new Set(), pool:[], idx:null, current:null,
-  voices:[], browserVoice:{ zh:null, de:null }, voicePanelTarget:'de',
-  autoplay:{ on:false, timers:[], gapMs:800 },
-  settings:{ mode:'de2zh', order:'random', rateDe:0.95, pitchDe:1.0, rateZh:0.95, pitchZh:1.0, lessons:[], browserVoiceZh:null, browserVoiceDe:null, autoplayGap:800 },
-  session:{ total:0, done:0, known:0, unsure:0, unknown:0, ttrSum:0, ttrCount:0 },
-  startedAt:null, revealedAt:null,
-  // progress.byLesson: { [lessonId]: { known:number, unknown:number } }
-  progress:{ version:'v1', cards:{}, byLesson:{} },
-  wakeLock:null,
-  trainingOn:false
+/* -------------------------------------------------------------------------- */
+/* TEIL 1 – GLOBAL STATE · SETTINGS · CSV PARSER                              */
+/* -------------------------------------------------------------------------- */
+
+const CSV_URL = "./data/Long-Chinesisch_Lektionen.csv";
+
+const LS_KEYS = {
+    settings: "fc_settings_v1",
+    progress: "fc_progress_v1"
 };
 
-const $=s=>document.querySelector(s);
+const $ = (s) => document.querySelector(s);
 
-function saveSettings(){ try{ localStorage.setItem(LS_KEYS.settings, JSON.stringify(state.settings)); }catch(e){} }
-function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEYS.settings)||'null'); if(s){ state.settings=Object.assign(state.settings,s); } }catch(e){} }
-function saveProgress(){ try{ localStorage.setItem(LS_KEYS.progress, JSON.stringify(state.progress)); }catch(e){} }
-function loadProgress(){ try{ const p=JSON.parse(localStorage.getItem(LS_KEYS.progress)||'null'); if(p && p.version==='v1'){ state.progress=p; } }catch(e){} }
+/* ============================ GLOBAL STATE =============================== */
 
-function isZhVoice(v){ const L=(v.lang||'').toLowerCase(); return L.startsWith('zh')||L.includes('cmn')||L.includes('hans')||L.includes('zh-cn'); }
-function isDeVoice(v){ const L=(v.lang||'').toLowerCase(); return L.startsWith('de'); }
+const state = {
+    mode: "de2zh",
+    order: "seq",
 
-function updateVoiceList(){ const box=$('#dbgVoices'); if(!box) return; box.innerHTML=''; const list=(state.voices||[]).filter(v=> state.voicePanelTarget==='zh'? isZhVoice(v) : isDeVoice(v)); if(list.length===0){ box.innerHTML='<div class="meta">Keine passenden Stimmen gefunden.</div>'; return; }
-  list.forEach(v=>{ const row=document.createElement('div'); row.className='voice'; const name=document.createElement('div'); name.className='name'; name.textContent=v.name||'(name)'; const meta=document.createElement('div'); meta.className='meta'; meta.textContent=`${v.lang||''} ${v.default?'· default':''}`; const actions=document.createElement('div'); actions.style.marginLeft='auto'; actions.style.display='flex'; actions.style.gap='6px'; actions.style.flexWrap='wrap';
-    const pick=document.createElement('button'); pick.className='btn'; pick.textContent='Diese Stimme wählen'; pick.onclick=()=>{ if(state.voicePanelTarget==='zh'){ state.browserVoice.zh=v; state.settings.browserVoiceZh=v.name||v.voiceURI; } else { state.browserVoice.de=v; state.settings.browserVoiceDe=v.name||v.voiceURI; } saveSettings(); updateVoiceList(); };
-    const test=document.createElement('button'); test.className='btn ghost'; test.textContent='Probehören'; test.onclick=()=>{ const u=new SpeechSynthesisUtterance(state.voicePanelTarget==='zh'? '这是一个测试。' : 'Dies ist ein Test.'); u.lang=(state.voicePanelTarget==='zh')?'zh-CN':'de-DE'; u.voice=v; try{speechSynthesis.cancel();}catch(e){} speechSynthesis.speak(u); };
-    const act = (state.voicePanelTarget==='zh'? state.browserVoice.zh : state.browserVoice.de);
-    if(act && (act.name===v.name || act.voiceURI===v.voiceURI)) name.textContent+='  •  [Aktiv]';
-    actions.appendChild(pick); actions.appendChild(test);
-    row.appendChild(name); row.appendChild(meta); row.appendChild(actions); box.appendChild(row);
-  });
+    // TTS settings
+    rateDe: 0.95,
+    pitchDe: 1.0,
+    rateZh: 0.95,
+    pitchZh: 1.0,
+
+    lessons: new Map(),
+    lessonOrder: [],
+    selectedLessons: new Set(),
+
+    pool: [],
+    idx: null,
+
+    history: [],
+    historyPos: -1,
+
+    current: null,
+	delayedSentenceTimer: null,
+	sentenceDelay: 5000,  // in Millisekunden
+
+    voices: [],
+    browserVoice: { zh: null, de: null },
+    voicePanelTarget: "de",
+
+    autoplay: {
+        on: false,
+        timers: [],
+        gapMs: 800
+    },
+
+    settings: {
+        mode: "de2zh",
+        order: "seq",
+        rateDe: 0.95,
+        pitchDe: 1.0,
+        rateZh: 0.95,
+        pitchZh: 1.0,
+        lessons: [],
+        browserVoiceZh: null,
+        browserVoiceDe: null,
+        autoplayGap: 800
+    },
+
+    session: {
+        total: 0,
+        done: 0,
+        known: 0,
+        unsure: 0,
+        unknown: 0,
+        ttrSum: 0,
+        ttrCount: 0
+    },
+
+    startedAt: null,
+    revealedAt: null,
+
+    progress: {
+        version: "v1",
+        cards: {},
+        byLesson: {}
+    },
+
+    wakeLock: null,
+    trainingOn: false
+};
+
+/* ============================ SETTINGS / PROGRESS ========================= */
+
+function saveSettings() {
+    try {
+        localStorage.setItem(LS_KEYS.settings, JSON.stringify(state.settings));
+    } catch (e) {}
 }
 
-function refreshVoices(){ state.voices = window.speechSynthesis?.getVoices?.() || []; if(state.settings.browserVoiceZh){ const vz=state.voices.find(x=>x.name===state.settings.browserVoiceZh||x.voiceURI===state.settings.browserVoiceZh); if(vz) state.browserVoice.zh=vz; } if(state.settings.browserVoiceDe){ const vd=state.voices.find(x=>x.name===state.settings.browserVoiceDe||x.voiceURI===state.settings.browserVoiceDe); if(vd) state.browserVoice.de=vd; } updateVoiceList(); }
+function loadSettings() {
+    try {
+        const s = JSON.parse(localStorage.getItem(LS_KEYS.settings) || "null");
+        if (s) Object.assign(state.settings, s);
+    } catch (e) {}
+}
 
-let _voicesRetryT; function openVoicesPanelFor(target){ state.voicePanelTarget=target; refreshVoices(); if(!state.voices || state.voices.length===0){ clearTimeout(_voicesRetryT); let tries=0; const tick=()=>{ tries++; refreshVoices(); if(state.voices.length>0 || tries>=8) return; _voicesRetryT=setTimeout(tick,300); }; _voicesRetryT=setTimeout(tick,300); } $('#voicePanel').classList.remove('hidden'); }
-function closeVoices(){ $('#voicePanel').classList.add('hidden'); }
+function saveProgress() {
+    try {
+        localStorage.setItem(LS_KEYS.progress, JSON.stringify(state.progress));
+    } catch (e) {}
+}
 
-async function parseExcelBuffer(buf){ const wb=XLSX.read(buf,{type:'array'}); state.lessons.clear(); for(const name of wb.SheetNames){ const sh=wb.Sheets[name]; const rows=XLSX.utils.sheet_to_json(sh,{header:1,blankrows:false}); const r0=DATA_START_ROW-1; const key=name; if(!state.lessons.has(key)) state.lessons.set(key,[]); for(let r=r0;r<rows.length;r++){ const row=rows[r]||[]; const w={de:String(row[COL_WORD.de-1]||'').trim(), py:String(row[COL_WORD.py-1]||'').trim(), zh:String(row[COL_WORD.zh-1]||'').trim()}; const s={de:String(row[COL_SENT.de-1]||'').trim(), py:String(row[COL_SENT.py-1]||'').trim(), zh:String(row[COL_SENT.zh-1]||'').trim()}; const pos=String(row[COL_POS-1]||'').trim(); if(!(w.de||w.zh||s.de||s.zh)) continue; state.lessons.get(key).push({word:w,sent:s,pos}); } }
-  populateLessonSelect(); }
+function loadProgress() {
+    try {
+        const p = JSON.parse(localStorage.getItem(LS_KEYS.progress) || "null");
+        if (p && p.version === "v1") state.progress = p;
+    } catch (e) {}
+}
 
-async function loadExcel(){ try{ const res=await fetch(EXCEL_URL,{cache:'no-store'}); const buf=await res.arrayBuffer(); await parseExcelBuffer(buf); }catch(e){ console.error('Excel konnte nicht geladen werden:',e); alert('Konnte Datei nicht laden.'); } }
+/* ============================ CSV PARSING ================================= */
 
-function ensureBL(lessonKey){ const bl=state.progress.byLesson; bl[lessonKey]=bl[lessonKey]||{ known:0, unknown:0 }; return bl[lessonKey]; }
+function parseCSVLine(line) {
+    const result = [];
+    let cur = "";
+    let quotes = false;
 
-function populateLessonSelect(){ const sel=$('#lessonSelect'); sel.innerHTML=''; const keys=Array.from(state.lessons.keys()).sort(); for(const k of keys){ const total=state.lessons.get(k).length; const bl=state.progress.byLesson?.[k]||{known:0,unknown:0}; const known=bl.known||0, unknown=bl.unknown||0; const opt=document.createElement('option'); opt.value=k; opt.textContent=`${k} (${total}) · Richtig ${known} · Falsch ${unknown}`; if(state.settings.lessons?.includes(k)) opt.selected=true; sel.appendChild(opt); } }
+    for (let i = 0; i < line.length; i++) {
+        const c = line[i];
 
-function resetSessionStats(){ state.session={ total:state.pool.length, done:0, known:0, unsure:0, unknown:0, ttrSum:0, ttrCount:0 }; renderSessionStats(); }
+        if (c === '"') {
+            if (quotes && line[i + 1] === '"') {
+                cur += '"';
+                i++;
+            } else {
+                quotes = !quotes;
+            }
+        } else if (c === ";" && !quotes) {
+            result.push(cur);
+            cur = "";
+        } else {
+            cur += c;
+        }
+    }
 
-function gatherPoolFromSettings(){ state.selectedLessons.clear(); (state.settings.lessons||[]).forEach(id=> state.selectedLessons.add(id)); const out=[]; for(const k of state.selectedLessons){ const arr=state.lessons.get(k); if(arr) out.push(...arr); } state.pool=out; state.idx=null; resetSessionStats(); }
+    result.push(cur);
+    return result;
+}
 
-function gatherPool(){ const out=[]; for(const k of state.selectedLessons){ const arr=state.lessons.get(k); if(arr) out.push(...arr); } state.pool=out; state.idx=null; resetSessionStats(); }
+async function loadCSV() {
+    try {
+        const res = await fetch(CSV_URL);
+        const buf = await res.arrayBuffer();
+        const text = new TextDecoder("utf-8").decode(buf);
 
-function setCard(entry){ state.current=entry; $('#solBox').classList.add('masked'); state.startedAt=Date.now(); state.revealedAt=null; if(state.mode==='zh2de'){ $('#promptWord').innerHTML=(entry.word.zh||'—'); $('#promptWordSub').innerHTML=formatPinyinAndPos(entry.word.py, entry.pos); $('#promptSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); $('#solWord').textContent=entry.word.de||'—'; $('#solSent').textContent=entry.sent.de||'—'; } else { $('#promptWord').textContent=entry.word.de||'—'; $('#promptWordSub').textContent=entry.pos?entry.pos:''; $('#promptSent').textContent=entry.sent.de||'—'; $('#solWord').innerHTML=formatZh(entry.word.zh, entry.word.py); $('#solSent').innerHTML=formatZh(entry.sent.zh, entry.sent.py); } $('#btnNext').disabled=false; $('#btnReveal').disabled=false; $('#btnPlayQ').disabled=false; $('#btnPlayA').disabled=false; disableRating(); renderModeUI(); }
+        parseCSV(text);
+        populateLessonSelect();
+    } catch (e) {
+        alert("Fehler beim Laden der CSV.");
+        console.error(e);
+    }
+}
 
-function nextCard(){ if(!state.pool.length) return alert('Bitte Lektionen wählen und übernehmen.'); if(state.order==='seq'){ if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); } else { const e=state.pool[Math.floor(Math.random()*state.pool.length)]; setCard(e); } }
-function prevCard(){ if(state.order!=='seq' || !state.pool.length) return; if(state.idx==null) state.idx=0; else state.idx=(state.idx-1+state.pool.length)%state.pool.length; setCard(state.pool[state.idx]); }
+function parseCSV(text) {
 
-function scrollToTopHard(){ window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0; setTimeout(()=>{ window.scrollTo(0,0); document.body.scrollTop=0; document.documentElement.scrollTop=0; }, 60); }
-function scrollToPageEnd(){ try{ window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }catch(e){ window.scrollTo(0, document.body.scrollHeight); } }
+    state.lessons.clear();
+    state.lessonOrder = [];
 
-function startTraining(){ if(!state.trainingOn){ const sel=$('#lessonSelect'); state.selectedLessons.clear(); const picked=[]; for(const o of sel.selectedOptions){ state.selectedLessons.add(o.value); picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPool(); if(!state.pool.length){ alert('Bitte zuerst Lektion(en) übernehmen.'); return; } state.idx = (state.order==='seq') ? 0 : null; if(state.order==='seq') setCard(state.pool[state.idx]); else setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); state.trainingOn=true; updateTrainingBtn(); scrollToPageEnd(); setTimeout(scrollToPageEnd, 60); } else { stopTraining(); } }
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+    if (lines.length < 2) return;
 
-function stopTraining(){ state.trainingOn=false; updateTrainingBtn(); $('#btnPrev').disabled=true; $('#btnReveal').disabled=true; $('#btnNext').disabled=true; $('#btnPlayQ').disabled=true; $('#btnPlayA').disabled=true; disableRating(); $('#solBox').classList.add('masked'); $('#promptWord').textContent='—'; $('#promptWordSub').innerHTML='&nbsp;'; $('#promptSent').textContent='—'; $('#solWord').textContent='—'; $('#solSent').textContent='—'; scrollToTopHard(); }
-function updateTrainingBtn(){ const b=$('#btnStart'); if(!b) return; b.textContent = state.trainingOn? 'Training stoppen ■' : 'Training starten ▶'; }
+    for (let i = 1; i < lines.length; i++) {
 
-function doReveal(){ $('#solBox').classList.remove('masked'); state.revealedAt=Date.now(); const ttr=state.revealedAt-(state.startedAt||state.revealedAt); if(ttr>0){ state.session.ttrSum+=ttr; state.session.ttrCount+=1; } enableRating(); renderSessionStats(); }
+        const cols = parseCSVLine(lines[i]);
+        if (cols.length < 9) continue;
 
-function enableRating(){ $('#btnRateKnown').disabled=false; $('#btnRateUnsure').disabled=false; $('#btnRateUnknown').disabled=false; }
-function disableRating(){ $('#btnRateKnown').disabled=true; $('#btnRateUnsure').disabled=true; $('#btnRateUnknown').disabled=true; }
+        // ✅ Skip disabled/commented rows (starting with "*")
+        const firstCell = (cols[0] || "").replace(/\uFEFF/g, "").trim();
+        if (firstCell.startsWith("*")) continue;
 
-function rate(mark){ if(!state.current) return; state.session.done += 1; if(mark==='known') state.session.known += 1; else if(mark==='unsure') state.session.unsure += 1; else state.session.unknown += 1; renderSessionStats();
-  try{ const lessonKey = findLessonKeyOfCurrent(); if(lessonKey){ const rec=ensureBL(lessonKey); if(mark==='known') rec.known += 1; else if(mark==='unknown') rec.unknown += 1; // 'unsure' nicht zählen
-    saveProgress(); populateLessonSelect(); } }catch(e){}
-  disableRating(); nextCard(); }
+        // ✅ Extract lesson name
+        const lesson = (cols[8] || "")
+            .replace(/\uFEFF/g, "")
+            .trim();
 
-function findLessonKeyOfCurrent(){ for(const [k,arr] of state.lessons.entries()){ if(arr && arr.includes(state.current)) return k; } return null; }
+        const entry = {
+            word: {
+                de: (cols[0] || "").trim(),
+                py: (cols[1] || "").trim(),
+                zh: (cols[5] || "").trim()
+            },
+            pos: (cols[2] || "").trim(),
+            sent: {
+                py: (cols[3] || "").trim(),
+                de: (cols[4] || "").trim(),
+                zh: (cols[6] || "").trim()
+            },
+            id: (cols[7] || "").trim(),
+            lesson
+        };
 
-function formatZh(hz,py){ const h=(hz||'').trim(); const p=(py||'').trim(); return p? `${h}<br><span class="py">${p}</span>` : (h||'—'); }
-function formatPinyinAndPos(py,pos){ const a=(py||'').trim(); const b=(pos||'').trim(); if(a&&b) return `<span class="py">${a}</span><br><span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; if(a) return `<span class="py">${a}</span>`; if(b) return `<span class="prompt small" style="display:inline-block;margin-top:6px;">${b}</span>`; return ''; }
+        // ✅ Insert lesson & entry into the map
+        if (!state.lessons.has(lesson)) {
+            state.lessons.set(lesson, []);
+            state.lessonOrder.push(lesson);
+        }
 
-const START_DELAY_MS=150; const BETWEEN_DELAY_MS=800; let _ttsPrimed=false; function ttsPrime(cb){ if(_ttsPrimed){ cb(); return; } setTimeout(()=>{ _ttsPrimed=true; cb(); }, START_DELAY_MS); }
-function buildUtterance(text, langKey){ const lang=(langKey==='zh')?'zh-CN':'de-DE'; const u=new SpeechSynthesisUtterance(text||''); u.lang=lang; if(langKey==='zh'){ u.rate=state.rateZh; u.pitch=state.pitchZh; } else { u.rate=state.rateDe; u.pitch=state.pitchDe; } const chosen=(langKey==='zh')?state.browserVoice.zh:state.browserVoice.de; if(chosen) u.voice=chosen; else { const L=(langKey==='zh')?'zh':'de'; const cand=(state.voices||[]).filter(v=>(v.lang||'').toLowerCase().startsWith(L)); u.voice=cand.find(v=>v.default)||cand[0]||null; } return u; }
+        state.lessons.get(lesson).push(entry);
+    }
+}
 
-/* --- Native Mandarin Voice Pack (optional cloud TTS with cache + fallback) --- */
+/* ============================ LESSON SELECT =============================== */
 
-const VOICE_PACK = {
-  female1: "zh-CN-XiaoxiaoNeural",
-  female2: "zh-CN-XiaochenNeural",
-  male1: "zh-CN-YunxiNeural",
-  male2: "zh-CN-YunyangNeural"
-};
+function populateLessonSelect() {
+    const sel = $("#lessonSelect");
+    const table = $("#lessonTable");
 
-// Set later if you use a proxy server
-const NATIVE_TTS_ENDPOINT = "";
+    sel.innerHTML = "";
+    table.innerHTML = "";
 
-let nativeVoiceChoice = "female1";
 
-const nativeAudioCache = new Map();
+const header = `
+    <div class="lt-row lt-head">
+        <span class="lt-lesson" data-sort="lesson">Lektion</span>
+        <span class="lt-total" data-sort="total">Karten</span>
+        <span class="lt-known" data-sort="known">✅</span>
+        <span class="lt-unknown" data-sort="unknown">❌</span>
+        <span class="lt-percent" data-sort="percent">%</span>
+    </div>
+`;
 
-async function nativeMandarinSpeak(text){
-  if(!text) return;
+    table.insertAdjacentHTML("beforeend", header);
 
-  if(!NATIVE_TTS_ENDPOINT){
-    const u = buildUtterance(text,'zh');
+    for (const k of state.lessonOrder) {
+
+        const cards = state.lessons.get(k) || [];
+        const total = cards.length;
+
+        const p = state.progress.byLesson[k] || { known: 0, unknown: 0 };
+        const known   = p.known   || 0;
+        const unknown = p.unknown || 0;
+        const percent = total > 0 ? Math.round((known / total) * 100) : 0;
+
+        // Unter der Haube weiter Optionen befüllen (für Training)
+        const opt = document.createElement("option");
+        opt.value = k;
+        sel.appendChild(opt);
+
+        const row = document.createElement("div");
+        row.className = "lt-row";
+        row.dataset.lesson = k;
+
+        row.innerHTML = `
+            <span class="lt-lesson">${k}</span>
+            <span class="lt-total">${total}</span>
+            <span class="lt-known">${known}</span>
+            <span class="lt-unknown">${unknown}</span>
+            <span class="lt-percent">${percent}%</span>
+        `;
+
+        row.addEventListener("click", () => {
+            opt.selected = !opt.selected;
+            row.classList.toggle("selected", opt.selected);
+        });
+
+        table.appendChild(row);
+
+        // vorauswahl anzeigen
+        if (state.settings.lessons.includes(k)) {
+            opt.selected = true;
+            row.classList.add("selected");
+        }
+    }
+}
+
+function sortLessons() {
+    const key = lessonSort.key;
+    if (!key) return;
+
+    state.lessonOrder.sort((a, b) => {
+        const A = getLessonStats(a);
+        const B = getLessonStats(b);
+
+        let vA = A[key];
+        let vB = B[key];
+
+        if (typeof vA === "string") vA = vA.toLowerCase();
+        if (typeof vB === "string") vB = vB.toLowerCase();
+
+        if (vA < vB) return lessonSort.asc ? -1 : 1;
+        if (vA > vB) return lessonSort.asc ? 1 : -1;
+        return 0;
+    });
+}
+
+let lessonSort = { key: null, asc: true };
+
+document.addEventListener("click", (ev) => {
+    const sortKey = ev.target.dataset.sort;
+    if (!sortKey) return;
+
+    lessonSort.asc = lessonSort.key === sortKey ? !lessonSort.asc : true;
+    lessonSort.key = sortKey;
+
+    sortLessons();
+    populateLessonSelect();
+});
+
+function getLessonStats(lessonName) {
+    const cards = state.lessons.get(lessonName) || [];
+    const total = cards.length;
+
+    const p = state.progress.byLesson[lessonName] || { known: 0, unknown: 0 };
+    const known = p.known || 0;
+    const unknown = p.unknown || 0;
+    const percent = total ? Math.round((known / total) * 100) : 0;
+
+    return {
+        lesson: lessonName,
+        total,
+        known,
+        unknown,
+        percent
+    };
+}
+
+/* ============================ POOL HANDLING =============================== */
+
+function resetSessionStats() {
+    state.session = {
+        total: state.pool.length,
+        done: 0,
+        known: 0,
+        unsure: 0,
+        unknown: 0,
+        ttrSum: 0,
+        ttrCount: 0
+    };
+}
+
+function gatherPool() {
+    const out = [];
+    for (const k of state.selectedLessons) {
+        const arr = state.lessons.get(k);
+        if (arr) out.push(...arr);
+    }
+    state.pool = out;
+    state.idx = null;
+    resetSessionStats();
+}
+
+function gatherPoolFromSettings() {
+    state.selectedLessons.clear();
+    (state.settings.lessons || []).forEach((x) => state.selectedLessons.add(x));
+    gatherPool();
+}
+
+/* ============================ UTILS =============================== */
+
+function formatZh(hz, py) {
+    hz = (hz || "").trim();
+    py = (py || "").trim();
+    return py
+        ? `${hz}<br><span class="zh-pinyin">${py}</span>`
+        : hz || "—";
+}
+
+/* ========================================================================== */
+/*                                ENDE TEIL 1                                 */
+/* ========================================================================== */
+
+/* ========================================================================== */
+/*                           TEIL 2 – CARD LOGIC                              */
+/*                Rendering · Navigation · Rating · Training                  */
+/* ========================================================================== */
+
+
+/* ============================ sync & scroll ============================ */
+
+function syncCardHeights() {
+    const q = document.querySelector("#promptBox");
+    const a = document.querySelector("#solBox");
+    if (!q || !a) return;
+
+    q.style.minHeight = "";
+    a.style.minHeight = "";
+
+    const h = Math.max(q.offsetHeight, a.offsetHeight);
+    q.style.minHeight = h + "px";
+    a.style.minHeight = h + "px";
+}
+
+function scrollToBottom() {
+    setTimeout(() => {
+        window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: "smooth"
+        });
+    }, 40);
+}
+
+
+/* ============================ CARD RENDERING ============================ */
+
+
+function setCard(entry, fromHistory = false) {
+
+    /* ---- Timer für verzögerten Satz abbrechen ---- */
+    if (state.delayedSentenceTimer) {
+        clearTimeout(state.delayedSentenceTimer);
+        state.delayedSentenceTimer = null;
+    }
+
+    if (!fromHistory) pushToHistory(entry);
+
+    state.current = entry;
+    state.startedAt = Date.now();
+    state.revealedAt = null;
+
+    /* -------- Titel (Lektion / ID) -------- */
+    const cardTitle  = document.querySelector("#cardTitle");
+    const cardLesson = document.querySelector("#cardLesson");
+
+    if (cardTitle)  cardTitle.textContent  = `Karte (ID ${entry.id})`;
+    if (cardLesson) cardLesson.textContent = `Lektion ${entry.lesson}`;
+
+    /* -------- Fortschrittsbalken -------- */
+    const stats = document.querySelector("#lessonStats");
+    if (stats) {
+        const cards = state.lessons.get(entry.lesson) || [];
+        const total = cards.length;
+        const prog = state.progress.byLesson[entry.lesson] || { known: 0, unknown: 0 };
+
+        const green = total > 0 ? (prog.known / total) * 100 : 0;
+        const red   = total > 0 ? (prog.unknown / total) * 100 : 0;
+
+        stats.innerHTML = `
+            <div class="lesson-bar-large">
+                <div class="lesson-bar-red"   style="width:${red}%"></div>
+                <div class="lesson-bar-green" style="left:${red}%; width:${green}%"></div>
+            </div>
+        `;
+    }
+
+    /* -------- Karte anzeigen -------- */
+    const sol = $("#solBox");
+    sol.classList.add("masked");
+
+    /* Wort, Pinyin & POS werden immer sofort angezeigt */
+    if (state.mode === "zh2de") {
+        /* ---- CH → DE ---- */
+
+        $("#promptWord").innerHTML = entry.word.zh || "—";
+
+        $("#promptWordSub").innerHTML = entry.word.py
+            ? `<span class="pinyin-word">${entry.word.py}</span>`
+            : "";
+
+        $("#promptPOS").textContent = entry.pos || "";
+
+        /* ✅ Satz NICHT sofort anzeigen */
+        $("#promptSent").innerHTML = "";
+
+        /* ✅ Lösungskarte sofort setzen */
+        $("#solWord").textContent = entry.word.de;
+        $("#solSent").textContent = entry.sent.de;
+
+        /* ✅ Verzögertes Einblenden des Satzes (CH+Pinyin) */
+        state.delayedSentenceTimer = setTimeout(() => {
+            $("#promptSent").innerHTML =
+                `${entry.sent.zh}<br><span class="zh-pinyin">${entry.sent.py}</span>`;
+            syncCardHeights();
+        }, state.sentenceDelay);
+
+    } else {
+        /* ---- DE → CH ---- */
+
+        $("#promptWord").textContent = entry.word.de || "—";
+        $("#promptWordSub").innerHTML = "";
+        $("#promptPOS").textContent = entry.pos || "";
+
+        /* ✅ Satz NICHT sofort anzeigen */
+        $("#promptSent").textContent = "";
+
+        /* ✅ Lösungskarte: CH + Pinyin */
+        $("#solWord").innerHTML =
+            `${entry.word.zh}<br><span class="zh-pinyin">${entry.word.py}</span>`;
+        $("#solSent").innerHTML =
+            `${entry.sent.zh}<br><span class="zh-pinyin">${entry.sent.py}</span>`;
+
+        /* ✅ Verzögertes Einblenden des Satzes (Deutsch) */
+        state.delayedSentenceTimer = setTimeout(() => {
+            $("#promptSent").textContent = entry.sent.de || "—";
+            syncCardHeights();
+        }, state.sentenceDelay);
+    }
+
+    /* -------- Buttons setzen -------- */
+    $("#btnReveal").disabled = false;
+
+    hideRatingButtons();
+    showNavButtons();
+    updateNavButtons();
+
+    syncCardHeights();
+}
+
+
+/* ============================ HISTORY / NAV ============================ */
+
+function pushToHistory(entry) {
+    if (state.historyPos < state.history.length - 1) {
+        state.history = state.history.slice(0, state.historyPos + 1);
+    }
+    state.history.push(entry);
+    state.historyPos = state.history.length - 1;
+}
+
+function updateNavButtons() {
+    $("#btnPrev").disabled = state.historyPos <= 0;
+    $("#btnNext").disabled = state.pool.length === 0;
+}
+
+function nextCard() {
+
+    if (!state.pool.length) return;
+
+    if (state.historyPos < state.history.length - 1) {
+        state.historyPos++;
+        setCard(state.history[state.historyPos], true);
+        syncCardHeights();
+        return;
+    }
+
+    let next;
+
+    if (state.order === "seq") {
+        if (state.idx == null) state.idx = 0;
+        else state.idx = (state.idx + 1) % state.pool.length;
+        next = state.pool[state.idx];
+    } else {
+        next = state.pool[Math.floor(Math.random() * state.pool.length)];
+    }
+
+    setCard(next);
+    syncCardHeights();
+}
+
+function prevCard() {
+    if (state.historyPos > 0) {
+        state.historyPos--;
+        setCard(state.history[state.historyPos], true);
+    }
+    updateNavButtons();
+    syncCardHeights();
+}
+
+
+/* ============================ NAV SHOW/HIDE ============================ */
+
+function hideNavButtons() {
+    if (state.autoplay.on) return;   // Autoplay braucht Navigation!
+    $("#btnPrev").style.display = "none";
+    $("#btnReveal").style.display = "none";
+    $("#btnNext").style.display = "none";
+}
+
+function showNavButtons() {
+    $("#btnPrev").style.display = "";
+    $("#btnReveal").style.display = "";
+    $("#btnNext").style.display = "";
+}
+
+
+/* ============================ REVEAL / RATING ============================ */
+
+function doReveal() {
+    $("#solBox").classList.remove("masked");
+    state.revealedAt = Date.now();
+
+	if (state.delayedSentenceTimer) {
+    clearTimeout(state.delayedSentenceTimer);
+    state.delayedSentenceTimer = null;
+}	
+    if (!state.autoplay.on) hideNavButtons();
+
+    showRatingButtons();
+    enableRating();
+    syncCardHeights();
+}
+
+function showRatingButtons() {
+    $("#rateBar").style.display = "flex";
+}
+
+function hideRatingButtons() {
+    $("#rateBar").style.display = "none";
+}
+
+function enableRating() {
+    $("#btnRateKnown").disabled = false;
+    $("#btnRateUnsure").disabled = false;
+    $("#btnRateUnknown").disabled = false;
+}
+
+function disableRating() {
+    $("#btnRateKnown").disabled = true;
+    $("#btnRateUnsure").disabled = true;
+    $("#btnRateUnknown").disabled = true;
+}
+
+function rate(mark) {
+
+    if (!state.current) return;
+
+    state.session.done++;
+
+    if (mark === "known") state.session.known++;
+    else if (mark === "unsure") state.session.unsure++;
+    else state.session.unknown++;
+
+    const lesson = state.current.lesson;
+
+    if (lesson) {
+        if (!state.progress.byLesson[lesson])
+            state.progress.byLesson[lesson] = { known: 0, unknown: 0 };
+
+        if (mark === "known")   state.progress.byLesson[lesson].known++;
+        if (mark === "unknown") state.progress.byLesson[lesson].unknown++;
+
+        saveProgress();
+    }
+
+    disableRating();
+    hideRatingButtons();
+    showNavButtons();
+
+    nextCard();
+}
+
+
+/* ============================ SESSION STATS ============================ */
+
+function renderSessionStats() {
+    const s = state.session;
+
+    const avg = s.ttrCount
+        ? (s.ttrSum / s.ttrCount / 1000).toFixed(1)
+        : "—";
+
+    const acc = s.done
+        ? `${Math.round((s.known / s.done) * 100)}%`
+        : "—";
+
+    $("#sessionStats").textContent =
+        `Karten: ${s.done}/${s.total} · Korrekt: ${acc} · Aufdeck-Zeit: ${avg}s`;
+}
+
+
+/* ============================ TRAINING ============================ */
+
+function startTraining() {
+
+    if (!state.trainingOn) {
+
+        state.history = [];
+        state.historyPos = -1;
+
+        state.selectedLessons.clear();
+        const sel = $("#lessonSelect");
+
+        const picked = [];
+        for (const o of sel.selectedOptions) {
+            state.selectedLessons.add(o.value);
+            picked.push(o.value);
+        }
+
+        state.settings.lessons = picked;
+        saveSettings();
+
+        gatherPool();
+
+        if (!state.pool.length) {
+            alert("Bitte zuerst Lektionen auswählen.");
+            return;
+        }
+
+        if (state.order === "seq") {
+            state.idx = 0;
+            setCard(state.pool[state.idx]);
+        } else {
+            const first = state.pool[Math.floor(Math.random() * state.pool.length)];
+            setCard(first);
+        }
+
+        state.trainingOn = true;
+        updateTrainingBtn();
+
+        scrollToBottom();
+
+    } else {
+        stopTraining();
+    }
+}
+
+function stopTraining() {
+    state.trainingOn = false;
+    updateTrainingBtn();
+
+    $("#btnPrev").disabled = true;
+    $("#btnReveal").disabled = true;
+    $("#btnNext").disabled = true;
+
+    disableRating();
+    hideRatingButtons();
+
+    $("#solBox").classList.add("masked");
+}
+
+function updateTrainingBtn() {
+    $("#btnStart").textContent =
+        state.trainingOn ? "Training stoppen ■" : "Training starten ▶";
+}
+
+
+/* ========================================================================== */
+/*                                ENDE TEIL 2                                 */
+/* ========================================================================== */
+
+/* ========================================================================== */
+/*                           TEIL 3 – TTS & AUTOPLAY                          */
+/* ========================================================================== */
+
+
+/* ============================ TTS PRIME DELAY ============================ */
+
+function ttsPrime(cb) {
+    setTimeout(cb, 120);
+}
+
+
+/* ============================ BUILD UTTERANCE ============================ */
+
+function buildUtterance(text, langKey) {
+
+    const u = new SpeechSynthesisUtterance(text || "");
+    u.lang = (langKey === "zh") ? "zh-CN" : "de-DE";
+
+    if (langKey === "zh") {
+        u.rate  = state.rateZh;
+        u.pitch = state.pitchZh;
+    } else {
+        u.rate  = state.rateDe;
+        u.pitch = state.pitchDe;
+    }
+
+    const chosen = (langKey === "zh") ? state.browserVoice.zh : state.browserVoice.de;
+    if (chosen) u.voice = chosen;
+
+    return u;
+}
+
+
+/* ============================ DETECT VOICES ============================ */
+
+function isZhVoice(v) {
+    const L = (v.lang || "").toLowerCase();
+    return (
+        L.startsWith("zh") ||
+        L.includes("cmn") ||
+        L.includes("hans") ||
+        L.includes("zh-cn")
+    );
+}
+
+function isDeVoice(v) {
+    const L = (v.lang || "").toLowerCase();
+    return L.startsWith("de");
+}
+
+
+/* ============================ REFRESH VOICES ============================ */
+
+function refreshVoices() {
+
+    state.voices = window.speechSynthesis.getVoices() || [];
+
+    if (state.settings.browserVoiceZh) {
+        const vz = state.voices.find(v =>
+            v.name === state.settings.browserVoiceZh ||
+            v.voiceURI === state.settings.browserVoiceZh
+        );
+        if (vz) state.browserVoice.zh = vz;
+    }
+
+    if (state.settings.browserVoiceDe) {
+        const vd = state.voices.find(v =>
+            v.name === state.settings.browserVoiceDe ||
+            v.voiceURI === state.settings.browserVoiceDe
+        );
+        if (vd) state.browserVoice.de = vd;
+    }
+
+    updateVoiceList();
+}
+
+
+/* ============================ VOICE PANEL ============================ */
+
+let voiceRetryTimer = null;
+
+function openVoicesPanelFor(target) {
+    state.voicePanelTarget = target;
+    refreshVoices();
+
+    if (!state.voices.length) {
+        clearTimeout(voiceRetryTimer);
+        let tries = 0;
+
+        const attempt = () => {
+            tries++;
+            refreshVoices();
+            if (state.voices.length || tries >= 10) return;
+            voiceRetryTimer = setTimeout(attempt, 200);
+        };
+
+        voiceRetryTimer = setTimeout(attempt, 200);
+    }
+
+    $("#voicePanel").classList.remove("hidden");
+}
+
+function closeVoices() {
+    $("#voicePanel").classList.add("hidden");
+}
+
+
+/* ============================ UPDATE VOICE LIST ============================ */
+
+function updateVoiceList() {
+    const box = $("#dbgVoices");
+    if (!box) return;
+
+    box.innerHTML = "";
+
+    const list = (state.voices || []).filter(v =>
+        state.voicePanelTarget === "zh" ? isZhVoice(v) : isDeVoice(v)
+    );
+
+    if (!list.length) {
+        box.innerHTML = "<div>Keine passenden Stimmen gefunden.</div>";
+        return;
+    }
+
+    list.forEach(v => {
+
+        const row  = document.createElement("div");
+        row.className = "voice";
+
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = v.name || "(namenlos)";
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `${v.lang}${v.default ? " · default" : ""}`;
+
+        const actions = document.createElement("div");
+        actions.style.display = "flex";
+        actions.style.gap = "6px";
+        actions.style.marginLeft = "auto";
+
+        const btnPick = document.createElement("button");
+        btnPick.className = "btn";
+        btnPick.textContent = "Diese Stimme wählen";
+
+        btnPick.onclick = () => {
+            if (state.voicePanelTarget === "zh") {
+                state.browserVoice.zh = v;
+                state.settings.browserVoiceZh =
+                    v.name || v.voiceURI;
+            } else {
+                state.browserVoice.de = v;
+                state.settings.browserVoiceDe =
+                    v.name || v.voiceURI;
+            }
+            saveSettings();
+            closeVoices();
+        };
+
+        const btnTest = document.createElement("button");
+        btnTest.className = "btn ghost";
+        btnTest.textContent = "Probehören";
+
+        btnTest.onclick = () => {
+            const u = new SpeechSynthesisUtterance(
+                state.voicePanelTarget === "zh"
+                    ? "这是一个测试。"
+                    : "Dies ist ein Test."
+            );
+            u.lang = state.voicePanelTarget === "zh" ? "zh-CN" : "de-DE";
+            u.voice = v;
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
+        };
+
+        const active = state.voicePanelTarget === "zh"
+            ? state.browserVoice.zh
+            : state.browserVoice.de;
+
+        if (active &&
+            (active.name === v.name || active.voiceURI === v.voiceURI)) {
+            name.textContent += " • [Aktiv]";
+        }
+
+        actions.appendChild(btnPick);
+        actions.appendChild(btnTest);
+
+        row.appendChild(name);
+        row.appendChild(meta);
+        row.appendChild(actions);
+
+        box.appendChild(row);
+    });
+}
+
+
+/* ============================ PLAY QUESTION / ANSWER ============================ */
+
+function playQuestion() {
+    if (!state.current) return;
+
+    if (state.mode === "de2zh") {
+        playSequence(
+            state.current.word.de, "de",
+            state.current.sent.de, "de"
+        );
+    } else {
+        speechSynthesis.cancel();
+        ttsSpeak(state.current.word.zh, "zh");
+        setTimeout(() =>
+            ttsSpeak(state.current.sent.zh, "zh"),
+        600);
+    }
+}
+
+function playAnswer() {
+    if (!state.current) return;
+
+    if (state.mode === "de2zh") {
+        ttsSpeak(state.current.word.zh, "zh");
+        setTimeout(() =>
+            ttsSpeak(state.current.sent.zh, "zh"),
+        600);
+    } else {
+        playSequence(
+            state.current.word.de, "de",
+            state.current.sent.de, "de"
+        );
+    }
+}
+
+
+/* ============================ SEQUENCED PLAYBACK ============================ */
+
+function ttsSpeak(text, langKey) {
+    const u = buildUtterance(text, langKey);
     speechSynthesis.speak(u);
+    return u;
+}
+
+function playSequence(a, aLang, b, bLang) {
+    ttsPrime(() => {
+        speechSynthesis.cancel();
+        ttsSpeak(a, aLang);
+        setTimeout(() => ttsSpeak(b, bLang), 700);
+    });
+}
+
+
+/* ============================ AUTOPLAY ============================ */
+
+function setAutoplay(on) {
+
+    state.autoplay.on = on;
+
+    if (!on) {
+        speechSynthesis.cancel();
+        state.autoplay.timers.forEach(x => clearTimeout(x));
+        state.autoplay.timers = [];
+        releaseWakeLock();
+    }
+
+    updateAutoplayBtn();
+}
+
+function updateAutoplayBtn() {
+    $("#btnAutoplay").textContent =
+        state.autoplay.on ? "Autoplay ■ Stop" : "Autoplay ▶︎";
+}
+
+
+function ensurePoolForAutoplay() {
+
+    if (state.pool.length) return true;
+
+    if (!state.settings.lessons.length) {
+
+        const sel = $("#lessonSelect");
+        const picked = [];
+
+        for (const o of sel.selectedOptions) picked.push(o.value);
+
+        state.settings.lessons = picked;
+        saveSettings();
+    }
+
+    gatherPoolFromSettings();
+
+    if (!state.pool.length) {
+        alert("Bitte Lektionen wählen.");
+        return false;
+    }
+
+    if (state.order === "seq") {
+        state.idx = 0;
+        setCard(state.pool[state.idx]);
+    } else {
+        const r = state.pool[Math.floor(Math.random() * state.pool.length)];
+        setCard(r);
+    }
+
+    return true;
+}
+
+
+function speakPair(word, sent, langKey, done) {
+
+    if (!state.autoplay.on) return;
+
+    const u1 = buildUtterance(word, langKey);
+
+    u1.onend = () => {
+
+        if (!state.autoplay.on) return;
+
+        const t = setTimeout(() => {
+
+            if (!state.autoplay.on) return;
+
+            const u2 = buildUtterance(sent, langKey);
+
+            u2.onend = () => {
+                if (!state.autoplay.on) return;
+                done && done();
+            };
+
+            speechSynthesis.speak(u2);
+
+        }, 650);
+
+        state.autoplay.timers.push(t);
+    };
+
+    speechSynthesis.speak(u1);
+}
+
+
+function autoplayStep() {
+
+    if (!state.autoplay.on) return;
+
+    if (!ensurePoolForAutoplay()) {
+        setAutoplay(false);
+        return;
+    }
+
+    $("#solBox").classList.add("masked");
+    disableRating();
+
+    const qLang = (state.mode === "de2zh") ? "de" : "zh";
+    const aLang = (state.mode === "de2zh") ? "zh" : "de";
+
+    ttsPrime(() => {
+
+        speechSynthesis.cancel();
+
+        speakPair(
+            state.current.word[qLang],
+            state.current.sent[qLang],
+            qLang,
+
+            () => {
+
+                if (!state.autoplay.on) return;
+
+                $("#solBox").classList.remove("masked");
+
+                speakPair(
+                    state.current.word[aLang],
+                    state.current.sent[aLang],
+                    aLang,
+
+                    () => {
+
+                        if (!state.autoplay.on) return;
+
+                        const t = setTimeout(() => {
+
+                            if (!state.autoplay.on) return;
+
+                            if (state.order === "seq") {
+                                if (state.idx == null) state.idx = 0;
+                                else state.idx = (state.idx + 1) % state.pool.length;
+
+                                setCard(state.pool[state.idx]);
+                            } else {
+                                setCard(
+                                    state.pool[Math.floor(Math.random() * state.pool.length)]
+                                );
+                            }
+
+                            autoplayStep();
+
+                        }, state.autoplay.gapMs);
+
+                        state.autoplay.timers.push(t);
+                    }
+                );
+            }
+        );
+
+    });
+}
+
+
+function toggleAutoplay() {
+
+    // === AUTOPLAY START ===
+    if (!state.autoplay.on) {
+
+        // Pool laden falls leer
+        if (!ensurePoolForAutoplay()) return;
+
+        // Autoplay aktivieren
+        setAutoplay(true);
+        requestWakeLock();
+
+        // Falls noch keine Karte angezeigt wurde
+        if (!state.current) {
+            if (state.order === "seq") {
+                state.idx = 0;
+                setCard(state.pool[state.idx]);
+            } else {
+                const first = state.pool[Math.floor(Math.random() * state.pool.length)];
+                setCard(first);
+            }
+        }
+
+        scrollToBottom();
+        autoplayStep();
+        return;
+    }
+
+    // === AUTOPLAY STOP ===
+    // (WICHTIG: ALLES abbrechen – keine weiteren Timer, kein Speech)
+    setAutoplay(false);
+
+    try { speechSynthesis.cancel(); } catch (e) {}
+
+    if (state.autoplay.timers && state.autoplay.timers.length > 0) {
+        state.autoplay.timers.forEach(id => clearTimeout(id));
+    }
+
+    state.autoplay.timers = [];
+
+    // Verhindert ein sofortiges Wiederstarten
     return;
-  }
+}
 
-  const cacheKey = nativeVoiceChoice + "|" + text;
 
-  if(nativeAudioCache.has(cacheKey)){
-    const audio = new Audio(nativeAudioCache.get(cacheKey));
-    audio.play();
-    return;
-  }
+/* ============================ WAKE LOCK ============================ */
 
-  try{
-    const res = await fetch(NATIVE_TTS_ENDPOINT,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json"},
-      body: JSON.stringify({
-        text:text,
-        voice: VOICE_PACK[nativeVoiceChoice]
-      })
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator && !state.wakeLock) {
+            state.wakeLock = await navigator.wakeLock.request("screen");
+            state.wakeLock.addEventListener?.("release", () => {
+                state.wakeLock = null;
+            });
+            document.addEventListener("visibilitychange", onVisibilityChange, {
+                passive: true
+            });
+        }
+    } catch (e) {}
+}
+
+function onVisibilityChange() {
+    if (
+        document.visibilityState === "visible" &&
+        state.autoplay.on &&
+        !state.wakeLock
+    ) {
+        requestWakeLock();
+    }
+}
+
+function releaseWakeLock() {
+    try {
+        if (state.wakeLock) state.wakeLock.release?.();
+    } catch (e) {}
+
+    state.wakeLock = null;
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+}
+
+
+/* ============================ AUTOPLAY SAFETY ============================ */
+
+function stopAutoplayOnUserAction() {
+    if (state.autoplay.on) {
+        setAutoplay(false);
+        speechSynthesis.cancel();
+        state.autoplay.timers.forEach(id => clearTimeout(id));
+        state.autoplay.timers = [];
+    }
+}
+
+
+/* ========================================================================== */
+/*                                ENDE TEIL 3                                 */
+/* ========================================================================== */
+``
+/* ========================================================================== */
+/*                           TEIL 4 – INIT & EVENTS                           */
+/* ========================================================================== */
+
+function renderModeUI() {
+    const left  = $("#modeLeft");
+    const right = $("#modeRight");
+
+    if (state.mode === "de2zh") {
+        left.textContent  = "🇩🇪 DE";
+        right.textContent = "🇨🇳 ZH";
+    } else {
+        left.textContent  = "🇨🇳 ZH";
+        right.textContent = "🇩🇪 DE";
+    }
+
+    $("#btnOrderToggle").textContent =
+        "Reihenfolge: " +
+        (state.order === "seq" ? "Sequenziell" : "Zufällig");
+
+    updateTrainingBtn();
+}
+
+/* ========================================================================== */
+/*                                INIT ROUTINE                                */
+/* ========================================================================== */
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    console.log("[INIT] Starte Initialisierung …");
+
+    /* ============================================================
+       SETTINGS + PROGRESS LADEN + THEME & DELAY INITIALISIEREN
+       ============================================================ */
+    loadSettings();
+    loadProgress();
+
+    // Theme laden
+    const savedTheme = localStorage.getItem("theme") || "dark";
+    document.documentElement.classList.toggle("light", savedTheme === "light");
+
+    // Satz-Delay (ms)
+    if (state.settings.sentenceDelay !== undefined) {
+        state.sentenceDelay = state.settings.sentenceDelay;
+    }
+
+    const delayInput = document.querySelector("#delayInput");
+    if (delayInput) delayInput.value = state.sentenceDelay / 1000;
+
+    // MODE & ORDER
+    state.mode  = state.settings.mode  || "de2zh";
+    state.order = state.settings.order || "random";
+
+    // AUTOPLAY GAP
+    state.autoplay.gapMs = state.settings.autoplayGap || 800;
+
+    // TTS-Werte übernehmen
+    state.rateDe  = state.settings.rateDe;
+    state.pitchDe = state.settings.pitchDe;
+    state.rateZh  = state.settings.rateZh;
+    state.pitchZh = state.settings.pitchZh;
+
+    renderModeUI();
+
+    /* ============================================================
+       CSV LADEN
+       ============================================================ */
+    loadCSV();
+
+    /* ============================================================
+       STIMMEN LADEN
+       ============================================================ */
+    speechSynthesis.onvoiceschanged = () => {
+        refreshVoices();
+    };
+    setTimeout(refreshVoices, 300); // Fallback
+
+    /* Slider auf gespeicherte Werte setzen */
+    const rateDeRange  = document.querySelector("#rateDeRange");
+    const pitchDeRange = document.querySelector("#pitchDeRange");
+    const rateZhRange  = document.querySelector("#rateZhRange");
+    const pitchZhRange = document.querySelector("#pitchZhRange");
+
+    const rateDeVal  = document.querySelector("#rateDeVal");
+    const pitchDeVal = document.querySelector("#pitchDeVal");
+    const rateZhVal  = document.querySelector("#rateZhVal");
+    const pitchZhVal = document.querySelector("#pitchZhVal");
+
+    if (rateDeRange)  rateDeRange.value  = state.rateDe;
+    if (pitchDeRange) pitchDeRange.value = state.pitchDe;
+    if (rateZhRange)  rateZhRange.value  = state.rateZh;
+    if (pitchZhRange) pitchZhRange.value = state.pitchZh;
+
+    if (rateDeVal)  rateDeVal.textContent  = `(${state.rateDe.toFixed(2)})`;
+    if (pitchDeVal) pitchDeVal.textContent = `(${state.pitchDe.toFixed(2)})`;
+    if (rateZhVal)  rateZhVal.textContent  = `(${state.rateZh.toFixed(2)})`;
+    if (pitchZhVal) pitchZhVal.textContent = `(${state.pitchZh.toFixed(2)})`;
+
+    /* ============================================================
+       AUTOPLAY BUTTON In TRAINING-GRUPPE SETZEN
+       ============================================================ */
+    (function placeAutoplayButton() {
+        const trainingBtn = document.querySelector("#btnStart");
+        const autoplayBtn = document.querySelector("#btnAutoplay");
+
+        if (!trainingBtn || !autoplayBtn) return;
+
+        const parent = trainingBtn.parentNode;
+        let group = parent.querySelector(".training-group");
+
+        if (!group) {
+            group = document.createElement("div");
+            group.className = "training-group";
+            parent.insertBefore(group, trainingBtn);
+            group.appendChild(trainingBtn);
+        }
+
+        group.appendChild(autoplayBtn);
+        autoplayBtn.classList.add("primary");
+    })();
+
+    /* ============================================================
+       SLIDE-DRAWER (⋮)
+       ============================================================ */
+    const toggleBtn = document.querySelector("#menuToggle");
+    const sideMenu  = document.querySelector("#sideMenu");
+
+    if (toggleBtn && sideMenu) {
+        toggleBtn.addEventListener("click", () => {
+            sideMenu.classList.toggle("open");
+        });
+    }
+
+    /* THEME-SWITCH */
+    document.querySelector("#btnLight")?.addEventListener("click", () => {
+        document.documentElement.classList.add("light");
+        localStorage.setItem("theme", "light");
     });
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    document.querySelector("#btnDark")?.addEventListener("click", () => {
+        document.documentElement.classList.remove("light");
+        localStorage.setItem("theme", "dark");
+    });
 
-    nativeAudioCache.set(cacheKey,url);
-
-    const audio = new Audio(url);
-    audio.play();
-
-  }catch(e){
-    const u = buildUtterance(text,'zh');
-    speechSynthesis.speak(u);
-  }
-}
-
-function ttsSpeak(text, langKey){ const u=buildUtterance(text, langKey); speechSynthesis.speak(u); return u; }
-function playSequence(firstText, firstLangKey, secondText, secondLangKey){ ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){}; ttsSpeak(firstText, firstLangKey); setTimeout(()=>{ ttsSpeak(secondText, secondLangKey); }, BETWEEN_DELAY_MS); }); }
-function playQuestion(){ if(!state.current) return; if(state.mode==='de2zh'){ playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } else { nativeMandarinSpeak(state.current.word.zh); setTimeout(()=>nativeMandarinSpeak(state.current.sent.zh),700); } }
-function playAnswer(){ if(!state.current) return; if(state.mode==='de2zh'){ nativeMandarinSpeak(state.current.word.zh); setTimeout(()=>nativeMandarinSpeak(state.current.sent.zh),700); } else { playSequence(state.current.word.de,'de', state.current.sent.de,'de'); } }
-
-function setAutoplay(on){ state.autoplay.on=on; if(!on){ try{ speechSynthesis.cancel(); }catch(e){} state.autoplay.timers.forEach(id=>clearTimeout(id)); state.autoplay.timers=[]; releaseWakeLock(); } updateAutoplayBtn(); }
-function updateAutoplayBtn(){ const b=$('#btnAutoplay'); if(!b) return; b.textContent = state.autoplay.on? 'Autoplay ■ Stop' : 'Autoplay ▶︎'; }
-function speakPair(word, sent, langKey, done){ if(!state.autoplay.on) return; const u1 = buildUtterance(word, langKey); u1.onend = ()=>{ if(!state.autoplay.on) return; const t=setTimeout(()=>{ if(!state.autoplay.on) return; const u2=buildUtterance(sent, langKey); u2.onend=()=>{ if(!state.autoplay.on) return; done && done(); }; speechSynthesis.speak(u2); }, BETWEEN_DELAY_MS); state.autoplay.timers.push(t); }; speechSynthesis.speak(u1); }
-function ensurePoolForAutoplay(){ if(state.pool.length>0) return true; if(!state.settings.lessons || state.settings.lessons.length===0){ const sel=$('#lessonSelect'); const picked=[]; for(const o of sel?.selectedOptions||[]){ picked.push(o.value); } if(picked.length>0){ state.settings.lessons=picked; saveSettings(); } } gatherPoolFromSettings(); if(!state.pool.length){ alert('Bitte Lektion(en) wählen oder übernehmen, bevor Autoplay startet.'); return false; } if(state.order==='seq'){ state.idx=0; setCard(state.pool[state.idx]); } else { setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); } return true; }
-function autoplayStep(){ if(!state.autoplay.on) return; if(!ensurePoolForAutoplay()) { setAutoplay(false); return; } $('#solBox').classList.add('masked'); disableRating(); const qLang = (state.mode==='de2zh')? 'de':'zh'; const aLang = (state.mode==='de2zh')? 'zh':'de'; ttsPrime(()=>{ try{ speechSynthesis.cancel(); }catch(e){}; speakPair(state.current.word[qLang], state.current.sent[qLang], qLang, ()=>{ if(!state.autoplay.on) return; $('#solBox').classList.remove('masked'); speakPair(state.current.word[aLang], state.current.sent[aLang], aLang, ()=>{ if(!state.autoplay.on) return; const t=setTimeout(()=>{ if(!state.autoplay.on) return; if(state.order==='seq'){ if(state.idx==null) state.idx=0; else state.idx=(state.idx+1)%state.pool.length; setCard(state.pool[state.idx]); } else { setCard(state.pool[Math.floor(Math.random()*state.pool.length)]); } autoplayStep(); }, state.autoplay.gapMs); state.autoplay.timers.push(t); }); }); }); }
-function toggleAutoplay(){ if(!state.autoplay.on){ if(!ensurePoolForAutoplay()) return; setAutoplay(true); requestWakeLock(); scrollToPageEnd(); setTimeout(scrollToPageEnd, 60); autoplayStep(); } else { setAutoplay(false); } }
-function stopAutoplayOnUserAction(){ if(state.autoplay.on) setAutoplay(false); }
-
-// Wake Lock API
-async function requestWakeLock(){ try{ if('wakeLock' in navigator && !state.wakeLock){ state.wakeLock = await navigator.wakeLock.request('screen'); state.wakeLock.addEventListener?.('release', ()=>{ state.wakeLock=null; }); document.addEventListener('visibilitychange', onVisibilityChange, { passive:true }); } }catch(e){} }
-function onVisibilityChange(){ if(document.visibilityState==='visible' && state.autoplay.on && !state.wakeLock){ requestWakeLock(); } }
-function releaseWakeLock(){ try{ if(state.wakeLock){ state.wakeLock.release?.(); } }catch(e){} finally{ state.wakeLock=null; document.removeEventListener('visibilitychange', onVisibilityChange); } }
-
-function renderSessionStats(){ const s=state.session; const avg=s.ttrCount? (s.ttrSum/s.ttrCount/1000).toFixed(1) : '—'; const acc=s.done? Math.round(100*s.known/s.done)+'%' : '—'; $('#sessionStats').textContent=`Karten: ${s.done}/${s.total} · Korrekt: ${acc} · Ø Aufdeck‑Zeit: ${avg}s`; }
-function renderModeUI(){ const left=$('#modeLeft'), right=$('#modeRight'); if(state.mode==='de2zh'){ left.textContent='🇩🇪 DE'; right.textContent='🇨🇳 ZH'; } else { left.textContent='🇨🇳 ZH'; right.textContent='🇩🇪 DE'; } $('#btnOrderToggle').textContent = 'Reihenfolge: ' + (state.order==='seq' ? 'Sequenziell' : 'Zufällig'); updateTrainingBtn(); }
-
-window.addEventListener('DOMContentLoaded', ()=>{
-  loadSettings(); loadProgress();
-  state.mode = state.settings.mode || 'de2zh';
-  state.order = state.settings.order || 'random';
-  state.autoplay.gapMs = typeof state.settings.autoplayGap==='number' ? state.settings.autoplayGap : 800;
-  state.rateDe = typeof state.settings.rateDe==='number'? state.settings.rateDe : 0.95;
-  state.pitchDe = typeof state.settings.pitchDe==='number'? state.settings.pitchDe : 1.0;
-  state.rateZh = typeof state.settings.rateZh==='number'? state.settings.rateZh : 0.95;
-  state.pitchZh = typeof state.settings.pitchZh==='number'? state.settings.pitchZh : 1.0;
-  renderModeUI(); updateAutoplayBtn();
-
-  // NEU: Setze den Text des Swap-Buttons auf "< Richtung >" (ersetzt Icon und integriert "Richtung" – Platz sparen, höher machen via CSS)
-  const swapBtn = $('#btnSwapMode');
-  if (swapBtn) {
-    swapBtn.textContent = '< Richtung >';  // Zeigt die < > als Literal-Text (keine HTML-Entities nötig mit textContent)
-  }
-
-  // Optional: Verstecke oder entferne das separate "Richtung"-Label (angenommen ID="lblRichtung" oder Klasse ".direction-label" – passe bei Bedarf an)
-  const directionLabel = document.querySelector('#lblRichtung') || document.querySelector('.direction-label') || document.querySelector('.lbl:has(~ .mode-inline)');  // Fallback-Selektoren basierend auf CSS
-  if (directionLabel) {
-    directionLabel.style.display = 'none';  // Versteckt das Label (spart Höhe); oder .remove() zum Entfernen
-  }
-
-  // NEU: Füge .primary-Klasse zum Autoplay-Button hinzu (für blaue Farbe, wie Training-Button)
-  const autoplayBtn = $('#btnAutoplay');
-  if (autoplayBtn) {
-    autoplayBtn.classList.add('primary');
-    console.log('Autoplay-Button: Primary-Klasse hinzugefügt');  // Debug-Log
-  }
-
-  const gapSec = (state.autoplay.gapMs/1000).toFixed(1); $('#gapRange').value = gapSec; $('#gapVal').textContent = `(${gapSec} s)`;
-  $('#rateDeRange').value=String(state.rateDe); $('#rateDeVal').textContent=`(${state.rateDe.toFixed(2)})`;
-  $('#pitchDeRange').value=String(state.pitchDe); $('#pitchDeVal').textContent=`(${state.pitchDe.toFixed(2)})`;
-  $('#rateZhRange').value=String(state.rateZh); $('#rateZhVal').textContent=`(${state.rateZh.toFixed(2)})`;
-  $('#pitchZhRange').value=String(state.pitchZh); $('#pitchZhVal').textContent=`(${state.pitchZh.toFixed(2)})`;
-
-  loadExcel();
-
-  // NEU: Verschiebe Autoplay unter Sliders, direkt neben/neben Training-Button – in dessen Parent, mit neuer Gruppe
-  setTimeout(() => {  // 100ms Timeout für volles Rendering
-    const trainingBtn = $('#btnStart');
-    if (trainingBtn && autoplayBtn) {
-      const trainingParent = trainingBtn.parentNode;
-      const autoplayParent = autoplayBtn.parentNode;
-      console.log('Debug Position: Training Parent:', trainingParent?.className || trainingParent?.tagName || 'unbekannt', 'Autoplay Parent:', autoplayParent?.className || autoplayParent?.tagName || 'unbekannt');  // Log: Zeigt Parent (z.B. "div", ".config-section")
-
-      // Entferne Autoplay aus oberer Position
-      if (autoplayParent && autoplayParent.contains(autoplayBtn)) {
-        autoplayParent.removeChild(autoplayBtn);
-        console.log('Autoplay aus oberer Position entfernt.');  // Debug
-      }
-
-      // Prüfe, ob Training-Parent schon eine Flex-Gruppe hat; sonst erstelle .training-group
-      let group = trainingParent.querySelector('.training-group');
-      if (!group) {
-        // Erstelle neue Flex-Gruppe um Training-Button
-        group = document.createElement('div');
-        group.className = 'training-group';
-        trainingParent.insertBefore(group, trainingBtn);
-        group.appendChild(trainingBtn);
-        console.log('Neue .training-group um Training erstellt.');  // Debug
-      }
-
-      // Füge Autoplay in die Gruppe ein (direkt nach Training)
-      group.appendChild(autoplayBtn);
-      console.log('Autoplay in Gruppe unter Sliders platziert – neben Training.');  // Debug
-
-      // Bestätige finale Position
-      console.log('Finale Parent von Autoplay:', autoplayBtn.parentNode?.className || autoplayBtn.parentNode?.tagName);
-    } else {
-      console.warn('Training- oder Autoplay-Button nicht gefunden.');  // Debug
+    /* DELAY INPUT */
+    if (delayInput) {
+        delayInput.addEventListener("input", (e) => {
+            const seconds = parseFloat(e.target.value) || 0;
+            state.sentenceDelay = seconds * 1000;
+            state.settings.sentenceDelay = state.sentenceDelay;
+            saveSettings();
+        });
     }
-  }, 100);  // Kurzer Delay
 
-  // Voice panels
-  $('#btnVoiceDe').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); openVoicesPanelFor('de'); });
-  $('#btnVoiceZh').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); openVoicesPanelFor('zh'); });
-  $('#btnCloseVoices').addEventListener('click', closeVoices);
+    /* ============================================================
+       STIMMEN-EINSTELLUNG
+       ============================================================ */
+    rateDeRange?.addEventListener("input", (e) => {
+        stopAutoplayOnUserAction();
+        state.rateDe = parseFloat(e.target.value);
+        state.settings.rateDe = state.rateDe;
+        rateDeVal.textContent = `(${state.rateDe.toFixed(2)})`;
+        saveSettings();
+    });
 
-  // Order / Autoplay
-  $('#btnOrderToggle').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); state.order = (state.order==='random')? 'seq':'random'; state.settings.order=state.order; saveSettings(); renderModeUI(); });
-  $('#btnAutoplay').addEventListener('click', ()=>{ toggleAutoplay(); });
+    pitchDeRange?.addEventListener("input", (e) => {
+        stopAutoplayOnUserAction();
+        state.pitchDe = parseFloat(e.target.value);
+        state.settings.pitchDe = state.pitchDe;
+        pitchDeVal.textContent = `(${state.pitchDe.toFixed(2)})`;
+        saveSettings();
+    });
 
-  // Gap slider
-  $('#gapRange').addEventListener('input', e=>{ const s=parseFloat(e.target.value)||0.8; state.autoplay.gapMs=Math.round(s*1000); state.settings.autoplayGap=state.autoplay.gapMs; $('#gapVal').textContent = `(${s.toFixed(1)} s)`; saveSettings(); });
+    rateZhRange?.addEventListener("input", (e) => {
+        stopAutoplayOnUserAction();
+        state.rateZh = parseFloat(e.target.value);
+        state.settings.rateZh = state.rateZh;
+        rateZhVal.textContent = `(${state.rateZh.toFixed(2)})`;
+        saveSettings();
+    });
 
-  // Rate/Pitch per language
-  $('#rateDeRange').addEventListener('input', e=>{ stopAutoplayOnUserAction(); state.rateDe=parseFloat(e.target.value); state.settings.rateDe=state.rateDe; $('#rateDeVal').textContent=`(${state.rateDe.toFixed(2)})`; saveSettings(); });
-  $('#pitchDeRange').addEventListener('input', e=>{ stopAutoplayOnUserAction(); state.pitchDe=parseFloat(e.target.value); state.settings.pitchDe=state.pitchDe; $('#pitchDeVal').textContent=`(${state.pitchDe.toFixed(2)})`; saveSettings(); });
-  $('#rateZhRange').addEventListener('input', e=>{ stopAutoplayOnUserAction(); state.rateZh=parseFloat(e.target.value); state.settings.rateZh=state.rateZh; $('#rateZhVal').textContent=`(${state.rateZh.toFixed(2)})`; saveSettings(); });
-  $('#pitchZhRange').addEventListener('input', e=>{ stopAutoplayOnUserAction(); state.pitchZh=parseFloat(e.target.value); state.settings.pitchZh=state.pitchZh; $('#pitchZhVal').textContent=`(${state.pitchZh.toFixed(2)})`; saveSettings(); });
+    pitchZhRange?.addEventListener("input", (e) => {
+        stopAutoplayOnUserAction();
+        state.pitchZh = parseFloat(e.target.value);
+        state.settings.pitchZh = state.pitchZh;
+        pitchZhVal.textContent = `(${state.pitchZh.toFixed(2)})`;
+        saveSettings();
+    });
 
-  // Mode swap
-  $('#btnSwapMode').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); state.mode = (state.mode==='de2zh')? 'zh2de':'de2zh'; state.settings.mode=state.mode; saveSettings(); renderModeUI(); if(state.current) setCard(state.current); });
+    document.querySelector("#btnVoiceDe")?.addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        openVoicesPanelFor("de");
+    });
 
-  // Flow: Start/Stop button
-  $('#btnStart').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); startTraining(); });
-  $('#btnNext').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); nextCard(); });
-  $('#btnPrev').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); prevCard(); });
-  $('#btnReveal').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); doReveal(); });
-  $('#btnPlayQ').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); playQuestion(); });
-  $('#btnPlayA').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); playAnswer(); });
+    document.querySelector("#btnVoiceZh")?.addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        openVoicesPanelFor("zh");
+    });
 
-  // Rating
-  $('#btnRateKnown').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); rate('known'); });
-  $('#btnRateUnsure').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); rate('unsure'); });
-  $('#btnRateUnknown').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); rate('unknown'); });
+    document.querySelector("#btnCloseVoices")?.addEventListener("click", () => {
+        closeVoices();
+    });
 
-  // NEW: Lessons controls
-  $('#btnUseLessons').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); const sel=$('#lessonSelect'); const picked=[]; for(const o of sel.selectedOptions){ picked.push(o.value); } state.settings.lessons=picked; saveSettings(); gatherPoolFromSettings(); });
-  $('#btnClearLessons').addEventListener('click', ()=>{ stopAutoplayOnUserAction(); // Clear pool & selection
-    state.selectedLessons.clear(); state.settings.lessons=[]; saveSettings(); state.pool=[]; state.idx=null; resetSessionStats();
-    // clear UI selection in list
-    const sel=$('#lessonSelect'); for(const o of sel.options){ o.selected=false; }
-    // disable training state (if active) and reset view
-    if(state.trainingOn) stopTraining();
-  });
+    /* ============================================================
+       MODUS, REIHENFOLGE, AUTOPLAY
+       ============================================================ */
+    $("#btnSwapMode").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        state.mode = state.mode === "de2zh" ? "zh2de" : "de2zh";
+        state.settings.mode = state.mode;
+        saveSettings();
+        renderModeUI();
+        if (state.current) setCard(state.current);
+    });
 
-  // Progress export/import
-  $('#btnExport').addEventListener('click', ()=>{ const blob=new Blob([JSON.stringify(state.progress,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='progress.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); });
-  $('#fileImport').addEventListener('change', e=>{ stopAutoplayOnUserAction(); const f=e.target.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ const p=JSON.parse(r.result); if(p && p.version==='v1'){ state.progress=p; saveProgress(); populateLessonSelect(); alert('Fortschritt importiert.'); } else alert('Ungültiges Format.'); }catch(err){ alert('Import fehlgeschlagen: '+err.message); } }; r.readAsText(f); e.target.value=''; });
+    $("#btnOrderToggle").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        state.order = state.order === "random" ? "seq" : "random";
+        state.settings.order = state.order;
+        saveSettings();
+        renderModeUI();
+    });
+
+    $("#btnAutoplay").addEventListener("click", () => {
+        toggleAutoplay();
+    });
+
+    $("#gapRange").addEventListener("input", (e) => {
+        stopAutoplayOnUserAction();
+        const s = parseFloat(e.target.value) || 0.8;
+        state.autoplay.gapMs = Math.round(s * 1000);
+        state.settings.autoplayGap = state.autoplay.gapMs;
+        $("#gapVal").textContent = `(${s.toFixed(1)} s)`;
+        saveSettings();
+    });
+
+    /* ============================================================
+       TRAINING + NAVIGATION
+       ============================================================ */
+
+    $("#btnStart").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        startTraining();
+    });
+
+    $("#btnNext").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        nextCard();
+    });
+
+    $("#btnPrev").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        prevCard();
+    });
+
+    $("#btnReveal").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        doReveal();
+    });
+
+    /* ============================================================
+       AUDIO SPRECHER
+       ============================================================ */
+    $("#speakerQuestion").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        playQuestion();
+    });
+
+    $("#speakerAnswer").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        playAnswer();
+    });
+
+    /* ============================================================
+       RATING
+       ============================================================ */
+
+    $("#btnRateKnown").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        rate("known");
+    });
+
+    $("#btnRateUnsure").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        rate("unsure");
+    });
+
+    $("#btnRateUnknown").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        rate("unknown");
+    });
+
+    /* ============================================================
+       LEKTIONEN
+       ============================================================ */
+    $("#btnUseLessons").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+
+        const sel = $("#lessonSelect");
+        const picked = [];
+
+        for (const o of sel.selectedOptions) picked.push(o.value);
+
+        state.settings.lessons = picked;
+        saveSettings();
+
+        gatherPoolFromSettings();
+        populateLessonSelect();
+    });
+
+    $("#btnClearLessons").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+
+        state.selectedLessons.clear();
+        state.settings.lessons = [];
+        saveSettings();
+
+        state.pool = [];
+        state.idx = null;
+
+        resetSessionStats();
+
+        const sel = $('#lessonSelect');
+        for (const o of sel.options) o.selected = false;
+
+        document.querySelectorAll(".lt-row.selected")
+            .forEach(row => row.classList.remove("selected"));
+
+        if (state.trainingOn) stopTraining();
+    });
+
+    /* ============================================================
+       IMPORT/EXPORT → jetzt im Seitenmenü
+       ============================================================ */
+
+    document.querySelector("#btnMenuExport")?.addEventListener("click", () => {
+        const blob = new Blob(
+            [JSON.stringify(state.progress, null, 2)],
+            { type: "application/json" }
+        );
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "progress.json";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 300);
+    });
+
+    document.querySelector("#btnMenuImport")?.addEventListener("click", () => {
+        const inp = document.createElement("input");
+        inp.type = "file";
+        inp.accept = "application/json";
+
+        inp.onchange = (e) => {
+            const f = e.target.files?.[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+                try {
+                    const p = JSON.parse(r.result);
+                    if (p && p.version === "v1") {
+                        state.progress = p;
+                        saveProgress();
+                        populateLessonSelect();
+                        alert("Fortschritt importiert.");
+                    } else {
+                        alert("Ungültiges Format.");
+                    }
+                } catch (err) {
+                    alert("Fehler beim Import.");
+                }
+            };
+            r.readAsText(f);
+        };
+
+        inp.click();
+    });
+
+    console.log("[INIT] Alles bereit ✅");
 });
+
+
+/* ========================================================================== */
+/*                                ENDE TEIL 4                                 */
+/* ========================================================================== */

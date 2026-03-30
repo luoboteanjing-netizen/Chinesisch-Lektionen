@@ -1,149 +1,225 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chinesisch Flashcards – v5.5 (Browser optimiert)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chinesisch Flashcards – v5.5 (Browser optimiert)</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Deine CSS -->
+    <link rel="stylesheet" href="assets/css/style.css" />
 </head>
+
 <body>
-  <main class="container">
-    <header>
-      <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
-      <p class="subtitle">Lektion, Richtung und Reihenfolge wählen · Karte lernen</p>
-      <div class="top-actions">
-        <span class="muted small-label">Fortschritt:</span>
-        <label class="import-btn btn ghost small">Importieren<input id="fileImport" type="file" accept="application/json" hidden></label>
-        <button id="btnExport" class="btn ghost small">Exportieren</button>
-      </div>
-    </header>
 
-    <section class="card cfg">
-      <div class="grid-2">
+    <!-- ✅ Hamburger-Menü Icon (oben rechts) -->
+    <div id="menuToggle">⋮</div>
+
+    <!-- ✅ Seitenmenü für Einstellungen -->
+ <div id="sideMenu" class="side-menu">
+    <h3>Einstellungen</h3>
+	
+	<div class="menu-block">
+		<button id="btnMenuExport" class="btn">Fortschritt exportieren</button>
+		<button id="btnMenuImport" class="btn">Fortschritt importieren</button>
+	</div>
+
+    <div class="menu-block">
+        <button id="btnLight" class="btn">Light Mode</button>
+        <button id="btnDark" class="btn">Dark Mode</button>
+    </div>
+
+    <div class="menu-block">
+        <label class="lbl">Satz‑Delay (Sekunden):</label>
+        <input id="delayInput" type="number" min="0" max="15" step="0.5" value="5" class="menu-input">
+    </div>
+</div>
+
+    <main class="container">
+
+<header>
+    <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
+    <p class="subtitle">Lektion, Richtung und Reihenfolge wählen · Karte lernen</p>
+    
+</header>
+
+<!-- ====================================================================== -->
+<!-- KONFIG-BLOCK -->
+<!-- ====================================================================== -->
+
+<section class="card cfg">
+    <div class="grid-2">
+
+        <!-- Lektionen -->
         <div class="pane">
-          <div class="lbl">Lektion(en)</div>
-          <select id="lessonSelect" class="select" multiple size="10"></select>
-          <div class="controls mt8">
-            <button id="btnUseLessons" class="btn">Übernehmen</button>
-            <button id="btnClearLessons" class="btn ghost">Leeren</button>
-          </div>
+  
+            <select id="lessonSelect" class="select" multiple size="10"></select>
+
+            <!-- ✅ Neue Tabelle für die Lektionen-Auswahl -->
+            <div id="lessonTable" class="lesson-table"></div>
+
+            <div class="controls mt8">
+                <button id="btnUseLessons" class="btn">Übernehmen</button>
+                <button id="btnClearLessons" class="btn ghost">Leeren</button>
+            </div>
         </div>
 
+        <!-- Richtung / Reihenfolge / Autoplay -->
         <div class="pane">
-          <div class="lbl">Richtung</div>
-          <div class="mode-inline">
-            <div class="mode-item" id="modeLeft">🇩🇪 DE</div>
-            <button id="btnSwapMode" class="btn ghost swap" title="Richtung umschalten">⇄</button>
-            <div class="mode-item" id="modeRight">🇨🇳 ZH</div>
-          </div>
 
-          <div class="actions-inline mt8">
-            <button id="btnOrderToggle" class="btn ghost">Reihenfolge: Zufällig</button>
-            <button id="btnAutoplay" class="btn ghost">Autoplay ▶︎</button>
-          </div>
+           
 
-          <div class="mt8 gap-row">
-            <label class="lbl">Pausen‑Zeit zwischen Karten: <span id="gapVal" class="hint">(0.8 s)</span></label>
-            <input id="gapRange" type="range" min="0.6" max="2.5" step="0.1" value="0.8" />
-          </div>
-
-          <div class="two-col mt12">
-            <button id="btnVoiceDe" class="btn large fit voice-btn">DE Stimme</button>
-            <button id="btnVoiceZh" class="btn large fit voice-btn">ZH Stimme</button>
-          </div>
-          <div class="two-col mt8 voice-grids">
-            <div class="voice-config">
-              <label class="lbl">DE Tempo <span id="rateDeVal" class="hint">(0.95)</span></label>
-              <input id="rateDeRange" class="voice-range" type="range" min="0.6" max="1.6" step="0.05" value="0.95" />
-              <label class="lbl">DE Tonhöhe <span id="pitchDeVal" class="hint">(1.00)</span></label>
-              <input id="pitchDeRange" class="voice-range" type="range" min="0.7" max="1.5" step="0.05" value="1.00" />
+            <div class="mode-inline">
+                <div class="mode-item" id="modeLeft">🇩🇪 DE</div>
+                <button id="btnSwapMode" class="btn ghost swap" title="Richtung umschalten">⇄</button>
+                <div class="mode-item" id="modeRight">🇨🇳 ZH</div>
             </div>
-            <div class="voice-config">
-              <label class="lbl">ZH Tempo <span id="rateZhVal" class="hint">(0.95)</span></label>
-              <input id="rateZhRange" class="voice-range" type="range" min="0.6" max="1.6" step="0.05" value="0.95" />
-              <label class="lbl">ZH Tonhöhe <span id="pitchZhVal" class="hint">(1.00)</span></label>
-              <input id="pitchZhRange" class="voice-range" type="range" min="0.7" max="1.5" step="0.05" value="1.00" />
+
+            <div class="actions-inline mt8">
+                <button id="btnOrderToggle" class="btn ghost">Reihenfolge: Zufällig</button>
             </div>
-          </div>
 
-          <div class="stack mt12">
-            <button id="btnStart" class="btn primary">Training starten ▶</button>
-          </div>
+            <div class="mt8 gap-row">
+                <label class="lbl">
+                    Pause zw. Karten im Autoplay:
+                    <span id="gapVal" class="hint">(0.8 s)</span>
+                </label>
+                <input id="gapRange" type="range" min="0.6" max="2.5" step="0.1" value="0.8">
+            </div>
+
+            <!-- Stimmen -->
+            <div class="two-col mt12">
+                <button id="btnVoiceDe" class="btn large fit voice-btn">DE Stimme</button>
+                <button id="btnVoiceZh" class="btn large fit voice-btn">ZH Stimme</button>
+            </div>
+
+            <div class="two-col mt8 voice-grids">
+                <div class="voice-config">
+                    <label class="lbl">DE Tempo <span id="rateDeVal" class="hint">(0.95)</span></label>
+                    <input id="rateDeRange" class="voice-range" type="range" min="0.6" max="1.6" step="0.05" value="0.95">
+
+                    <label class="lbl">DE Tonhöhe <span id="pitchDeVal" class="hint">(1.00)</span></label>
+                    <input id="pitchDeRange" class="voice-range" type="range" min="0.7" max="1.5" step="0.05" value="1.00">
+                </div>
+
+                <div class="voice-config">
+                    <label class="lbl">ZH Tempo <span id="rateZhVal" class="hint">(0.95)</span></label>
+                    <input id="rateZhRange" class="voice-range" type="range" min="0.6" max="1.6" step="0.05" value="0.95">
+
+                    <label class="lbl">ZH Tonhöhe <span id="pitchZhVal" class="hint">(1.00)</span></label>
+                    <input id="pitchZhRange" class="voice-range" type="range" min="0.7" max="1.5" step="0.05" value="1.00">
+                </div>
+            </div>
+
+            <div class="stack mt12">
+                <div class="training-group">
+                    <button id="btnStart" class="btn primary">Training starten ▶</button>
+                    <button id="btnAutoplay" class="btn ghost">Autoplay ▶︎</button>
+                </div>
+            </div>
+
         </div>
-      </div>
-    </section>
+    </div>
+</section>
 
-    <section class="card learn" id="learnSection">
-      <div class="section-title">Karte</div>
+<!-- ====================================================================== -->
+<!-- LERN-KARTE -->
+<!-- ====================================================================== -->
 
-      <div id="promptBox" class="prompt-box">
+<section class="card learn" id="learnSection">
+
+    <div class="section-title">
+        <span id="cardLesson" class="left"></span>
+        <span id="cardTitle" class="right"></span>
+    </div>
+
+    <div id="lessonStats" class="stats-bar"></div>
+
+    <!-- FRAGE -->
+    <div id="promptBox" class="prompt-box">
+
         <div class="prompt-row">
-          <div class="prompt-col">
-            <div id="promptWord" class="prompt big">—</div>
-            <div id="promptWordSub" class="prompt sub small">&nbsp;</div>
-          </div>
-        </div>
-        <div class="prompt-row">
-          <div class="prompt-col">
-            <div id="promptSent" class="prompt">—</div>
-          </div>
-        </div>
-      </div>
+            <div class="prompt-col">
+                <div id="promptWord" class="prompt big">—</div>
 
-      <div class="solution">
+                <!-- Pinyin vom WORT -->
+                <div id="promptWordSub" class="prompt sub small"></div>
+
+                <!-- ✅ POS -->
+                <div id="promptPOS" class="prompt pos small"></div>
+            </div>
+        </div>
+
+        <div class="prompt-row">
+            <div class="prompt-col">
+                <div id="promptSent" class="prompt">—</div>
+
+                <div id="speakerQuestion" class="card-speaker">🔊</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÖSUNG -->
+    <div class="solution">
         <div id="solBox" class="sol masked">
-          <div class="sol-part">
-            <div id="solWord" class="sol-text">—</div>
-          </div>
-          <div class="sol-part">
-            <div id="solSent" class="sol-text">—</div>
-          </div>
+
+            <div class="sol-part">
+                <div id="solWord" class="sol-text">—</div>
+            </div>
+
+            <div class="sol-part">
+                <div id="solSent" class="sol-text">—</div>
+                <div id="speakerAnswer" class="card-speaker">🔊</div>
+            </div>
         </div>
-      </div>
+    </div>
 
-      <div class="card-controls">
-        <button id="btnPrev" class="btn" disabled>◀ Zurück</button>
-        <button id="btnReveal" class="btn ghost" disabled>Jetzt aufdecken 👁️</button>
-        <button id="btnNext" class="btn" disabled>Nächste Karte ▶</button>
-      </div>
+    <!-- Navigation -->
+    <div class="card-controls">
+        <button id="btnPrev" class="btn">◀ Zurück</button>
+        <button id="btnReveal" class="btn ghost" disabled>Aufdecken</button>
+        <button id="btnNext" class="btn" disabled>Nächste ▶</button>
+    </div>
 
-      <div class="ratebar" id="rateBar">
-        <button id="btnRateKnown"  class="btn rate good"   disabled>✅ Gewusst</button>
+    <!-- Rating-Bar -->
+    <div class="ratebar" id="rateBar" style="display:none;">
+        <button id="btnRateKnown" class="btn rate good" disabled>✅ Gewusst</button>
         <button id="btnRateUnsure" class="btn rate unsure" disabled>🤔 Unsicher</button>
-        <button id="btnRateUnknown"class="btn rate bad"    disabled>❌ Nicht gewusst</button>
-      </div>
+        <button id="btnRateUnknown" class="btn rate bad" disabled>❌ Nicht gewusst</button>
+    </div>
 
-      <div class="card-controls second">
-        <button id="btnPlayQ" class="btn ghost" disabled>🔊 Frage abspielen</button>
-        <button id="btnPlayA" class="btn ghost" disabled>🔊 Antwort abspielen</button>
-      </div>
+    <div id="sessionStats" class="stats-bar">—</div>
+</section>
 
-      <div id="sessionStats" class="stats-bar">—</div>
+<!-- ====================================================================== -->
+<!-- VOICE PANEL -->
+<!-- ====================================================================== -->
 
-    </section>
-  </main>
-
-  <div id="voicePanel" class="debug hidden">
+<div id="voicePanel" class="debug hidden">
     <div class="debug-head">
-      <div class="title">Stimmen</div>
-      <button id="btnCloseVoices" class="btn ghost">✕</button>
+        <div class="title">Stimmen</div>
+        <button id="btnCloseVoices" class="btn ghost">✕</button>
     </div>
-    <div class="debug-body">
-      <div class="debug-section">
-        <div class="h">Hinweis</div>
-        <p>Wähle eine Stimme für die aktuell geöffnete Sprache.</p>
-      </div>
-      <div class="debug-section">
-        <div class="h">Stimmenliste</div>
-        <div id="dbgVoices"></div>
-      </div>
-    </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="assets/js/app.js"></script>
+    <div class="debug-body">
+        <div class="debug-section">
+            <div class="h">Hinweis</div>
+            <p>Wähle eine Stimme für die aktuell geöffnete Sprache.</p>
+        </div>
+
+        <div class="debug-section">
+            <div class="h">Stimmenliste</div>
+            <div id="dbgVoices"></div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+
+</main>
 </body>
 </html>
