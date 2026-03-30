@@ -11,45 +11,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
     <!-- Deine CSS -->
-  <link rel="stylesheet" id="cssMain" href="assets/css/style.css">
+    <link rel="stylesheet" id="cssMain" href="assets/css/style.css">
 </head>
 
 <body>
 
-    <!-- ✅ Hamburger-Menü Icon (oben rechts) -->
+    <!-- ✅ Drei-Punkte-Menü Icon (oben rechts) -->
     <div id="menuToggle">⋮</div>
 
-    <!-- ✅ Seitenmenü für Einstellungen -->
- <div id="sideMenu" class="side-menu">
-    <h3>Einstellungen</h3>
-	
-	<div class="menu-block">
-		<button id="btnMenuExport" class="btn">Fortschritt exportieren</button>
-		<button id="btnMenuImport" class="btn">Fortschritt importieren</button>
-	</div>
+    <!-- ✅ Seitenmenü für Einstellungen (RICHTIG positioniert) -->
+    <div id="sideMenu" class="side-menu">
+        <h3>Einstellungen</h3>
 
-    <div class="menu-block">
-        <button id="btnLight" class="btn">Light Mode</button>
-        <button id="btnDark" class="btn">Dark Mode</button>
+        <div class="menu-block">
+            <button id="btnMenuExport" class="btn">Fortschritt exportieren</button>
+            <button id="btnMenuImport" class="btn">Fortschritt importieren</button>
+        </div>
+
+        <div class="menu-block">
+            <button id="btnLight" class="btn">Light Mode</button>
+            <button id="btnDark" class="btn">Dark Mode</button>
+        </div>
+
+        <div class="menu-block">
+            <label class="lbl">Satz‑Delay (Sekunden):</label>
+            <input id="delayInput" type="number" min="0" max="15" step="0.5" value="5" class="menu-input">
+        </div>
+
+        <div class="menu-version">
+            Version: <span id="appVersion"></span>
+        </div>
     </div>
 
-    <div class="menu-block">
-        <label class="lbl">Satz‑Delay (Sekunden):</label>
-        <input id="delayInput" type="number" min="0" max="15" step="0.5" value="5" class="menu-input">
-    </div>
-	
-	<div class="menu-version">
-		Version: <span id="appVersion"></span>
-	</div>
-	
-</div>
+    <!-- ✅ Overlay MUSS außerhalb des Menüs stehen -->
+    <div id="sideOverlay"></div>
 
     <main class="container">
 
 <header>
     <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
     <p class="subtitle">Lektion, Richtung und Reihenfolge wählen · Karte lernen</p>
-    
 </header>
 
 <!-- ====================================================================== -->
