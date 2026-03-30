@@ -7,6 +7,24 @@
 /* TEIL 1 – GLOBAL STATE · SETTINGS · CSV PARSER                              */
 /* -------------------------------------------------------------------------- */
 
+/* ===========================
+   AUTOMATISCHE VERSIONIERUNG
+   =========================== */
+
+function generateVersionStamp() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2, "0");
+    const da = String(d.getDate()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+
+    return `${y}${m}${da}-${h}${mi}`;
+}
+
+const APP_VERSION = generateVersionStamp();
+
+
 const CSV_URL = "./data/Long-Chinesisch_Lektionen.csv";
 
 const LS_KEYS = {
@@ -1258,6 +1276,14 @@ function renderModeUI() {
 
 window.addEventListener("DOMContentLoaded", () => {
 
+/* ================================
+   Asset-Versionierung aktivieren
+   ================================ */
+const css = document.querySelector("#cssMain");
+const js  = document.querySelector("#jsMain");
+
+if (css) css.href = `assets/css/style.css?v=${APP_VERSION}`;
+if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
     console.log("[INIT] Starte Initialisierung …");
 
     /* ============================================================
@@ -1605,6 +1631,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
         inp.click();
     });
+	// ================================
+	// Version im Menü anzeigen
+	// ================================
+	const verElem = document.querySelector("#appVersion");
+	if (verElem) verElem.textContent = APP_VERSION;
 
     console.log("[INIT] Alles bereit ✅");
 });
