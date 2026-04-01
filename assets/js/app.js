@@ -12,9 +12,17 @@
    =========================== */
 
 /* === Version manuell definieren === */
-const APP_VERSION = "1.0.1";   // beim nächsten Release erhöhen
+const APP_VERSION = "1.0.3";   // beim nächsten Release erhöhen
 
-const CSV_URL = "./data/Long-Chinesisch_Lektionen.csv";
+// CSV-Datei dynamisch über URL-Parameter auswählen
+const params = new URLSearchParams(location.search);
+const csvParam = params.get("csv");
+
+// Falls ?csv=xyz.csv gesetzt ist → diese Datei laden
+// Sonst → Standarddatei verwenden
+const CSV_URL = csvParam 
+    ? `./data/${csvParam}`
+    : "./data/Long-Chinesisch_Lektionen.csv";
 
 const LS_KEYS = {
     settings: "fc_settings_v1",
@@ -228,10 +236,10 @@ const header = `
     <div class="lt-row lt-head">
         <span class="lt-lesson" data-sort="lesson">Lektion</span>
         <span class="lt-total" data-sort="total">Karten</span>
-        <span class="lt-known" data-sort="known">✅</span>
-        <span class="lt-unknown" data-sort="unknown">❌</span>
-        <span class="lt-percent" data-sort="percent">%</span>
-    </div>
+        <span class="lt-strong"  data-sort="strong">✅</span>    <!-- Box 4+5 -->
+        <span class="lt-weak"    data-sort="weak">⚠️</span>      <!-- Box 2+3 -->
+		<span class="lt-unknown" data-sort="unknown">❌</span>   <!-- Box 1 -->
+	</div>
 `;
 
     table.insertAdjacentHTML("beforeend", header);
@@ -258,15 +266,37 @@ const header = `
         row.innerHTML = `
             <span class="lt-lesson">${k}</span>
             <span class="lt-total">${total}</span>
-            <span class="lt-known">${known}</span>
-            <span class="lt-unknown">${unknown}</span>
-            <span class="lt-percent">${percent}%</span>
+			<span class="lt-strong">0</span>
+			<span class="lt-weak">0</span>
+			<span class="lt-unknown">0</span>
         `;
 
-        row.addEventListener("click", () => {
-            opt.selected = !opt.selected;
-            row.classList.toggle("selected", opt.selected);
-        });
+row.addEventListener("click", () => {
+
+    // Toggle Auswahl
+    opt.selected = !opt.selected;
+    row.classList.toggle("selected", opt.selected);
+
+    // ✅ Automatisch ausgewählte Lektionen auslesen
+    const selectedLessons =
+        [...sel.options].filter(o => o.selected).map(o => o.value);
+
+    // ✅ In Settings speichern
+    state.settings.lessons = selectedLessons;
+    saveSettings();
+
+    // ✅ Pool neu befüllen
+    gatherPoolFromSettings();
+
+    // ✅ Falls Training läuft → Pool aktualisieren
+    if (state.trainingOn) {
+        state.idx = null;
+        resetSessionStats();
+        if (state.pool.length) {
+            setCard(state.pool[0]);
+        }
+    }
+});
 
         table.appendChild(row);
 
@@ -276,6 +306,32 @@ const header = `
             row.classList.add("selected");
         }
     }
+}
+
+// ✅ Fortschritt in der Lektionstabelle live aktualisieren
+
+function updateLessonStatsUI() {
+    document.querySelectorAll(".lt-row:not(.lt-head)").forEach(row => {
+        const lesson = row.dataset.lesson;
+        const cards = state.lessons.get(lesson) ?? [];
+
+        let red = 0;      // Box 1 (falsch/schwach)
+        let yellow = 0;   // Box 2 + 3 (unsicher)
+        let green = 0;    // Box 4 + 5 (sicher)
+
+        for (const c of cards) {
+            const p = state.progress.cards[c.id] ?? { box: 0 };
+
+            if (p.box === 1) red++;
+            else if (p.box === 2 || p.box === 3) yellow++;
+            else if (p.box === 4 || p.box === 5) green++;
+        }
+
+        row.querySelector(".lt-total").textContent   = cards.length;
+        row.querySelector(".lt-unknown").textContent = red;
+        row.querySelector(".lt-weak").textContent    = yellow;
+        row.querySelector(".lt-strong").textContent  = green;
+    });
 }
 
 function sortLessons() {
@@ -300,15 +356,25 @@ function sortLessons() {
 
 let lessonSort = { key: null, asc: true };
 
+/* ============================================================
+   SORTIERUNG FÜR LEKTIONSTABELLE
+   ============================================================ */
 document.addEventListener("click", (ev) => {
     const sortKey = ev.target.dataset.sort;
     if (!sortKey) return;
 
-    lessonSort.asc = lessonSort.key === sortKey ? !lessonSort.asc : true;
+    // ✅ Beim Klick auf "Lektion" → original CSV-Reihenfolge wiederherstellen
+    if (sortKey === "lesson") {
+        loadCSV();      // CSV neu laden = Reihenfolge exakt wie importiert
+        return;
+    }
+
+    // ✅ Alle anderen Spalten sortieren wie bisher
+    lessonSort.asc = (lessonSort.key === sortKey) ? !lessonSort.asc : true;
     lessonSort.key = sortKey;
 
-    sortLessons();
-    populateLessonSelect();
+    sortLessons();          // sortiert lessonOrder anhand der gewählten Spalte
+    populateLessonSelect(); // Liste neu aufbauen
 });
 
 function getLessonStats(lessonName) {
@@ -407,7 +473,6 @@ function scrollToBottom() {
 
 /* ============================ CARD RENDERING ============================ */
 
-
 function setCard(entry, fromHistory = false) {
 
     /* ---- Timer für verzögerten Satz abbrechen ---- */
@@ -429,24 +494,47 @@ function setCard(entry, fromHistory = false) {
     if (cardTitle)  cardTitle.textContent  = `Karte (ID ${entry.id})`;
     if (cardLesson) cardLesson.textContent = `Lektion ${entry.lesson}`;
 
-    /* -------- Fortschrittsbalken -------- */
-    const stats = document.querySelector("#lessonStats");
-    if (stats) {
-        const cards = state.lessons.get(entry.lesson) || [];
-        const total = cards.length;
-        const prog = state.progress.byLesson[entry.lesson] || { known: 0, unknown: 0 };
+// ----------------------------------------------------------
+// Fortschrittsbalken (Leitner) – von links nach rechts:
+// Grün (4+5) → Gelb (2+3) → Rot (1) → Grau (0)
+// ----------------------------------------------------------
+const stats = document.querySelector("#lessonStats");
+if (stats) {
+    const cards = state.lessons.get(entry.lesson) ?? [];
+    const total = cards.length;
 
-        const green = total > 0 ? (prog.known / total) * 100 : 0;
-        const red   = total > 0 ? (prog.unknown / total) * 100 : 0;
+    let green = 0;   // Box 4 + 5
+    let yellow = 0;  // Box 2 + 3
+    let red   = 0;   // Box 1
+    let grey  = 0;   // Box 0
 
-        stats.innerHTML = `
-            <div class="lesson-bar-large">
-                <div class="lesson-bar-red"   style="width:${red}%"></div>
-                <div class="lesson-bar-green" style="left:${red}%; width:${green}%"></div>
-            </div>
-        `;
+    for (const c of cards) {
+        const p = state.progress.cards[c.id] ?? { box: 0 };
+
+        if (p.box === 0) grey++;
+        else if (p.box === 1) red++;
+        else if (p.box === 2 || p.box === 3) yellow++;
+        else if (p.box === 4 || p.box === 5) green++;
     }
 
+    const greenPct  = total ? (green  / total) * 100 : 0;
+    const yellowPct = total ? (yellow / total) * 100 : 0;
+    const redPct    = total ? (red    / total) * 100 : 0;
+    const greyPct   = total ? (grey   / total) * 100 : 0;
+
+    const leftYellow = greenPct;
+    const leftRed    = greenPct + yellowPct;
+    const leftGrey   = greenPct + yellowPct + redPct;
+
+    stats.innerHTML = `
+        <div class="lesson-bar-large">
+            <div class="lesson-bar-green"  style="left:0%;           width:${greenPct}%"></div>
+            <div class="lesson-bar-yellow" style="left:${leftYellow}%;width:${yellowPct}%"></div>
+            <div class="lesson-bar-red"    style="left:${leftRed}%;   width:${redPct}%"></div>
+            <div class="lesson-bar-grey"   style="left:${leftGrey}%;  width:${greyPct}%"></div>
+        </div>
+    `;
+}
     /* -------- Karte anzeigen -------- */
     const sol = $("#solBox");
     sol.classList.add("masked");
@@ -510,6 +598,21 @@ function setCard(entry, fromHistory = false) {
     syncCardHeights();
 }
 
+// =====================================================
+// LEITNER: pro-Karte Status sicherstellen
+// =====================================================
+function ensureCardProgress(entry) {
+    const id = entry.id;
+    if (!state.progress.cards[id]) {
+        state.progress.cards[id] = {
+            box: 0,          // 0 = neu (noch nie gesehen)
+            timesCorrect: 0,
+            timesWrong: 0,
+            lastReview: 0
+        };
+    }
+    return state.progress.cards[id];
+}
 
 /* ============================ HISTORY / NAV ============================ */
 
@@ -583,12 +686,29 @@ function doReveal() {
     $("#solBox").classList.remove("masked");
     state.revealedAt = Date.now();
 
-	if (state.delayedSentenceTimer) {
-    clearTimeout(state.delayedSentenceTimer);
-    state.delayedSentenceTimer = null;
-}	
-    if (!state.autoplay.on) hideNavButtons();
+    // -----------------------------------------
+    // LEITNER: Erste Sichtung → Box 0 → Box 1
+    // -----------------------------------------
+    const p = ensureCardProgress(state.current);
+    if (p.box === 0) {
+        p.box = 1;                    // neu → schwach
+        p.lastReview = Date.now();
+        saveProgress();
+        updateLessonStatsUI();
+    }
 
+    // -----------------------------------------
+    // Timer abbrechen
+    // -----------------------------------------
+    if (state.delayedSentenceTimer) {
+        clearTimeout(state.delayedSentenceTimer);
+        state.delayedSentenceTimer = null;
+    }
+
+    // -----------------------------------------
+    // Buttons anzeigen
+    // -----------------------------------------
+    if (!state.autoplay.on) hideNavButtons();
     showRatingButtons();
     enableRating();
     syncCardHeights();
@@ -615,17 +735,51 @@ function disableRating() {
 }
 
 function rate(mark) {
-
     if (!state.current) return;
 
-    state.session.done++;
+    // -----------------------------------------
+    // LEITNER: Bewertung
+    // -----------------------------------------
+    const p = ensureCardProgress(state.current);
 
+    // Falls Karte gerade erst zum ersten Mal aufgedeckt wurde:
+    if (p.box === 0) p.box = 1;
+
+    if (mark === "known") {
+        // richtig:
+        // - Box 1 → Box 2 (erste korrekte Antwort)
+        // - danach normale Leiter hoch
+        if (p.box === 1) p.box = 2;
+        else p.box = Math.min(p.box + 1, 5);
+
+        p.timesCorrect++;
+    }
+    else if (mark === "unsure") {
+        // unsicher → 2 oder 3
+        if (p.box < 2)      p.box = 2;   // 1 → 2
+        else if (p.box === 2) p.box = 3; // 2 → 3
+
+        p.timesWrong++;
+    }
+    else if (mark === "unknown") {
+        // falsch → zurück zu 1
+        p.box = 1;
+        p.timesWrong++;
+    }
+
+    p.lastReview = Date.now();
+    saveProgress();
+    updateLessonStatsUI();
+
+    // -----------------------------------------
+    // DEIN ORIGINALER CODE (unverändert)
+    // -----------------------------------------
+    state.session.done++;
     if (mark === "known") state.session.known++;
     else if (mark === "unsure") state.session.unsure++;
     else state.session.unknown++;
 
     const lesson = state.current.lesson;
-
     if (lesson) {
         if (!state.progress.byLesson[lesson])
             state.progress.byLesson[lesson] = { known: 0, unknown: 0 };
@@ -634,15 +788,14 @@ function rate(mark) {
         if (mark === "unknown") state.progress.byLesson[lesson].unknown++;
 
         saveProgress();
+        updateLessonStatsUI();
     }
 
     disableRating();
     hideRatingButtons();
     showNavButtons();
-
     nextCard();
 }
-
 
 /* ============================ SESSION STATS ============================ */
 
@@ -718,6 +871,7 @@ function stopTraining() {
 
     disableRating();
     hideRatingButtons();
+	updateLessonStatsUI();
 
     $("#solBox").classList.add("masked");
 }
@@ -1235,7 +1389,7 @@ function stopAutoplayOnUserAction() {
 /* ========================================================================== */
 /*                                ENDE TEIL 3                                 */
 /* ========================================================================== */
-``
+
 /* ========================================================================== */
 /*                           TEIL 4 – INIT & EVENTS                           */
 /* ========================================================================== */
@@ -1311,7 +1465,9 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
     /* ============================================================
        CSV LADEN
        ============================================================ */
-    loadCSV();
+    loadCSV().then(() => {
+    updateLessonStatsUI();
+});
 
     /* ============================================================
        STIMMEN LADEN
@@ -1365,17 +1521,32 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
         autoplayBtn.classList.add("primary");
     })();
 
-    /* ============================================================
-       SLIDE-DRAWER (⋮)
-       ============================================================ */
-    const toggleBtn = document.querySelector("#menuToggle");
-    const sideMenu  = document.querySelector("#sideMenu");
+ 
+ /* ============================================================
+   SLIDE-DRAWER (⋮) – Menü öffnen/schließen + Animation
+   ============================================================ */
+const toggleBtn = document.querySelector("#menuToggle");
+const sideMenu  = document.querySelector("#sideMenu");
+const overlay   = document.querySelector("#sideOverlay"); // ✅ einzige overlay-Definition
 
-    if (toggleBtn && sideMenu) {
-        toggleBtn.addEventListener("click", () => {
-            sideMenu.classList.toggle("open");
-        });
-    }
+if (toggleBtn && sideMenu) {
+
+    // Menü per Button öffnen/schließen
+    toggleBtn.addEventListener("click", () => {
+        const isOpen = sideMenu.classList.toggle("open");
+
+        // Für Animation (⋮ → ×)
+        document.body.classList.toggle("menu-open", isOpen);
+    });
+}
+
+// Tap auf Overlay → Menü schließen
+if (overlay) {
+    overlay.addEventListener("click", () => {
+        sideMenu.classList.remove("open");
+        document.body.classList.remove("menu-open");
+    });
+}
 
     /* THEME-SWITCH */
     document.querySelector("#btnLight")?.addEventListener("click", () => {
@@ -1536,45 +1707,7 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
         rate("unknown");
     });
 
-    /* ============================================================
-       LEKTIONEN
-       ============================================================ */
-    $("#btnUseLessons").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
-
-        const sel = $("#lessonSelect");
-        const picked = [];
-
-        for (const o of sel.selectedOptions) picked.push(o.value);
-
-        state.settings.lessons = picked;
-        saveSettings();
-
-        gatherPoolFromSettings();
-        populateLessonSelect();
-    });
-
-    $("#btnClearLessons").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
-
-        state.selectedLessons.clear();
-        state.settings.lessons = [];
-        saveSettings();
-
-        state.pool = [];
-        state.idx = null;
-
-        resetSessionStats();
-
-        const sel = $('#lessonSelect');
-        for (const o of sel.options) o.selected = false;
-
-        document.querySelectorAll(".lt-row.selected")
-            .forEach(row => row.classList.remove("selected"));
-
-        if (state.trainingOn) stopTraining();
-    });
-
+  
     /* ============================================================
        IMPORT/EXPORT → jetzt im Seitenmenü
        ============================================================ */
@@ -1672,6 +1805,7 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
         // ✅ Wenn genug nach rechts gewischt → Menü schließen
         if (diff > 40) {
             menu.classList.remove("open");
+			document.body.classList.remove("menu-open");
         }
 
         // Menü resetten
@@ -1692,18 +1826,21 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
 /* ============================================
    Overlay tap-to-close
    ============================================ */
-const overlay = document.querySelector("#sideOverlay");
+// overlay wurde oben im Menüblock definiert
 
 if (overlay) {
     overlay.addEventListener("click", () => {
         sideMenu.classList.remove("open");
+        document.body.classList.remove("menu-open");
     });
 }
 
-    console.log("[INIT] Alles bereit ✅");
-});
+console.log("[INIT] Alles bereit ✅");
+});  // ✅ schließt NUR den DOMContentLoaded – korrekt!
 
-
+/* ========================================================================== */
+/* ENDE TEIL 4 */
+/* ========================================================================== */
 /* ========================================================================== */
 /*                                ENDE TEIL 4                                 */
 /* ========================================================================== */
