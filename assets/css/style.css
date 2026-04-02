@@ -560,10 +560,10 @@ html:not(.light) .lt-row.selected {
     display: grid;
     grid-template-columns:
         80px   /* Lektion */
-        40px    /* Karten */
-        30px    /* ✅ */
-        30px    /* ❌ */
-        40px;   /* % */
+        35px    /* Karten */
+        35px    /* ✅ */
+        350px    /* unsure */
+        35px;   /* weak */
     gap: 8px;
     padding: 4px 6px;
     font-size: 14px;
