@@ -22,7 +22,7 @@ const csvParam = params.get("csv");
 // Sonst → Standarddatei verwenden
 const CSV_URL = csvParam 
     ? `./data/${csvParam}`
-    : "./data/Long-Chinesisch_Lektionen.csv";
+    : "./data/HSK-Chinesisch_Lektionen.csv";
 
 const LS_KEYS = {
     settings: "fc_settings_v1",
@@ -237,7 +237,7 @@ const header = `
         <span class="lt-lesson" data-sort="lesson">Lektion</span>
         <span class="lt-total" data-sort="total">Karten</span>
         <span class="lt-strong"  data-sort="strong">✅</span>    <!-- Box 4+5 -->
-        <span class="lt-weak"    data-sort="weak">⚠️</span>      <!-- Box 2+3 -->
+        <span class="lt-weak"    data-sort="weak">🤔</span>      <!-- Box 2+3 -->
 		<span class="lt-unknown" data-sort="unknown">❌</span>   <!-- Box 1 -->
 	</div>
 `;
