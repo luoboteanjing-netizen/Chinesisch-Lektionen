@@ -482,7 +482,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 /* ===============================================
-   6-Spalten-Layout (Lektion / Total / ✅ / ⚠️ / ❌ / %)
+   6-Spalten-Layout (Lektion / Total / ✅ / 🤔️ / ❌ / %)
 ================================================= */
 
 .lt-row {
@@ -491,7 +491,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
         80px   /* Lektion */
         40px   /* Total */
         30px   /* strong (✅) */
-        30px   /* weak   (⚠️) */
+        30px   /* weak   (🤔️) */
         30px   /* unknown (❌) */
         40px;  /* % */
     gap: 8px;
