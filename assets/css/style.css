@@ -562,7 +562,7 @@ html:not(.light) .lt-row.selected {
         80px   /* Lektion */
         35px    /* Karten */
         35px    /* ✅ */
-        350px    /* unsure */
+        35px    /* unsure */
         35px;   /* weak */
     gap: 8px;
     padding: 4px 6px;
