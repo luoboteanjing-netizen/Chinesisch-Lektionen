@@ -18,11 +18,41 @@ const APP_VERSION = "1.0.3";   // beim nächsten Release erhöhen
 const params = new URLSearchParams(location.search);
 const csvParam = params.get("csv");
 
-// Falls ?csv=xyz.csv gesetzt ist → diese Datei laden
-// Sonst → Standarddatei verwenden
-const CSV_URL = csvParam 
-    ? `./data/${csvParam}`
-    : "./data/Long-Chinesisch_Lektionen.csv";
+// 🔥 CSV wird jetzt dynamisch zur Laufzeit bestimmt
+let CSV_URL = null;
+
+/* ===========================
+   CSV RESOLVER (mit Fallback)
+   =========================== */
+async function resolveCSV() {
+
+    // 1. URL-Parameter hat Priorität
+    if (csvParam) {
+        const file = `./data/${csvParam}`;
+        try {
+            const res = await fetch(file, { method: "HEAD" });
+            if (res.ok) return file;
+
+            console.warn("CSV aus URL nicht gefunden → Fallback wird verwendet");
+        } catch (e) {}
+    }
+
+    // 2. Fallback-Reihenfolge
+    const candidates = [
+        "./data/HSK-Chinesisch_Lektionen.csv",
+        "./data/Long-Chinesisch_Lektionen.csv"
+    ];
+
+    for (const file of candidates) {
+        try {
+            const res = await fetch(file, { method: "HEAD" });
+            if (res.ok) return file;
+        } catch (e) {}
+    }
+
+    // 3. Harte Fehlerbehandlung
+    throw new Error("Keine CSV-Datei gefunden");
+}
 
 const LS_KEYS = {
     settings: "fc_settings_v1",
@@ -162,6 +192,7 @@ function parseCSVLine(line) {
 
 async function loadCSV() {
     try {
+		 CSV_URL = await resolveCSV();
         const res = await fetch(CSV_URL);
         const buf = await res.arrayBuffer();
         const text = new TextDecoder("utf-8").decode(buf);
@@ -436,6 +467,12 @@ function formatZh(hz, py) {
         : hz || "—";
 }
 
+function getLeitnerAscii(box) {
+    // Box 0–5 → 0–5 gefüllte Kästchen
+    const filled = Math.max(0, Math.min(box, 5));
+    return "■".repeat(filled) + "□".repeat(5 - filled);
+}
+
 /* ========================================================================== */
 /*                                ENDE TEIL 1                                 */
 /* ========================================================================== */
@@ -491,8 +528,14 @@ function setCard(entry, fromHistory = false) {
     const cardTitle  = document.querySelector("#cardTitle");
     const cardLesson = document.querySelector("#cardLesson");
 
-    if (cardTitle)  cardTitle.textContent  = `Karte (ID ${entry.id})`;
-    if (cardLesson) cardLesson.textContent = `Lektion ${entry.lesson}`;
+  
+	if (cardTitle) {
+		const p = ensureCardProgress(entry);
+		const ascii = getLeitnerAscii(p.box);
+		cardTitle.innerHTML = `<span class="leitner-ascii">${ascii}</span>`;
+	}
+
+    if (cardLesson) cardLesson.textContent = `Lektion ${entry.id}`;
 
 // ----------------------------------------------------------
 // Fortschrittsbalken (Leitner) – von links nach rechts:
@@ -724,13 +767,13 @@ function hideRatingButtons() {
 
 function enableRating() {
     $("#btnRateKnown").disabled = false;
-    $("#btnRateUnsure").disabled = false;
+  
     $("#btnRateUnknown").disabled = false;
 }
 
 function disableRating() {
     $("#btnRateKnown").disabled = true;
-    $("#btnRateUnsure").disabled = true;
+ 
     $("#btnRateUnknown").disabled = true;
 }
 
@@ -1695,11 +1738,6 @@ if (overlay) {
     $("#btnRateKnown").addEventListener("click", () => {
         stopAutoplayOnUserAction();
         rate("known");
-    });
-
-    $("#btnRateUnsure").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
-        rate("unsure");
     });
 
     $("#btnRateUnknown").addEventListener("click", () => {
