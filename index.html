@@ -43,15 +43,22 @@
         </div>
     </div>
 
-    <!-- ✅ Overlay MUSS außerhalb des Menüs stehen -->
-    <div id="sideOverlay"></div>
+<!-- ✅ Overlay MUSS außerhalb des Menüs und Containers stehen -->
+<div id="sideOverlay"></div>
 
-    <main class="container">
-
-<header>
-    <h1>Flashcards <span class="muted">Deutsch ↔ 中文</span></h1>
-    <p class="subtitle">Lektion, Richtung und Reihenfolge wählen · Karte lernen</p>
+<!-- ✅ Header OHNE .container → kein Top-Abstand -->
+<header class="app-header">
+  <img
+    src="assets/img/header.png"
+    alt="App Banner"
+    class="header-banner"
+  />
 </header>
+
+<!-- ✅ Ab hier beginnt der normale Seiteninhalt -->
+<main class="container">
+
+
 
 <!-- ====================================================================== -->
 <!-- KONFIG-BLOCK -->
@@ -190,9 +197,9 @@
 
     <!-- Rating-Bar -->
     <div class="ratebar" id="rateBar" style="display:none;">
-        <button id="btnRateKnown" class="btn rate good" disabled>✅ Gewusst</button>
-        <button id="btnRateUnsure" class="btn rate unsure" disabled>🤔 Unsicher</button>
         <button id="btnRateUnknown" class="btn rate bad" disabled>❌ Nicht gewusst</button>
+
+		<button id="btnRateKnown" class="btn rate good" disabled>✅ Gewusst</button>
     </div>
 
     <div id="sessionStats" class="stats-bar">—</div>
