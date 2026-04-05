@@ -12,7 +12,7 @@
    =========================== */
 
 /* === Version manuell definieren === */
-const APP_VERSION = "1.0.3";   // beim nächsten Release erhöhen
+const APP_VERSION = "1.1.0";   // beim nächsten Release erhöhen
 
 // CSV-Datei dynamisch über URL-Parameter auswählen
 const params = new URLSearchParams(location.search);
@@ -303,23 +303,24 @@ const header = `
         `;
 
 row.addEventListener("click", () => {
+    // ✅ Alle Optionen abwählen
+    [...sel.options].forEach(o => o.selected = false);
+    document
+        .querySelectorAll(".lt-row.selected")
+        .forEach(r => r.classList.remove("selected"));
 
-    // Toggle Auswahl
-    opt.selected = !opt.selected;
-    row.classList.toggle("selected", opt.selected);
+    // ✅ Diese Lektion auswählen
+    opt.selected = true;
+    row.classList.add("selected");
 
-    // ✅ Automatisch ausgewählte Lektionen auslesen
-    const selectedLessons =
-        [...sel.options].filter(o => o.selected).map(o => o.value);
-
-    // ✅ In Settings speichern
-    state.settings.lessons = selectedLessons;
+    // ✅ Genau eine Lektion speichern
+    state.settings.lessons = [opt.value];
     saveSettings();
 
-    // ✅ Pool neu befüllen
+    // ✅ Pool neu bauen
     gatherPoolFromSettings();
 
-    // ✅ Falls Training läuft → Pool aktualisieren
+    // ✅ Falls Training läuft → direkt neu laden
     if (state.trainingOn) {
         state.idx = null;
         resetSessionStats();
@@ -743,11 +744,22 @@ function doReveal() {
     // -----------------------------------------
     // Timer abbrechen
     // -----------------------------------------
-    if (state.delayedSentenceTimer) {
-        clearTimeout(state.delayedSentenceTimer);
-        state.delayedSentenceTimer = null;
-    }
+// -----------------------------------------
+// Verzögerten Satz ggf. sofort anzeigen
+// -----------------------------------------
+if (state.delayedSentenceTimer) {
+    clearTimeout(state.delayedSentenceTimer);
+    state.delayedSentenceTimer = null;
 
+    // ✅ Satz sofort anzeigen (je nach Modus)
+    if (state.mode === "zh2de") {
+        $("#promptSent").innerHTML =
+            `${state.current.sent.zh}<br><span class="zh-pinyin">${state.current.sent.py}</span>`;
+    } else {
+        $("#promptSent").textContent =
+            state.current.sent.de || "—";
+    }
+}
     // -----------------------------------------
     // Buttons anzeigen
     // -----------------------------------------
