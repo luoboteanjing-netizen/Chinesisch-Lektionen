@@ -549,7 +549,7 @@ if (cardTitle) {
     `;
 	}
 
-    if (cardLesson) cardLesson.textContent = `Lektion ${entry.id} ${entry.lesson}`;
+    if (cardLesson) cardLesson.textContent = `Lektion ${entry.lesson} ${entry.id}`;
 
 // ----------------------------------------------------------
 // Fortschrittsbalken (Leitner) – von links nach rechts:
