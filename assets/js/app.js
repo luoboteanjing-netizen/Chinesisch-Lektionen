@@ -530,13 +530,26 @@ function setCard(entry, fromHistory = false) {
     const cardLesson = document.querySelector("#cardLesson");
 
   
-	if (cardTitle) {
-		const p = ensureCardProgress(entry);
-		const ascii = getLeitnerAscii(p.box);
-		cardTitle.innerHTML = `<span class="leitner-ascii">${ascii}</span>`;
+	
+if (cardTitle) {
+    const p = ensureCardProgress(entry);
+    const ascii = getLeitnerAscii(p.box);
+
+    const idx = (state.idx ?? 0) + 1;  // 1‑basiert
+    const cardsInLesson = state.lessons.get(entry.lesson) ?? [];
+    const total = cardsInLesson.length;
+
+    cardTitle.innerHTML = `
+        <span class="card-title-left">
+            Karte ${idx} / ${total}
+        </span>
+        <span class="card-title-right leitner-ascii">
+            ${ascii}
+        </span>
+    `;
 	}
 
-    if (cardLesson) cardLesson.textContent = `Lektion ${entry.id}`;
+    if (cardLesson) cardLesson.textContent = `Lektion ${entry.id} ${entry.lesson}`;
 
 // ----------------------------------------------------------
 // Fortschrittsbalken (Leitner) – von links nach rechts:
@@ -876,6 +889,9 @@ function startTraining() {
 
     if (!state.trainingOn) {
 
+        // ----------------------------
+        // Training vorbereiten
+        // ----------------------------
         state.history = [];
         state.historyPos = -1;
 
@@ -898,17 +914,28 @@ function startTraining() {
             return;
         }
 
-        if (state.order === "seq") {
-            state.idx = 0;
-            setCard(state.pool[state.idx]);
+        // ----------------------------
+        // ✅ Resume-Index bestimmen
+        // ----------------------------
+        const lesson = state.settings.lessons[0]; // Single-Select
+        const resumeIdx = state.settings.resumeIndexByLesson?.[lesson];
+
+        if (typeof resumeIdx === "number" && resumeIdx < state.pool.length) {
+            state.idx = resumeIdx;
         } else {
-            const first = state.pool[Math.floor(Math.random() * state.pool.length)];
-            setCard(first);
+            state.idx = 0;
         }
 
+        // ----------------------------
+        // ✅ Erste Karte setzen
+        // ----------------------------
+        setCard(state.pool[state.idx]);
+
+        // ----------------------------
+        // ✅ Training aktivieren
+        // ----------------------------
         state.trainingOn = true;
         updateTrainingBtn();
-
         scrollToBottom();
 
     } else {
@@ -918,6 +945,13 @@ function startTraining() {
 
 function stopTraining() {
     state.trainingOn = false;
+	
+	// ✅ Resume-Index der aktuellen Lektion speichern (Training + Autoplay)
+if (state.current && state.current.lesson && state.idx !== null) {
+    state.settings.resumeIndexByLesson[state.current.lesson] = state.idx;
+    saveSettings();
+}
+	
     updateTrainingBtn();
 
     $("#btnPrev").disabled = true;
@@ -1236,9 +1270,11 @@ function ensurePoolForAutoplay() {
         return false;
     }
 
-    if (state.order === "seq") {
-        state.idx = 0;
-        setCard(state.pool[state.idx]);
+   const lesson = state.settings.lessons[0];
+const resumeIdx = state.settings.resumeIndexByLesson?.[lesson];
+
+if (typeof resumeIdx === "number" && resumeIdx < state.pool.length) {
+    state.idx
     } else {
         const r = state.pool[Math.floor(Math.random() * state.pool.length)];
         setCard(r);
@@ -1489,6 +1525,11 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
        ============================================================ */
     loadSettings();
     loadProgress();
+	
+	// ✅ Resume-Fortschritt pro Lektion initialisieren
+if (!state.settings.resumeIndexByLesson) {
+    state.settings.resumeIndexByLesson = {};
+}
 
     // Theme laden
     const savedTheme = localStorage.getItem("theme") || "dark";
