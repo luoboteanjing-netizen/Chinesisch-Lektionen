@@ -53,7 +53,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 	background: var(--primary-bg, var(--accent));
     border-color: var(--primary-border, var(--accent));
     color: var(--accent-text);
-	font-weight:700; margin-top:12px; 
+	font-weight:600; margin-top:12px; 
 	flex: 0 1 auto; 
 	white-space: nowrap; 
 	transition: all 0.2s ease; 
@@ -145,14 +145,14 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .debug-head .title{font-weight:800}
 .debug-body{padding:10px;overflow:auto;max-height:70vh}
 .debug-section{margin-bottom:12px}
-.debug-section .h{font-weight:700;margin-bottom:6px;color:#cbd6e3}
+.debug-section .h{font-weight:600;margin-bottom:6px;color:#cbd6e3}
 #dbgVoices .voice{display:flex;gap:10px;align-items:center;border:1px solid #2b3646;border-radius:8px;padding:6px;margin-bottom:6px}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
-#dbgVoices .voice .name{font-weight:700}
+#dbgVoices .voice .name{font-weight:600}
 .mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
 .actions-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline */
 /* NEU: Gleiche Höhe wie Swap-Button für die Sprache-Items (links/rechts) – höheres Padding und min-height */
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:700; min-width:80px; min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
+.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:600; min-width:80px; min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:600;padding:8px 10px}
 .gap-row input[type=range]{width:100%}
 .two-col{display:flex; flex-wrap:wrap; gap:10px}
@@ -305,7 +305,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 	max-width: 100px;
 	margin: 0 auto;
 	text-align:center;
-	font-weight: 700
+	font-weight: 600
 }
 
 /* Flex Layout */
@@ -484,7 +484,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 .lt-head {
     background: #283344;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .lt-row.selected {
@@ -559,7 +559,7 @@ html:not(.light) .lt-row.selected {
     top: 0;
     z-index: 5;
     background: #283344;
-    font-weight: 700;
+    font-weight: 600;
     padding: 6px;
     border-bottom: 2px solid #1e2530;
 }
@@ -807,7 +807,7 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
 /* ======================================== */
 #btnSwapMode {
     font-size: 24px !important;     /* größer */
-    font-weight: 700 !important;    /* kräftiger */
+    font-weight: 600 !important;    /* kräftiger */
     line-height: 1 !important;
     padding: 6px 14px !important;
 }
@@ -1062,4 +1062,103 @@ html.light .header-banner {
 }
 main.container {
     margin-top: 0px;
+}
+
+/* ============================================================
+   Antwortkarte: Wort (Hanzi / Übersetzung) fett & minimal größer
+   ============================================================ */
+
+#solWord {
+    font-weight: 600;                 /* Wort fett */
+    font-size: calc(1em + 2px);       /* Wort +1px für bessere Lesbarkeit */
+}
+/* ============================================================
+   Antwortkarte: Pinyin bewusst kleiner & ruhiger darstellen
+   ============================================================ */
+
+#solWord .zh-pinyin {
+    font-weight: 400;     /* nicht fett */
+}
+
+/* ============================================================
+   ZENTRALE TYPOGRAFIE – FRAGE & ANTWORT
+   Alle Schriftanpassungen für Karten an EINER Stelle
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   FRAGEKARTE (PROMPT)
+   ------------------------------------------------------------ */
+
+/* Hauptwort auf der Fragekarte (z.B. Deutsch oder Hanzi) */
+#promptWord {
+    font-size: 24px;          /* Grundgröße */
+    font-weight: 600;         /* fett (stärker als normal) */
+    line-height: 1.4;
+}
+
+/* Zusatz unter dem Wort (z.B. Pinyin bei ZH→DE) */
+#promptWordSub {
+    font-size: 20px;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+/* Wortart (POS) */
+#promptPOS {
+    font-size: 18px;
+    font-style: italic;
+    opacity: 0.85;
+}
+
+/* Beispielsatz auf der Fragekarte */
+#promptSent {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.6;
+    margin-top: 8px;
+}
+
+
+/* ------------------------------------------------------------
+   ANTWORTKARTE (LÖSUNG)
+   ------------------------------------------------------------ */
+
+/* Hauptwort in der Antwort (Hanzi oder Übersetzung) */
+#solWord {
+    font-size: 24px; /* +1px für bessere Hanzi-Lesbarkeit */
+    font-weight: 600;           /* fett */
+    line-height: 1.4;
+}
+
+/* Pinyin in der Antwort */
+#solWord .zh-pinyin {
+    font-size: 20px;          /* bewusst kleiner als Hanzi */
+    font-weight: 400;
+    opacity: 1;
+}
+
+/* Beispielsatz in der Antwort */
+#solSent {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+
+/* ------------------------------------------------------------
+   GEMEINSAM (optional feinjustierbar)
+   ------------------------------------------------------------ */
+
+/* Basis-Lesbarkeit für beide Karten */
+#promptBox,
+#solBox {
+    text-align: center;
+}
+
+/* Schriftglättung für bessere Darstellung auf allen Systemen */
+#promptBox,
+#solBox {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
