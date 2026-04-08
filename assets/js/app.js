@@ -541,7 +541,7 @@ if (cardTitle) {
 
     cardTitle.innerHTML = `
         <span class="card-title-left">
-            Karte ${idx} / ${total}
+            ${idx} / ${total}
         </span>
         <span class="card-title-right leitner-ascii">
             ${ascii}
@@ -549,7 +549,7 @@ if (cardTitle) {
     `;
 	}
 
-    if (cardLesson) cardLesson.textContent = `Lektion ${entry.lesson} ${entry.id}`;
+    if (cardLesson) cardLesson.textContent = `Lektion ${entry.id}`;
 
 // ----------------------------------------------------------
 // Fortschrittsbalken (Leitner) – von links nach rechts:
