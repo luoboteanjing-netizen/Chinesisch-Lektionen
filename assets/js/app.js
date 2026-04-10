@@ -483,6 +483,24 @@ function getLeitnerAscii(box) {
 /*                Rendering · Navigation · Rating · Training                  */
 /* ========================================================================== */
 
+function setTheme(theme) {
+    const root = document.documentElement;
+
+    // Alle Theme-Klassen entfernen
+    root.classList.remove(
+        "light-orange",
+        "light-warm",
+        "light-blue"
+    );
+
+    // Dark = keine Klasse
+    if (theme !== "dark") {
+        root.classList.add(theme);
+    }
+
+    // merken
+    localStorage.setItem("theme", theme);
+}
 
 /* ============================ sync & scroll ============================ */
 
@@ -742,6 +760,11 @@ function showNavButtons() {
 function doReveal() {
     $("#solBox").classList.remove("masked");
     state.revealedAt = Date.now();
+	
+	
+	// ✅ Beim Aufdecken IMMER Chinesisch abspielen
+		playChineseOnReveal(state.current);
+
 
     // -----------------------------------------
     // LEITNER: Erste Sichtung → Box 0 → Box 1
@@ -865,24 +888,6 @@ function rate(mark) {
     nextCard();
 }
 
-/* ============================ SESSION STATS ============================ */
-
-function renderSessionStats() {
-    const s = state.session;
-
-    const avg = s.ttrCount
-        ? (s.ttrSum / s.ttrCount / 1000).toFixed(1)
-        : "—";
-
-    const acc = s.done
-        ? `${Math.round((s.known / s.done) * 100)}%`
-        : "—";
-
-    $("#sessionStats").textContent =
-        `Karten: ${s.done}/${s.total} · Korrekt: ${acc} · Aufdeck-Zeit: ${avg}s`;
-}
-
-
 /* ============================ TRAINING ============================ */
 
 function startTraining() {
@@ -969,6 +974,7 @@ function updateTrainingBtn() {
     $("#btnStart").textContent =
         state.trainingOn ? "Training stoppen ■" : "Training starten ▶";
 }
+
 
 
 /* ========================================================================== */
@@ -1315,6 +1321,19 @@ function speakPair(word, sent, langKey, done) {
     speechSynthesis.speak(u1);
 }
 
+function playChineseOnReveal(entry) {
+    if (!entry) return;
+
+    speechSynthesis.cancel();
+
+    // Wort zuerst
+    ttsSpeak(entry.word.zh, "zh");
+
+    // Satz leicht verzögert danach
+    setTimeout(() => {
+        ttsSpeak(entry.sent.zh, "zh");
+    }, 600);
+}
 
 function autoplayStep() {
 
@@ -1532,8 +1551,10 @@ if (!state.settings.resumeIndexByLesson) {
 }
 
     // Theme laden
-    const savedTheme = localStorage.getItem("theme") || "dark";
-    document.documentElement.classList.toggle("light", savedTheme === "light");
+    
+	const savedTheme = localStorage.getItem("theme") || "dark";
+	setTheme(savedTheme);
+
 
     // Satz-Delay (ms)
     if (state.settings.sentenceDelay !== undefined) {
@@ -1644,16 +1665,26 @@ if (overlay) {
     });
 }
 
-    /* THEME-SWITCH */
-    document.querySelector("#btnLight")?.addEventListener("click", () => {
-        document.documentElement.classList.add("light");
-        localStorage.setItem("theme", "light");
-    });
+console.log("Theme buttons:",
+    document.querySelector("#btnThemeDark"),
+    document.querySelector("#btnThemeLightOrange"),
+    document.querySelector("#btnThemeLightWarm"),
+    document.querySelector("#btnThemeLightBlue")
+);
 
-    document.querySelector("#btnDark")?.addEventListener("click", () => {
-        document.documentElement.classList.remove("light");
-        localStorage.setItem("theme", "dark");
-    });
+/* THEME-SWITCH */
+document.querySelector("#btnThemeDark")
+  ?.addEventListener("click", () => setTheme("dark"));
+
+document.querySelector("#btnThemeLightOrange")
+  ?.addEventListener("click", () => setTheme("light-orange"));
+
+document.querySelector("#btnThemeLightWarm")
+  ?.addEventListener("click", () => setTheme("light-warm"));
+
+document.querySelector("#btnThemeLightBlue")
+  ?.addEventListener("click", () => setTheme("light-blue"));
+  
 
     /* DELAY INPUT */
     if (delayInput) {
