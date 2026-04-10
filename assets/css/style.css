@@ -1224,13 +1224,12 @@ html, body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
 /* ============================================================
-   FINAL FIX: Sprach-Umschalter immer sichtbar als Primary
+   Prompt- & Solution-Box: einheitliche Border
    ============================================================ */
 
-#btnSwapMode.btn.swap {
-    background-color: var(--color-primary-bg) !important;
-    border-color: var(--color-primary-border) !important;
-    color: var(--color-accent-text) !important;
-    opacity: 1 !important;
+#promptBox,
+#solBox {
+    border: 2px solid var(--color-border);
 }
