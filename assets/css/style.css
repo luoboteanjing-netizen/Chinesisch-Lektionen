@@ -7,12 +7,14 @@
 	--accent-text: #081018;
 	--border: #283344;
 	--accent:#7aa2f7; 
-	--good:#7bd88f; 
-	--bad:#f7768e; 
+	--good:#2e8b57; 
+	--bad:#cc3333; 
 	--unsure:#ffbd6b; 
+	--primary-bg: var(--accent);
+    --primary-border: var(--accent);
 }
 
-:root.light {
+:root.light-orange {
     --bg: #F7D09D;
     --card: #ffffff;
     --text: #222;
@@ -23,12 +25,126 @@
     --good:   #2e8b57;
     --bad:    #cc3333;
     --unsure: #cc9900;
-	--primary-bg: var(--accent);
+    --primary-bg: var(--accent);
     --primary-border: var(--accent);
 }		
+
+/* Light-Warm (Abend, augenschonend) */
+:root.light-warm {
+    --bg: #F7D09D;
+    --card: #F2E9DE;
+    --text: #3a2f25;
+    --muted: #6f5c4b;
+    --accent-text: #3a2f25;
+    --border: #e0d6c9;
+    --accent: #c97c5d;
+    --good:   #5a8f6a;
+    --bad:    #b05a5a;
+    --unsure: #b79a55;
+	--primary-bg: var(--accent);
+	--primary-border: var(--accent);
+}
+
+/* Light-Blue (modern, kühl) */
+:root.light-blue {
+    --bg: #01193C;
+    --card: #ffffff;
+    --text: #1f2a37;
+    --muted: #4b5d73;
+    --accent-text: #1f2a37;
+    --border: #c9d7e5;
+    --accent: #3b82f6;
+    --good:   #2e8b57;
+    --bad:    #c24141;
+    --unsure: #d1a22f;
+	--primary-bg: var(--accent);
+    --primary-border: var(--accent);
+}
+
+
+/* ============================================================
+   Header-Banner – Default (Dark Mode)
+   ============================================================ */
+.header-banner {
+    content: url("../img/header.png");
+    width: 100%;
+    max-width: 1100px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+   
+   /* ============================================================
+   Header-Banner je nach Light/Dark Mode
+   ============================================================ */
+   
+html.light-orange .header-banner {
+    content: url("../img/header-light.png");
+}
+html.light-warm .header-banner {
+    content: url("../img/header-light.png");
+}
+
+html.light-blue .header-banner {
+    content: url("../img/header.png");
+}
+
+main.container {
+    margin-top: 0px;
+}
+
+
+/* ============================================================
+   SEMANTISCHE FARBROLLEN (Bedeutung, nicht Darstellung)
+   UI benutzt NUR diese Variablen
+   ============================================================ */
+
+:root {
+    /* Basisflächen */
+    --color-bg:        var(--bg);
+    --color-card:      var(--card);
+    --color-border:    var(--border);
+
+    /* Text */
+    --color-text:      var(--text);
+    --color-muted:     var(--muted);
+    --color-accent-text: var(--accent-text);
+
+    /* Aktionen / Status */
+    --color-primary:   var(--accent);
+    --color-positive:  var(--good);
+    --color-negative:  var(--bad);
+    --color-warning:   var(--unsure);
+
+    /* Buttons */
+    --color-primary-bg:     var(--primary-bg);
+    --color-primary-border: var(--primary-border);
+	
+	--color-progress-strong:  var(--good);
+	--color-progress-weak:    var(--unsure);
+	--color-progress-bad:     var(--bad);
+	--color-progress-neutral: var(--color-border);
+	
+	--color-table-known:   var(--color-positive);
+	--color-table-unknown: var(--color-negative);
+	--color-table-weak:    var(--color-warning);
+	
+	--color-selected-bg:    color-mix(in srgb, var(--color-primary) 15%, var(--color-card));
+	--color-selected-border: var(--color-primary);
+	--color-overlay: rgba(0,0,0,0.35);
+}
 		
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif}
+
+html,body{
+    margin:0;
+    padding:0;
+    background: var(--color-bg);
+    color: var(--color-text);
+
+font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif
+}
+
 .container{max-width:1100px;margin:24px auto;padding:0 12px}
 header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .subtitle{margin:0 0 8px 0;color:var(--muted);font-size:14px}
@@ -38,10 +154,11 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  flex-shrink: 1; /* Ermöglicht Schrumpfen bei Text-Änderungen, statt Wrap */
 }
 .small-label{font-size:12px;margin-right:2px}
-.btn{
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
+.btn {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+
 	padding:8px 12px;
 	border-radius:8px;
 	cursor:pointer; 
@@ -93,7 +210,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 /* Dynamisch breiterer Autoplay-Button (ca. 15% breiter als Standard, aber flexibel – passt sich an Nachbarn an) */
 #btnAutoplay {
- min-width: 110px; /* Etwas schmaler (110px), damit + Training immer in einer Zeile passt (~230px Gesamt) */
+ min-width: 120px; /* Etwas schmaler (110px), damit + Training immer in einer Zeile passt (~230px Gesamt) */
  padding: 8px 16px; /* Etwas mehr horizontaler Innenabstand, aber flexibel */
  flex: 0 1 auto; /* Grow:0 (wächst nicht über Basis), Shrink:1 (schrumpft bei Engpass), Basis:auto (passt zu Inhalt) – verhindert Wrap */
  white-space: nowrap; /* Verhindert Text-Umbruch (z.B. "Autoplay ▶︎" oder "Autoplay ■ Stop") */
@@ -104,6 +221,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 /* Breitere und höhere Swap/Direction-Button (mit "< Richtung >" als zentriertem Text, kein Icon) */
 .btn.swap {
+ background: var(--color-primary-bg);
+ border: 1px solid var(--color-primary-border);
+ color: var(--color-accent-text);
  font-weight: 600; /* Bold für den Text */
  padding: 8px 10px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
  font-size: 16px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
@@ -118,12 +238,37 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  line-height: 1.2; /* Etwas mehr Zeilenhöhe für den Text */
  white-space: nowrap; /* Verhindert Umbruch des Texts */
 }
-.card{background:var(--card);border:1px solid #1e2530;border-radius:12px;padding:14px 14px 10px;margin-bottom:14px}
+
+.card{
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+	border-radius:12px;
+	padding:14px 14px 10px;
+	margin-bottom:14px
+}
+
 .lbl{display:block;margin-bottom:6px;color:var(--muted)}
 .hint{color:var(--muted);font-size:12px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.pane{border:1px solid var(--border);border-radius:10px;padding:12px}
-.select, .input{width:100%;background:#0f141b;border:1px solid #293241;color:var(--text);border-radius:8px;padding:10px;min-height:42px}
+
+.pane{
+    border:1px solid var(--color-border);
+    background: var(--color-card);
+	border-radius:10px;
+	padding:12px
+}
+
+.select,
+.input {
+    width: 100%;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 42px;
+}
+
 .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .stack{display:flex;flex-direction:column;gap:8px}
 .prompt-box{border: 2px solid var(--border);border-radius:12px;padding:12px}
@@ -139,7 +284,18 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .card-controls{display:flex;gap:12px;justify-content:center;margin-top:10px}
 .card-controls.second{margin-top:6px}
 .stats-bar{margin-top:8px;color:#a7b5c5;font-size:13px;text-align:center}
-.debug{position:fixed;inset:5% 5% auto 5%;background:#0f141b;border:1px solid #2b3646;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);z-index:1000;display:flex;flex-direction:column}
+.debug {
+  position: fixed;
+  inset: 5% 5% auto 5%;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.25);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text);
+}
 .debug.hidden{display:none}
 .debug-head{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2b3646;padding:8px 10px}
 .debug-head .title{font-weight:800}
@@ -152,7 +308,12 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
 .actions-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline */
 /* NEU: Gleiche Höhe wie Swap-Button für die Sprache-Items (links/rechts) – höheres Padding und min-height */
-.mode-item{background:#0f141b;border:1px solid #293241;border-radius:8px;padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:600; min-width:80px; min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
+.mode-item {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+	border-radius:8px;
+	padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:600; min-width:80px; min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:600;padding:8px 10px}
 .gap-row input[type=range]{width:100%}
 .two-col{display:flex; flex-wrap:wrap; gap:10px}
@@ -173,6 +334,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .voice-config {
  gap: 10px; /* Erhöhtes Gap: Mehr Abstand zwischen allen Elementen (inkl. Button oben und Sliders) */
 }
+
 /* Speziell: Größerer Abstand direkt nach den Voice-Buttons (DE/ZH Stimme wählen) */
 .voice-btn + .voice-config,
 #btnVoiceDe + .voice-config,
@@ -195,15 +357,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  margin-top: 0;
  padding-top: 2px; /* Minimaler Puffer, falls nötig */
 }
-/* NEUE REGEL: Desktop-Hintergrundfarbe ändern (nur ab 1024px Breite, Mobile bleibt schwarz) */
-@media (min-width: 1024px) {
- :root {
- --bg: #1a1a2e; /* Beispiel: Dunkles Blau-Grau */
- }
- html, body {
- background: var(--bg);
- }
-}
+
 /* KONSISTENZ-REGELN: Einheitliche Schriftgröße (14px) für Labels und Buttons in Voice- und Gap-Bereichen */
 .voice-btn { font-size: 14px; font-weight: 500; }
 .voice-config .lbl { font-size: 14px; color: var(--muted); }
@@ -234,60 +388,66 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  .voice-config > *:first-child { margin-top:8px; }
  .voice-config .lbl { margin-bottom:3px; }
 }
+
+/* ============================================================
+   Lektions-Fortschrittsbalken (Leitner) – semantisch & themekonform
+   ============================================================ */
+
+/* Kleiner Balken (z. B. in Listen – falls genutzt) */
 .lesson-bar {
- display: inline-block;
- height: 6px;
- border-radius: 4px;
- background: #283344;
- width: 60px;
- margin-left: 8px;
- vertical-align: middle;
+    display: inline-block;
+    height: 6px;
+    width: 60px;
+    border-radius: 4px;
+    background: var(--color-border);
+    margin-left: 8px;
+    vertical-align: middle;
+    overflow: hidden;
 }
-.lesson-bar-fill {
- height: 100%;
- border-radius: 4px;
- background: #7bd88f; /* grün */
-}
+
+/* Großer Balken unter der Karte */
 .lesson-bar-large {
- width: 140px;
- height: 10px;
- background: #283344;
- border-radius: 5px;
- margin-top: 4px;
+    width: 100%;
+    height: 12px;
+    background: var(--color-border);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
 }
-.lesson-bar-large-fill {
- height: 100%;
- border-radius: 5px;
- background: #7bd88f;
-}
-.lesson-bar-large {
- width: 100%;
- height: 12px;
- background: #283344;
- border-radius: 5px;
- position: relative;
- overflow: hidden;
-}
-.lesson-bar-red {
- height: 100%;
- background: #e74c3c; /* rot */
- position: absolute;
- left: 0;
- top: 0;
-}
-.lesson-bar-yellow {
-    height: 100%;
-    background: #ffcc33;  /* gelb (Box 1+2) */
-    position: absolute;
-    left: 0;
-    top: 0;
-}
+
+/* Farb-Layer (absolut positioniert) */
 .lesson-bar-green {
-    height: 100%;
-    background: #2ecc71; /* grün (Box 3+4+5) */
     position: absolute;
     top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--color-progress-strong);
 }
+
+.lesson-bar-yellow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--color-progress-weak);
+}
+
+.lesson-bar-red {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--color-progress-bad);
+}
+
+.lesson-bar-grey {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--color-border);
+}
+
 /* ================== BUTTON-KOSMETIK ================== */
 .ratebar .btn { flex: 1 1 0; max-width: none; text-align:center; }
 .card-controls .btn { flex: 1 1 0; max-width:none; text-align:center; }
@@ -327,7 +487,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 /* Mindesthöhe */
 #promptBox, #solBox {
- min-height: 30vh;
+ min-height: 32vh;
  display:flex;
  flex-direction:column;
  justify-content:flex-start;
@@ -482,31 +642,25 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 
+
 .lt-head {
-    background: #283344;
+    background: var(--color-card);
+    border-bottom: 2px solid var(--color-border);
     font-weight: 600;
 }
 
-.lt-row.selected {
-    background: #334155;
-}
-/* ============================================
-   Dark Mode – ausgewählte Lektion deutlicher
-============================================ */
-html:not(.light) .lt-row.selected {
-    background: #3d4f64 !important;            /* 20% heller */
-    border-left: 4px solid var(--accent) !important;
-    box-shadow: 0 0 0 1px var(--accent) inset !important;
-}
+
 /* ================================
    Neue Spalte: Schwach (⚠️)
 ================================ */
 
-.lt-known   { color: var(--good); }
-.lt-unknown { color: var(--bad);  }
+.lt-known{ 
+	color: var(--color-table-known);
+	font-weight: 600;
+}
 
 .lt-weak {
-    color: #cc9900;        /* Gelb/Orange */
+    color: var(--color-table-weak);      /* Gelb/Orange */
     font-weight: 600;
 }
 
@@ -516,7 +670,7 @@ html:not(.light) .lt-row.selected {
 }
 
 .lt-unknown {
-    color: var(--bad);     /* Rot */
+    color: var(--color-table-unknown);    /* Rot */
     font-weight: 600;
 }
 
@@ -548,7 +702,7 @@ html:not(.light) .lt-row.selected {
     padding: 4px 6px;
     font-size: 14px;
     align-items: center;
-    background: var(--card);
+    background: var(--color-card);
     border-radius: 6px;
     cursor: pointer;
 }
@@ -558,7 +712,8 @@ html:not(.light) .lt-row.selected {
     position: sticky;
     top: 0;
     z-index: 5;
-    background: #283344;
+    background: var(--color-card);
+    border-bottom: 2px solid var(--color-border);
     font-weight: 600;
     padding: 6px;
     border-bottom: 2px solid #1e2530;
@@ -570,7 +725,8 @@ html:not(.light) .lt-row.selected {
 
 /* Auswahlzustand */
 .lt-row.selected {
-    background: #334155;
+	background: var(--color-selected-bg) !important;
+    border-left: 4px solid var(--color-selected-border) !important;
 }
 
 #menuToggle {
@@ -667,81 +823,6 @@ body.menu-open #menuToggle::before {
     color: var(--text);   /* passt sich Light/Dark Mode an */
 }
 
-:root.light #menuToggle {
-    color: #333;           /* klarer im hellen Modus */
-}
-
-/* ✅ Hintergrundfarben anpassen */
-html.light, 
-html.light body {
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* ✅ Karten hell machen */
-html.light .card {
-    background: var(--card);
-    border-color: var(--border);
-}
-
-/* ✅ Pane-Hintergründe */
-html.light .pane {
-    background: var(--card);
-    border-color: var(--border);
-}
-
-/* ✅ Buttons im Light Mode */
-
-html.light .btn.primary {
-    background: var(--accent) !important;
-    border-color: var(--accent) !important;
-    color: var(--accent-text) !important;
-}
-
-/* ✅ Mode-Buttons (DE/ZH) */
-html.light .mode-item {
-    background: #f0f0f0;
-    border-color: var(--border);
-}
-
-/* ✅ Swap-Button */
-html.light .btn.swap {
-    background: #eeeeee;
-    color: #222;
-    border-color: var(--border);
-}
-
-/* ✅ Prompt Box (war vorher dunkel gestrichelt) */
-html.light #promptBox {
-    background: #fafafa;
-    border: 2px solid var(--border);
-}
-
-/* ✅ Lösungskarte */
-html.light #solBox {
-    background: #ffffff;
-    border: 2px solid var(--border);
-}
-
-/* ✅ Tabellen-Zeilen */
-html.light .lt-row {
-    background: #f3f3f3;
-}
-html.light .lt-head {
-    background: #e0e0e0;
-}
-
-/* ✅ Voice-Panel */
-html.light #voicePanel {
-    background: white;
-    border-color: var(--border);
-}
-
-/* ✅ Scrollbar Light Mode */
-html.light .lesson-table::-webkit-scrollbar-track {
-    background: #e6e6e6;
-}
-
 html.light .lesson-table::-webkit-scrollbar-thumb {
     background: #b3b3b3;
 }
@@ -764,15 +845,6 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
     color: var(--text);
     border-radius: 6px;
     font-size: 14px;
-}
-
-/* ============================================= */
-/* ✅ Light Mode – Auswahl sichtbar machen       */
-/* ============================================= */
-
-:root.light .lt-row.selected {
-    background: #dce8ff !important;    /* helles Blau */
-    border-left: 3px solid #3366cc;     /* schöner „Markierungsstreifen“ */
 }
 
 /* ============================================= */
@@ -865,7 +937,7 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
 #sideOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.35);
+    background: var(--color-overlay);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
@@ -910,10 +982,10 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
     height: 100%;
 }
 
-.lesson-bar-green  { background: #2ecc71; z-index: 4; }
-.lesson-bar-red    { background: #e74c3c; z-index: 3; }
-.lesson-bar-yellow { background: #ffcc33; z-index: 2; }
-.lesson-bar-grey   { background: #99999966; z-index: 1; }
+.lesson-bar-green  { background: var(--color-progress-strong); z-index: 4; }
+.lesson-bar-red    { background: var(--color-progress-bad); z-index: 3; }
+.lesson-bar-yellow { background: var(--color-progress-weak); z-index: 2; }
+.lesson-bar-grey   { background: var(--color-progress-neutral); z-index: 1; }
 
 /* ============================================================
    FIX: Alle Nummern in der Lektionsliste rechtsbündig ausrichten
@@ -1016,14 +1088,14 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
 
 /* Nicht gewußt – ROT */
 #rateBar #btnRateUnknown {
-    border: 3px solid var(--bad) !important;
+    border: 3px solid var(--color-negative) !important;
 	border-radius:12px;
     background-clip: padding-box;
 }
 
 /* Gewußt – GRÜN */
 #rateBar #btnRateKnown {
-    border: 3px solid var(--good) !important;
+    border: 3px solid var(--color-positive) !important;
 	border-radius:12px;
     background-clip: padding-box;
 }
@@ -1053,16 +1125,6 @@ html, body {
     padding-right: 0px;
 }
 
-/* ============================================================
-   Header-Banner je nach Light/Dark Mode
-   ============================================================ */
-
-html.light .header-banner {
-    content: url("../img/header-light.png");
-}
-main.container {
-    margin-top: 0px;
-}
 
 /* ============================================================
    Antwortkarte: Wort (Hanzi / Übersetzung) fett & minimal größer
@@ -1161,4 +1223,14 @@ main.container {
 #solBox {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+/* ============================================================
+   FINAL FIX: Sprach-Umschalter immer sichtbar als Primary
+   ============================================================ */
+
+#btnSwapMode.btn.swap {
+    background-color: var(--color-primary-bg) !important;
+    border-color: var(--color-primary-border) !important;
+    color: var(--color-accent-text) !important;
+    opacity: 1 !important;
 }
