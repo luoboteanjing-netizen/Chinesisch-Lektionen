@@ -1,4 +1,4 @@
-/* Version 1.0.3 */
+/* Version 6.0 */
 :root{  
 	--bg: #01193C;
 	--card: #12161b;
@@ -82,7 +82,7 @@ html.light-orange .header-banner {
     content: url("../img/header-light.png");
 }
 html.light-warm .header-banner {
-    content: url("../img/header-light.png");
+    content: url("../img/header-warm.png");
 }
 
 html.light-blue .header-banner {
@@ -177,14 +177,69 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 	max-width: none;
 }
 .btn.ghost{background:transparent}
-/* FIX: Speziell für Training-Button – kompakte Breite (nicht 100% oder flex:1), unabhängig von Parent */
-#btnStart {
- width: auto !important; /* FIX: Nur Inhaltsbreite (Text + Padding) */
- flex: none !important; /* Kein Grow/Shrink über Inhalt */
- display: inline-block !important; /* Inline, um in Row zu passen */
- max-width: none !important; /* Entfernt Breitenbeschränkungen */
- min-width: 120px; /* Minimale Breite für "Training stoppen ■" */
+.btn.toggle {
+    min-width: 74px;
+    padding: 7px 10px;
 }
+.btn.toggle.active {
+    background: var(--primary-bg, var(--accent));
+    border-color: var(--primary-border, var(--accent));
+    color: var(--accent-text);
+}
+
+.actions-inline {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+.actions-inline .btn {
+    flex: 0 1 auto;
+    min-width: 74px;
+    width: auto;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.training-group .btn {
+ flex: 0 0 170px;
+ min-width: 170px;
+ width: 170px;
+ white-space: nowrap;
+ text-align: center;
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ box-sizing: border-box;
+}
+
+.training-group .btn:active {
+ padding: 8px 12px;
+ border: 1px solid var(--color-border);
+ outline: none;
+}
+
+.training-group .btn.primary:active {
+ border-color: var(--primary-border, var(--accent));
+}
+
+#btnAutoplay {
+ background: var(--primary-bg, var(--accent)) !important;
+ border-color: var(--primary-border, var(--accent)) !important;
+ color: var(--accent-text) !important;
+}
+
+#btnAutoplay.primary {
+ background: var(--primary-bg, var(--accent)) !important;
+ border-color: var(--primary-border, var(--accent)) !important;
+ color: var(--accent-text) !important;
+}
+
 /* NEU: Gruppe für Training + Autoplay (unter Sliders) – Flex-Row für nebeneinander */
 .training-group {
  display: flex;
@@ -196,29 +251,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 /* NEU: Autoplay als Primary (wenn Klasse hinzugefügt): Farblich identisch zum Training-Button */
 
-#btnAutoplay.primary {
- background: var(--accent) !important;
- border-color: var(--accent) !important;
- color: var(--accent-text) !important;
- font-weight: 600;
- white-space: nowrap;
- transition: all 0.2s ease; /* Smooth bei Text-Wechsel (z.B. "Stop") */
- flex: 0 1 auto; /* Kompakt, dynamisch */
- width: auto !important; /* FIX: Gleiche kompakte Breite wie Training */
- display: inline-block !important;
- max-width: none !important;
-}
-/* Dynamisch breiterer Autoplay-Button (ca. 15% breiter als Standard, aber flexibel – passt sich an Nachbarn an) */
-#btnAutoplay {
- min-width: 120px; /* Etwas schmaler (110px), damit + Training immer in einer Zeile passt (~230px Gesamt) */
- padding: 8px 16px; /* Etwas mehr horizontaler Innenabstand, aber flexibel */
- flex: 0 1 auto; /* Grow:0 (wächst nicht über Basis), Shrink:1 (schrumpft bei Engpass), Basis:auto (passt zu Inhalt) – verhindert Wrap */
- white-space: nowrap; /* Verhindert Text-Umbruch (z.B. "Autoplay ▶︎" oder "Autoplay ■ Stop") */
- font-weight: 600; /* Leicht bolder für Prominenz (wird zu 700 bei .primary) */
- background: var(--primary-bg, var(--accent)) !important;
- border-color: var(--primary-border, var(--accent)) !important;
- color: var(--accent-text) !important;
-}
 /* Breitere und höhere Swap/Direction-Button (mit "< Richtung >" als zentriertem Text, kein Icon) */
 .btn.swap {
  background: var(--color-primary-bg);
@@ -306,7 +338,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:600}
 .mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
-.actions-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Gleiches für actions-inline */
 /* NEU: Gleiche Höhe wie Swap-Button für die Sprache-Items (links/rechts) – höheres Padding und min-height */
 .mode-item {
     background: var(--color-card);
@@ -375,13 +406,26 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* Responsive: Mobile-Anpassungen */
 @media (max-width: 480px) {
  .top-actions { margin-top: 12px; gap: 6px; }
- #btnStart { min-width: 100px; }
- .training-group { gap: 8px; justify-content:center; flex-wrap:wrap; flex-direction:row; }
+ .training-group {
+  gap: 8px;
+  justify-content:center;
+  flex-wrap:wrap;
+  flex-direction:row;
+ }
+ .training-group .btn {
+  flex: 0 0 130px;
+  width: 130px;
+  min-width: 130px;
+ }
  .btn.primary { margin-top:8px; }
  .btn.swap { padding:8px 10px; min-height:28px; font-size:16px; }
- #btnAutoplay { min-width:100px; padding:8px 14px; }
  .mode-item { padding:10px 12px; min-height:28px; min-width:70px; font-size:13px; }
  .mode-inline, .actions-inline { gap:10px; }
+ .actions-inline .btn {
+  flex: 0 1 auto;
+  min-width: 74px;
+  width: auto;
+ }
  .voice-btn, .voice-config .lbl, .gap-row .lbl { font-size:13px; }
  #rateZhVal, #pitchZhVal, #rateDeVal, #pitchDeVal, #gapVal { font-size:11px; }
  .voice-config { gap:6px; }
@@ -539,12 +583,23 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* ============================================= */
 
 .card-speaker {
-    font-size: 1.6rem;
-    color: #222;       /* nutzt das helle Theme-Text-Weiß im Dark-Mode */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.3rem;
+    height: 3.3rem;
+    font-size: 2rem;
+    color: var(--color-text);
     opacity: 0.95;
+    cursor: pointer;
 }
 
-/* Light Mode: leicht abdunkeln */
+.card-speaker svg {
+    width: 2.2rem;
+    height: 2.2rem;
+    display: block;
+}
+
 :root.light .card-speaker {
     color: #444;
 }

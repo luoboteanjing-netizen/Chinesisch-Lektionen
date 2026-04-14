@@ -12,7 +12,7 @@
    =========================== */
 
 /* === Version manuell definieren === */
-const APP_VERSION = "1.1.0";   // beim nächsten Release erhöhen
+const APP_VERSION = "6.0";   // beim nächsten Release erhöhen
 
 // CSV-Datei dynamisch über URL-Parameter auswählen
 const params = new URLSearchParams(location.search);
@@ -59,6 +59,269 @@ const LS_KEYS = {
     progress: "fc_progress_v1"
 };
 
+const TRANSLATIONS = {
+    de: {
+        appTitle: "Chinesisch Flashcards",
+        settingsTitle: "Einstellungen",
+        progressTitle: "Fortschritt",
+        progressExport: "Fortschritt exportieren",
+        progressImport: "Fortschritt importieren",
+        progressResetLesson: "Aktuelle Lektion zurücksetzen",
+        progressResetAll: "Alle Lektionen zurücksetzen",
+        languageTitle: "Sprache",
+        uiLanguageLabel: "🌐 UI Sprache",
+        uiLanguageSelectDe: "Deutsch",
+        uiLanguageSelectEn: "English",
+        uiLanguageSelectZh: "中文",
+        uiLanguageSelectFr: "Français",
+        themeTitle: "Theme",
+        themeDark: "Dark Mode",
+        themeLightOrange: "Light‑Orange",
+        themeLightWarm: "Light‑Warm",
+        themeLightBlue: "Light‑Blue",
+        delayLabel: "Satz‑Delay (Sekunden):",
+        autoplayGapLabel: "Pause zw. Karten im Autoplay:",
+        settingsVersion: "Version:",
+        modeSwitchTitle: "Richtung umschalten",
+        orderRandom: "Zufällig",
+        autoPlay: "Autoplay ▶︎",
+        autoPlayStop: "Autoplay ■ Stop",
+        trainingStart: "Training starten ▶",
+        trainingStop: "Training stoppen ■",
+        prev: "◀ Zurück",
+        reveal: "Aufdecken",
+        next: "Nächste ▶",
+        rateUnknown: "❌ Nicht gewusst",
+        rateKnown: "✅ Gewusst",
+        voiceButtonDe: "DE Stimme",
+        voiceButtonZh: "ZH Stimme",
+        rateDeLabel: "DE Tempo",
+        pitchDeLabel: "DE Tonhöhe",
+        rateZhLabel: "ZH Tempo",
+        pitchZhLabel: "ZH Tonhöhe",
+        pinyinButton: "Pīnyīn",
+        lessonTableLesson: "Lektion",
+        lessonTableCards: "Karten",
+        voicePanelTitle: "Stimmen",
+        voicePanelClose: "✕",
+        voicePanelHintTitle: "Hinweis",
+        voicePanelHint: "Wähle eine Stimme für die aktuell geöffnete Sprache.",
+        voiceListTitle: "Stimmenliste",
+        noVoicesFound: "Keine passenden Stimmen gefunden.",
+        namelessVoice: "(namenlos)",
+        pickVoice: "Diese Stimme wählen",
+        testVoice: "Probehören",
+        voiceActiveSuffix: "• [Aktiv]",
+        selectLessonAlert: "Bitte zuerst Lektionen auswählen.",
+        selectLessonAlert2: "Bitte Lektionen wählen.",
+        noLessonSelected: "Keine Lektion ausgewählt.",
+        confirmResetLesson: "Fortschritt für die Lektion ‚{lesson}‘ wirklich zurücksetzen?",
+        resetLessonDone: "Fortschritt für Lektion ‚{lesson}‘ wurde zurückgesetzt.",
+        confirmResetAll: "Fortschritt für alle Lektionen wirklich vollständig zurücksetzen?",
+        resetAllDone: "Fortschritt für alle Lektionen wurde zurückgesetzt.",
+        alertImportOk: "Fortschritt importiert.",
+        alertImportInvalid: "Ungültiges Format.",
+        alertImportError: "Fehler beim Import.",
+        csvLoadError: "Fehler beim Laden der CSV.",
+        cardLessonTitle: "Lektion {id}"
+    },
+    en: {
+        appTitle: "Chinese Flashcards",
+        settingsTitle: "Settings",
+        progressTitle: "Progress",
+        progressExport: "Export progress",
+        progressImport: "Import progress",
+        progressResetLesson: "Reset current lesson",
+        progressResetAll: "Reset all lessons",
+        languageTitle: "Language",
+        uiLanguageLabel: "🌐 UI language",
+        uiLanguageSelectDe: "Deutsch",
+        uiLanguageSelectEn: "English",
+        uiLanguageSelectZh: "中文",
+        uiLanguageSelectFr: "French",
+        themeTitle: "Theme",
+        themeDark: "Dark mode",
+        themeLightOrange: "Light Orange",
+        themeLightWarm: "Light Warm",
+        themeLightBlue: "Light Blue",
+        delayLabel: "Sentence delay (seconds):",
+        autoplayGapLabel: "Pause between cards in autoplay:",
+        settingsVersion: "Version:",
+        modeSwitchTitle: "Switch direction",
+        orderRandom: "Random",
+        autoPlay: "Autoplay ▶︎",
+        autoPlayStop: "Autoplay ■ Stop",
+        trainingStart: "Start training ▶",
+        trainingStop: "Stop training ■",
+        prev: "◀ Back",
+        reveal: "Reveal",
+        next: "Next ▶",
+        rateUnknown: "❌ Didn't know",
+        rateKnown: "✅ Knew it",
+        voiceButtonDe: "DE Voice",
+        voiceButtonZh: "ZH Voice",
+        rateDeLabel: "DE rate",
+        pitchDeLabel: "DE pitch",
+        rateZhLabel: "ZH rate",
+        pitchZhLabel: "ZH pitch",
+        pinyinButton: "Pīnyīn",
+        lessonTableLesson: "Lesson",
+        lessonTableCards: "Cards",
+        voicePanelTitle: "Voices",
+        voicePanelClose: "✕",
+        voicePanelHintTitle: "Hint",
+        voicePanelHint: "Choose a voice for the currently open language.",
+        voiceListTitle: "Voice list",
+        noVoicesFound: "No matching voices found.",
+        namelessVoice: "(nameless)",
+        pickVoice: "Pick this voice",
+        testVoice: "Listen",
+        voiceActiveSuffix: "• [Active]",
+        selectLessonAlert: "Please choose lessons first.",
+        selectLessonAlert2: "Please choose lessons.",
+        noLessonSelected: "No lesson selected.",
+        confirmResetLesson: "Reset progress for lesson '{lesson}'?",
+        resetLessonDone: "Progress for lesson '{lesson}' has been reset.",
+        confirmResetAll: "Reset progress for all lessons?",
+        resetAllDone: "Progress for all lessons has been reset.",
+        alertImportOk: "Progress imported.",
+        alertImportInvalid: "Invalid format.",
+        alertImportError: "Import failed.",
+        csvLoadError: "Error loading CSV.",
+        cardLessonTitle: "Lesson {id}"
+    },
+    zh: {
+        appTitle: "中文抽认卡",
+        settingsTitle: "设置",
+        progressTitle: "进度",
+        progressExport: "导出进度",
+        progressImport: "导入进度",
+        progressResetLesson: "重置当前课",
+        progressResetAll: "重置所有课程",
+        languageTitle: "语言",
+        uiLanguageLabel: "🌐 UI 语言",
+        uiLanguageSelectDe: "Deutsch",
+        uiLanguageSelectEn: "English",
+        uiLanguageSelectZh: "中文",
+        uiLanguageSelectFr: "Français",
+        themeTitle: "主题",
+        themeDark: "深色模式",
+        themeLightOrange: "浅橙",
+        themeLightWarm: "浅暖",
+        themeLightBlue: "浅蓝",
+        delayLabel: "句子延迟（秒）：",
+        autoplayGapLabel: "自动播放卡片之间的暂停：",
+        settingsVersion: "版本：",
+        modeSwitchTitle: "切换方向",
+        orderRandom: "随机",
+        autoPlay: "自动播放 ▶︎",
+        autoPlayStop: "自动播放 ■ 停止",
+        trainingStart: "开始训练 ▶",
+        trainingStop: "停止训练 ■",
+        prev: "◀ 上一张",
+        reveal: "显示",
+        next: "下一张 ▶",
+        rateUnknown: "❌ 不会",
+        rateKnown: "✅ 会了",
+        voiceButtonDe: "DE 语音",
+        voiceButtonZh: "ZH 语音",
+        rateDeLabel: "DE 速率",
+        pitchDeLabel: "DE 音调",
+        rateZhLabel: "ZH 速率",
+        pitchZhLabel: "ZH 音调",
+        pinyinButton: "Pīnyīn",
+        lessonTableLesson: "课程",
+        lessonTableCards: "卡片",
+        voicePanelTitle: "语音",
+        voicePanelClose: "✕",
+        voicePanelHintTitle: "提示",
+        voicePanelHint: "为当前语言选择语音。",
+        voiceListTitle: "语音列表",
+        noVoicesFound: "未找到匹配语音。",
+        namelessVoice: "(无名)",
+        pickVoice: "选择此语音",
+        testVoice: "试听",
+        voiceActiveSuffix: "• [已激活]",
+        selectLessonAlert: "请先选择课程。",
+        selectLessonAlert2: "请选择课程。",
+        noLessonSelected: "未选择课程。",
+        confirmResetLesson: "确实要重置课程“{lesson}”的进度吗？",
+        resetLessonDone: "课程“{lesson}”的进度已重置。",
+        confirmResetAll: "确实要重置所有课程的进度吗？",
+        resetAllDone: "所有课程的进度已重置。",
+        alertImportOk: "进度已导入。",
+        alertImportInvalid: "格式无效。",
+        alertImportError: "导入失败。",
+        csvLoadError: "加载 CSV 时出错。",
+        cardLessonTitle: "课程 {id}"
+    },
+    fr: {
+        appTitle: "Cartes Mémoire Chinois",
+        settingsTitle: "Paramètres",
+        progressTitle: "Progrès",
+        progressExport: "Exporter le progrès",
+        progressImport: "Importer le progrès",
+        progressResetLesson: "Réinitialiser la leçon actuelle",
+        progressResetAll: "Réinitialiser toutes les leçons",
+        languageTitle: "Langue",
+        uiLanguageLabel: "🌐 Langue de l'interface",
+        uiLanguageSelectDe: "Deutsch",
+        uiLanguageSelectEn: "English",
+        uiLanguageSelectZh: "中文",
+        uiLanguageSelectFr: "Französisch",
+        themeTitle: "Thème",
+        themeDark: "Mode sombre",
+        themeLightOrange: "Clair Orange",
+        themeLightWarm: "Clair Chaud",
+        themeLightBlue: "Clair Bleu",
+        delayLabel: "Délai de phrase (secondes) :",
+        autoplayGapLabel: "Pause entre les cartes en lecture automatique :",
+        settingsVersion: "Version :",
+        modeSwitchTitle: "Changer de direction",
+        orderRandom: "Aléatoire",
+        autoPlay: "Lecture automatique ▶︎",
+        autoPlayStop: "Lecture automatique ■ Arrêter",
+        trainingStart: "Commencer l'entraînement ▶",
+        trainingStop: "Arrêter l'entraînement ■",
+        prev: "◀ Précédent",
+        reveal: "Révéler",
+        next: "Suivant ▶",
+        rateUnknown: "❌ Ne savait pas",
+        rateKnown: "✅ Savait",
+        voiceButtonDe: "Voix DE",
+        voiceButtonZh: "Voix ZH",
+        rateDeLabel: "Vitesse DE",
+        pitchDeLabel: "Hauteur DE",
+        rateZhLabel: "Vitesse ZH",
+        pitchZhLabel: "Hauteur ZH",
+        pinyinButton: "Pīnyīn",
+        lessonTableLesson: "Leçon",
+        lessonTableCards: "Cartes",
+        voicePanelTitle: "Voix",
+        voicePanelClose: "✕",
+        voicePanelHintTitle: "Astuce",
+        voicePanelHint: "Choisissez une voix pour la langue actuellement ouverte.",
+        voiceListTitle: "Liste des voix",
+        noVoicesFound: "Aucune voix correspondante trouvée.",
+        namelessVoice: "(sans nom)",
+        pickVoice: "Choisir cette voix",
+        testVoice: "Écouter",
+        voiceActiveSuffix: "• [Actif]",
+        selectLessonAlert: "Veuillez d'abord choisir des leçons.",
+        selectLessonAlert2: "Veuillez choisir des leçons.",
+        noLessonSelected: "Aucune leçon sélectionnée.",
+        confirmResetLesson: "Réinitialiser vraiment le progrès de la leçon '{lesson}' ?",
+        resetLessonDone: "Le progrès de la leçon '{lesson}' a été réinitialisé.",
+        confirmResetAll: "Réinitialiser vraiment le progrès de toutes les leçons ?",
+        resetAllDone: "Le progrès de toutes les leçons a été réinitialisé.",
+        alertImportOk: "Progrès importé.",
+        alertImportInvalid: "Format invalide.",
+        alertImportError: "Échec de l'importation.",
+        csvLoadError: "Erreur lors du chargement du CSV.",
+        cardLessonTitle: "Leçon {id}"
+    }
+};
+
 const $ = (s) => document.querySelector(s);
 
 /* ============================ GLOBAL STATE =============================== */
@@ -98,16 +361,20 @@ const state = {
     },
 
     settings: {
+        lang: "de",
         mode: "de2zh",
         order: "seq",
         rateDe: 0.95,
         pitchDe: 1.0,
         rateZh: 0.95,
         pitchZh: 1.0,
+        showHanzi: true,
+        showPinyin: true,
         lessons: [],
         browserVoiceZh: null,
         browserVoiceDe: null,
-        autoplayGap: 800
+        autoplayGap: 800,
+        resumeIndexByLesson: {}
     },
 
     session: {
@@ -117,7 +384,9 @@ const state = {
         unsure: 0,
         unknown: 0,
         ttrSum: 0,
-        ttrCount: 0
+        ttrCount: 0,
+        revealedCount: 0,
+        revealedCardIds: []
     },
 
     startedAt: null,
@@ -138,27 +407,92 @@ const state = {
 function saveSettings() {
     try {
         localStorage.setItem(LS_KEYS.settings, JSON.stringify(state.settings));
-    } catch (e) {}
+    } catch (e) {
+        console.warn("[Settings Save Error]", e);
+    }
 }
 
 function loadSettings() {
     try {
         const s = JSON.parse(localStorage.getItem(LS_KEYS.settings) || "null");
         if (s) Object.assign(state.settings, s);
-    } catch (e) {}
+    } catch (e) {
+        console.warn("[Settings Load Error]", e);
+    }
 }
 
 function saveProgress() {
     try {
         localStorage.setItem(LS_KEYS.progress, JSON.stringify(state.progress));
-    } catch (e) {}
+    } catch (e) {
+        console.warn("[Progress Save Error]", e);
+    }
 }
 
 function loadProgress() {
     try {
         const p = JSON.parse(localStorage.getItem(LS_KEYS.progress) || "null");
         if (p && p.version === "v1") state.progress = p;
-    } catch (e) {}
+    } catch (e) {
+        console.warn("[Progress Load Error]", e);
+    }
+}
+
+function translate(key, vars = {}) {
+    const lang = state.settings.lang || "de";
+    const dictionary = TRANSLATIONS[lang] || TRANSLATIONS.de;
+    let text = dictionary[key] ?? TRANSLATIONS.de[key] ?? key;
+    Object.entries(vars).forEach(([name, value]) => {
+        text = text.replace(new RegExp(`\\{${name}\\}`, "g"), value);
+    });
+    return text;
+}
+
+function translateAllUI() {
+    document.documentElement.lang = state.settings.lang || "de";
+    document.title = `${translate("appTitle")} – v${APP_VERSION}`;
+
+    document.querySelectorAll("[data-i18n]").forEach((node) => {
+        const key = node.dataset.i18n;
+        if (!key) return;
+        node.textContent = translate(key);
+    });
+
+    // Speziell für option elements in selects
+    document.querySelectorAll("option[data-i18n]").forEach((option) => {
+        const key = option.dataset.i18n;
+        if (!key) return;
+        option.textContent = translate(key);
+    });
+
+    document.querySelectorAll("[data-i18n-title]").forEach((node) => {
+        const key = node.dataset.i18nTitle;
+        if (!key) return;
+        node.title = translate(key);
+    });
+
+    // Update lesson table headers
+    const lessonHeader = document.querySelector("#lessonTableHeaderLesson");
+    if (lessonHeader) lessonHeader.textContent = translate("lessonTableLesson");
+
+    const cardsHeader = document.querySelector("#lessonTableHeaderCards");
+    if (cardsHeader) cardsHeader.textContent = translate("lessonTableCards");
+
+    const uiLangSelect = document.querySelector("#uiLangSelect");
+    if (uiLangSelect) uiLangSelect.value = state.settings.lang || "de";
+
+    const themeSelect = document.querySelector("#themeSelect");
+    if (themeSelect) themeSelect.value = state.settings.theme || "dark";
+
+    updateTrainingBtn();
+    updateAutoplayBtn();
+}
+
+function setUILanguage(lang) {
+    if (!TRANSLATIONS[lang]) return;
+    state.settings.lang = lang;
+    saveSettings();
+    translateAllUI();
 }
 
 /* ============================ CSV PARSING ================================= */
@@ -200,7 +534,7 @@ async function loadCSV() {
         parseCSV(text);
         populateLessonSelect();
     } catch (e) {
-        alert("Fehler beim Laden der CSV.");
+alert(translate("csvLoadError"));
         console.error(e);
     }
 }
@@ -265,8 +599,8 @@ function populateLessonSelect() {
 
 const header = `
     <div class="lt-row lt-head">
-        <span class="lt-lesson" data-sort="lesson">Lektion</span>
-        <span class="lt-total" data-sort="total">Karten</span>
+        <span id="lessonTableHeaderLesson" class="lt-lesson" data-sort="lesson">${translate("lessonTableLesson")}</span>
+        <span id="lessonTableHeaderCards" class="lt-total" data-sort="total">${translate("lessonTableCards")}</span>
         <span class="lt-strong"  data-sort="strong">✅</span>    <!-- Box 4+5 -->
         <span class="lt-weak"    data-sort="weak">🤔</span>      <!-- Box 2+3 -->
 		<span class="lt-unknown" data-sort="unknown">❌</span>   <!-- Box 1 -->
@@ -437,7 +771,9 @@ function resetSessionStats() {
         unsure: 0,
         unknown: 0,
         ttrSum: 0,
-        ttrCount: 0
+        ttrCount: 0,
+        revealedCount: state.session.revealedCount ?? 0,
+        revealedCardIds: state.session.revealedCardIds ?? []
     };
 }
 
@@ -449,7 +785,7 @@ function gatherPool() {
     }
     state.pool = out;
     state.idx = null;
-    resetSessionStats();
+    // resetSessionStats();  // Entfernt - wird jetzt in startTraining() gemacht
 }
 
 function gatherPoolFromSettings() {
@@ -500,6 +836,8 @@ function setTheme(theme) {
 
     // merken
     localStorage.setItem("theme", theme);
+    state.settings.theme = theme;
+    saveSettings();
 }
 
 /* ============================ sync & scroll ============================ */
@@ -529,6 +867,95 @@ function scrollToBottom() {
 
 /* ============================ CARD RENDERING ============================ */
 
+function renderDisplayToggleUI() {
+    const btnHanzi = $("#btnToggleHanzi");
+    const btnPinyin = $("#btnTogglePinyin");
+    if (!btnHanzi || !btnPinyin) return;
+
+    btnHanzi.classList.toggle("active", state.showHanzi);
+    btnPinyin.classList.toggle("active", state.showPinyin);
+}
+
+function renderPromptWord(entry) {
+    if (state.mode !== "zh2de") {
+        $("#promptWord").textContent = entry.word.de || "—";
+        $("#promptWordSub").innerHTML = "";
+        return;
+    }
+
+    const showHanzi = state.showHanzi;
+    const showPinyin = state.showPinyin;
+
+    if (showHanzi && showPinyin) {
+        $("#promptWord").innerHTML = entry.word.zh || "—";
+        $("#promptWordSub").innerHTML = entry.word.py
+            ? `<span class="pinyin-word">${entry.word.py}</span>`
+            : "";
+    } else if (showHanzi) {
+        $("#promptWord").innerHTML = entry.word.zh || "—";
+        $("#promptWordSub").innerHTML = "";
+    } else if (showPinyin) {
+        $("#promptWord").innerHTML = entry.word.py
+            ? `<span class="pinyin-word">${entry.word.py}</span>`
+            : "—";
+        $("#promptWordSub").innerHTML = "";
+    } else {
+        $("#promptWord").innerHTML = entry.word.zh || "—";
+        $("#promptWordSub").innerHTML = "";
+    }
+}
+
+function renderPromptSentence(entry) {
+    const showHanzi = state.showHanzi;
+    const showPinyin = state.showPinyin;
+    const parts = [];
+
+    if (showHanzi && entry.sent.zh) {
+        parts.push(entry.sent.zh);
+    }
+    if (showPinyin && entry.sent.py) {
+        parts.push(`<span class="zh-pinyin">${entry.sent.py}</span>`);
+    }
+
+    if (parts.length === 0) {
+        $("#promptSent").textContent = "";
+        return;
+    }
+
+    $("#promptSent").innerHTML = parts.join(parts.length > 1 ? "<br>" : " ");
+}
+
+function renderPromptWordFull(entry) {
+    if (state.mode !== "zh2de") {
+        $("#promptWord").textContent = entry.word.de || "—";
+        $("#promptWordSub").innerHTML = "";
+        return;
+    }
+
+    $("#promptWord").innerHTML = entry.word.zh || "—";
+    $("#promptWordSub").innerHTML = entry.word.py
+        ? `<span class="pinyin-word">${entry.word.py}</span>`
+        : "";
+}
+
+function renderPromptSentenceFull(entry) {
+    if (state.mode !== "zh2de") {
+        $("#promptSent").textContent = entry.sent.de || "—";
+        return;
+    }
+
+    const parts = [];
+    if (entry.sent.zh) parts.push(entry.sent.zh);
+    if (entry.sent.py) parts.push(`<span class="zh-pinyin">${entry.sent.py}</span>`);
+
+    if (parts.length === 0) {
+        $("#promptSent").textContent = "";
+        return;
+    }
+
+    $("#promptSent").innerHTML = parts.join("<br>");
+}
+
 function setCard(entry, fromHistory = false) {
 
     /* ---- Timer für verzögerten Satz abbrechen ---- */
@@ -553,13 +980,13 @@ if (cardTitle) {
     const p = ensureCardProgress(entry);
     const ascii = getLeitnerAscii(p.box);
 
-    const idx = (state.idx ?? 0) + 1;  // 1‑basiert
+    const revealCount = state.session.revealedCount;  // Nur aufgedeckte Karten
     const cardsInLesson = state.lessons.get(entry.lesson) ?? [];
     const total = cardsInLesson.length;
 
     cardTitle.innerHTML = `
         <span class="card-title-left">
-            ${idx} / ${total}
+            ${revealCount} / ${total}
         </span>
         <span class="card-title-right leitner-ascii">
             ${ascii}
@@ -567,7 +994,7 @@ if (cardTitle) {
     `;
 	}
 
-    if (cardLesson) cardLesson.textContent = `Lektion ${entry.id}`;
+    if (cardLesson) cardLesson.textContent = translate("cardLessonTitle", { id: entry.id });
 
 // ----------------------------------------------------------
 // Fortschrittsbalken (Leitner) – von links nach rechts:
@@ -618,12 +1045,7 @@ if (stats) {
     if (state.mode === "zh2de") {
         /* ---- CH → DE ---- */
 
-        $("#promptWord").innerHTML = entry.word.zh || "—";
-
-        $("#promptWordSub").innerHTML = entry.word.py
-            ? `<span class="pinyin-word">${entry.word.py}</span>`
-            : "";
-
+        renderPromptWord(entry);
         $("#promptPOS").textContent = entry.pos || "";
 
         /* ✅ Satz NICHT sofort anzeigen */
@@ -633,10 +1055,9 @@ if (stats) {
         $("#solWord").textContent = entry.word.de;
         $("#solSent").textContent = entry.sent.de;
 
-        /* ✅ Verzögertes Einblenden des Satzes (CH+Pinyin) */
+        /* ✅ Verzögertes Einblenden des Satzes */
         state.delayedSentenceTimer = setTimeout(() => {
-            $("#promptSent").innerHTML =
-                `${entry.sent.zh}<br><span class="zh-pinyin">${entry.sent.py}</span>`;
+            renderPromptSentence(entry);
             syncCardHeights();
         }, state.sentenceDelay);
 
@@ -742,13 +1163,13 @@ function prevCard() {
 /* ============================ NAV SHOW/HIDE ============================ */
 
 function hideNavButtons() {
-    if (state.autoplay.on) return;   // Autoplay braucht Navigation!
     $("#btnPrev").style.display = "none";
     $("#btnReveal").style.display = "none";
     $("#btnNext").style.display = "none";
 }
 
 function showNavButtons() {
+    if (!state.trainingOn || state.autoplay.on) return;  // Nur im Training UND nicht im Autoplay zeigen!
     $("#btnPrev").style.display = "";
     $("#btnReveal").style.display = "";
     $("#btnNext").style.display = "";
@@ -761,9 +1182,30 @@ function doReveal() {
     $("#solBox").classList.remove("masked");
     state.revealedAt = Date.now();
 	
+	// ✅ Kartenzähler hochzählen (nur beim Aufdecken von NEUEN Karten)
+	if (state.current && state.current.id && !state.session.revealedCardIds.includes(state.current.id)) {
+		state.session.revealedCardIds.push(state.current.id);
+		state.session.revealedCount++;
+		// Zähler in cardTitle aktualisieren
+		const cardTitle = document.querySelector("#cardTitle");
+		if (cardTitle) {
+			const p = ensureCardProgress(state.current);
+			const ascii = getLeitnerAscii(p.box);
+			const cardsInLesson = state.lessons.get(state.current.lesson) ?? [];
+			const total = cardsInLesson.length;
+			cardTitle.innerHTML = `
+				<span class="card-title-left">
+					${state.session.revealedCount} / ${total}
+				</span>
+				<span class="card-title-right leitner-ascii">
+					${ascii}
+				</span>
+			`;
+		}
+	}
 	
-	// ✅ Beim Aufdecken IMMER Chinesisch abspielen
-		playChineseOnReveal(state.current);
+    // ✅ Beim Aufdecken IMMER Chinesisch abspielen
+	playChineseOnReveal(state.current);
 
 
     // -----------------------------------------
@@ -781,20 +1223,16 @@ function doReveal() {
     // Timer abbrechen
     // -----------------------------------------
 // -----------------------------------------
-// Verzögerten Satz ggf. sofort anzeigen
+// Fragekarte VOLLSTÄNDIG anzeigen beim Aufdecken
 // -----------------------------------------
+if (state.mode === "zh2de") {
+    renderPromptWordFull(state.current);
+    renderPromptSentenceFull(state.current);
+}
+
 if (state.delayedSentenceTimer) {
     clearTimeout(state.delayedSentenceTimer);
     state.delayedSentenceTimer = null;
-
-    // ✅ Satz sofort anzeigen (je nach Modus)
-    if (state.mode === "zh2de") {
-        $("#promptSent").innerHTML =
-            `${state.current.sent.zh}<br><span class="zh-pinyin">${state.current.sent.py}</span>`;
-    } else {
-        $("#promptSent").textContent =
-            state.current.sent.de || "—";
-    }
 }
     // -----------------------------------------
     // Buttons anzeigen
@@ -899,6 +1337,8 @@ function startTraining() {
         // ----------------------------
         state.history = [];
         state.historyPos = -1;
+        state.session.revealedCount = 0;
+        state.session.revealedCardIds = [];
 
         state.selectedLessons.clear();
         const sel = $("#lessonSelect");
@@ -915,18 +1355,50 @@ function startTraining() {
         gatherPool();
 
         if (!state.pool.length) {
-            alert("Bitte zuerst Lektionen auswählen.");
+            alert(translate("selectLessonAlert"));
             return;
         }
 
         // ----------------------------
+        // ✅ Lesson-Variable für beide Abschnitte
+        // ----------------------------
+        const lesson = state.settings.lessons[0];
+
+        // ----------------------------
+        // ✅ Kartenzähler initialisieren (bereits bekannte Karten)
+        // ----------------------------
+        const cardsInLesson = state.lessons.get(lesson) || [];
+        let knownCardsCount = 0;
+        const knownCardIds = [];
+
+        for (const card of cardsInLesson) {
+            const progress = state.progress.cards[card.id];
+            if (progress && progress.box >= 1 && progress.box <= 5) {
+                knownCardsCount++;
+                knownCardIds.push(card.id);
+            }
+        }
+
+        state.session.revealedCount = knownCardsCount;
+        state.session.revealedCardIds = knownCardIds;
+
+        // ----------------------------
+        // ✅ Session-Stats initialisieren (nach bekannte Karten zählen)
+        // ----------------------------
+        resetSessionStats();
+
+        // ----------------------------
         // ✅ Resume-Index bestimmen
         // ----------------------------
-        const lesson = state.settings.lessons[0]; // Single-Select
         const resumeIdx = state.settings.resumeIndexByLesson?.[lesson];
 
         if (typeof resumeIdx === "number" && resumeIdx < state.pool.length) {
             state.idx = resumeIdx;
+            // ✅ History mit vorherigen Karten vorladen (1 bis resumeIdx)
+            for (let i = 0; i < resumeIdx; i++) {
+                state.history.push(state.pool[i]);
+            }
+            state.historyPos = resumeIdx - 1;
         } else {
             state.idx = 0;
         }
@@ -941,6 +1413,7 @@ function startTraining() {
         // ----------------------------
         state.trainingOn = true;
         updateTrainingBtn();
+        showNavButtons();  // Buttons anzeigen beim Training-Start
         scrollToBottom();
 
     } else {
@@ -958,6 +1431,7 @@ if (state.current && state.current.lesson && state.idx !== null) {
 }
 	
     updateTrainingBtn();
+    hideNavButtons();  // Buttons verstecken beim Training-Stopp
 
     $("#btnPrev").disabled = true;
     $("#btnReveal").disabled = true;
@@ -972,7 +1446,7 @@ if (state.current && state.current.lesson && state.idx !== null) {
 
 function updateTrainingBtn() {
     $("#btnStart").textContent =
-        state.trainingOn ? "Training stoppen ■" : "Training starten ▶";
+        state.trainingOn ? translate("trainingStop") : translate("trainingStart");
 }
 
 
@@ -1102,7 +1576,7 @@ function updateVoiceList() {
     );
 
     if (!list.length) {
-        box.innerHTML = "<div>Keine passenden Stimmen gefunden.</div>";
+        box.innerHTML = `<div>${translate("noVoicesFound")}</div>`;
         return;
     }
 
@@ -1126,7 +1600,7 @@ function updateVoiceList() {
 
         const btnPick = document.createElement("button");
         btnPick.className = "btn";
-        btnPick.textContent = "Diese Stimme wählen";
+        btnPick.textContent = translate("pickVoice");
 
         btnPick.onclick = () => {
             if (state.voicePanelTarget === "zh") {
@@ -1144,7 +1618,7 @@ function updateVoiceList() {
 
         const btnTest = document.createElement("button");
         btnTest.className = "btn ghost";
-        btnTest.textContent = "Probehören";
+        btnTest.textContent = translate("testVoice");
 
         btnTest.onclick = () => {
             const u = new SpeechSynthesisUtterance(
@@ -1164,7 +1638,7 @@ function updateVoiceList() {
 
         if (active &&
             (active.name === v.name || active.voiceURI === v.voiceURI)) {
-            name.textContent += " • [Aktiv]";
+            name.textContent += ` ${translate("voiceActiveSuffix")}`;
         }
 
         actions.appendChild(btnPick);
@@ -1250,7 +1724,7 @@ function setAutoplay(on) {
 
 function updateAutoplayBtn() {
     $("#btnAutoplay").textContent =
-        state.autoplay.on ? "Autoplay ■ Stop" : "Autoplay ▶︎";
+        state.autoplay.on ? translate("autoPlayStop") : translate("autoPlay");
 }
 
 
@@ -1272,18 +1746,19 @@ function ensurePoolForAutoplay() {
     gatherPoolFromSettings();
 
     if (!state.pool.length) {
-        alert("Bitte Lektionen wählen.");
+        alert(translate("selectLessonAlert2"));
         return false;
     }
 
-   const lesson = state.settings.lessons[0];
-const resumeIdx = state.settings.resumeIndexByLesson?.[lesson];
+    const lesson = state.settings.lessons[0];
+    const resumeIdx = state.settings.resumeIndexByLesson?.[lesson];
 
-if (typeof resumeIdx === "number" && resumeIdx < state.pool.length) {
-    state.idx
+    if (typeof resumeIdx === "number" && resumeIdx < state.pool.length) {
+        state.idx = resumeIdx;
+        setCard(state.pool[resumeIdx]);
     } else {
-        const r = state.pool[Math.floor(Math.random() * state.pool.length)];
-        setCard(r);
+        state.idx = Math.floor(Math.random() * state.pool.length);
+        setCard(state.pool[state.idx]);
     }
 
     return true;
@@ -1516,10 +1991,10 @@ function renderModeUI() {
         right.textContent = "🇩🇪 DE";
     }
 
-    $("#btnOrderToggle").textContent =
-        "Reihenfolge: " +
-        (state.order === "seq" ? "Sequenziell" : "Zufällig");
+    $("#btnOrderToggle").textContent = translate("orderRandom");
+    $("#btnOrderToggle").classList.toggle("active", state.order === "random");
 
+    renderDisplayToggleUI();
     updateTrainingBtn();
 }
 
@@ -1544,6 +2019,7 @@ if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
        ============================================================ */
     loadSettings();
     loadProgress();
+    resetSessionStats();  // Session-Stats initialisieren
 	
 	// ✅ Resume-Fortschritt pro Lektion initialisieren
 if (!state.settings.resumeIndexByLesson) {
@@ -1551,12 +2027,13 @@ if (!state.settings.resumeIndexByLesson) {
 }
 
     // Theme laden
-    
-	const savedTheme = localStorage.getItem("theme") || "dark";
-	setTheme(savedTheme);
+    const savedTheme = state.settings.theme || localStorage.getItem("theme") || "dark";
+    setTheme(savedTheme);
 
+    // UI-Sprache initialisieren
+    state.settings.lang = state.settings.lang || "de";
+    translateAllUI();
 
-    // Satz-Delay (ms)
     if (state.settings.sentenceDelay !== undefined) {
         state.sentenceDelay = state.settings.sentenceDelay;
     }
@@ -1564,9 +2041,11 @@ if (!state.settings.resumeIndexByLesson) {
     const delayInput = document.querySelector("#delayInput");
     if (delayInput) delayInput.value = state.sentenceDelay / 1000;
 
-    // MODE & ORDER
-    state.mode  = state.settings.mode  || "de2zh";
-    state.order = state.settings.order || "random";
+    // MODE, ORDER & DISPLAY TOGGLES
+    state.mode      = state.settings.mode  || "de2zh";
+    state.order     = state.settings.order || "random";
+    state.showHanzi = state.settings.showHanzi !== false;
+    state.showPinyin = state.settings.showPinyin !== false;
 
     // AUTOPLAY GAP
     state.autoplay.gapMs = state.settings.autoplayGap || 800;
@@ -1578,6 +2057,7 @@ if (!state.settings.resumeIndexByLesson) {
     state.pitchZh = state.settings.pitchZh;
 
     renderModeUI();
+    hideNavButtons();  // Buttons initial unsichtbar beim App-Start
 
     /* ============================================================
        CSV LADEN
@@ -1665,27 +2145,21 @@ if (overlay) {
     });
 }
 
-console.log("Theme buttons:",
-    document.querySelector("#btnThemeDark"),
-    document.querySelector("#btnThemeLightOrange"),
-    document.querySelector("#btnThemeLightWarm"),
-    document.querySelector("#btnThemeLightBlue")
-);
-
 /* THEME-SWITCH */
-document.querySelector("#btnThemeDark")
-  ?.addEventListener("click", () => setTheme("dark"));
+const themeSelect = document.querySelector("#themeSelect");
+if (themeSelect) {
+    themeSelect.addEventListener("change", (e) => {
+        setTheme(e.target.value);
+    });
+}
 
-document.querySelector("#btnThemeLightOrange")
-  ?.addEventListener("click", () => setTheme("light-orange"));
-
-document.querySelector("#btnThemeLightWarm")
-  ?.addEventListener("click", () => setTheme("light-warm"));
-
-document.querySelector("#btnThemeLightBlue")
-  ?.addEventListener("click", () => setTheme("light-blue"));
+const uiLangSelect = document.querySelector("#uiLangSelect");
+if (uiLangSelect) {
+    uiLangSelect.addEventListener("change", (e) => {
+        setUILanguage(e.target.value);
+    });
+}
   
-
     /* DELAY INPUT */
     if (delayInput) {
         delayInput.addEventListener("input", (e) => {
@@ -1763,6 +2237,24 @@ document.querySelector("#btnThemeLightBlue")
         state.settings.order = state.order;
         saveSettings();
         renderModeUI();
+    });
+
+    $("#btnToggleHanzi").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        state.showHanzi = !state.showHanzi;
+        state.settings.showHanzi = state.showHanzi;
+        saveSettings();
+        renderDisplayToggleUI();
+        if (state.current) setCard(state.current, true);
+    });
+
+    $("#btnTogglePinyin").addEventListener("click", () => {
+        stopAutoplayOnUserAction();
+        state.showPinyin = !state.showPinyin;
+        state.settings.showPinyin = state.showPinyin;
+        saveSettings();
+        renderDisplayToggleUI();
+        if (state.current) setCard(state.current, true);
     });
 
     $("#btnAutoplay").addEventListener("click", () => {
@@ -1862,12 +2354,12 @@ document.querySelector("#btnThemeLightBlue")
                         state.progress = p;
                         saveProgress();
                         populateLessonSelect();
-                        alert("Fortschritt importiert.");
+                        alert(translate("alertImportOk"));
                     } else {
-                        alert("Ungültiges Format.");
+                        alert(translate("alertImportInvalid"));
                     }
                 } catch (err) {
-                    alert("Fehler beim Import.");
+                    alert(translate("alertImportError"));
                 }
             };
             r.readAsText(f);
@@ -1875,6 +2367,66 @@ document.querySelector("#btnThemeLightBlue")
 
         inp.click();
     });
+
+    function getSelectedLessonForReset() {
+        const sel = document.querySelector("#lessonSelect");
+        if (!sel) return null;
+
+        const selectedOption = sel.selectedOptions[0];
+        if (selectedOption) return selectedOption.value;
+
+        return state.settings.lessons[0] || state.lessonOrder[0] || null;
+    }
+
+    function resetProgressForLesson(lessonName) {
+        if (!lessonName) return;
+
+        const cards = state.lessons.get(lessonName) || [];
+        for (const card of cards) {
+            delete state.progress.cards[card.id];
+        }
+
+        if (state.progress.byLesson?.[lessonName]) {
+            delete state.progress.byLesson[lessonName];
+        }
+
+        saveProgress();
+        populateLessonSelect();
+        updateLessonStatsUI();
+    }
+
+    function resetProgressAll() {
+        state.progress = {
+            version: "v1",
+            cards: {},
+            byLesson: {}
+        };
+
+        saveProgress();
+        populateLessonSelect();
+        updateLessonStatsUI();
+    }
+
+    document.querySelector("#btnResetLessonProgress")?.addEventListener("click", () => {
+        const lessonName = getSelectedLessonForReset();
+        if (!lessonName) {
+            alert(translate("noLessonSelected"));
+            return;
+        }
+
+        if (!confirm(translate("confirmResetLesson", { lesson: lessonName }))) return;
+
+        resetProgressForLesson(lessonName);
+        alert(translate("resetLessonDone", { lesson: lessonName }));
+    });
+
+    document.querySelector("#btnResetAllProgress")?.addEventListener("click", () => {
+        if (!confirm(translate("confirmResetAll"))) return;
+
+        resetProgressAll();
+        alert(translate("resetAllDone"));
+    });
+
 	// ================================
 	// Version im Menü anzeigen
 	// ================================
