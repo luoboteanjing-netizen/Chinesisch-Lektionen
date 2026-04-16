@@ -856,12 +856,23 @@ function syncCardHeights() {
 }
 
 function scrollToBottom() {
-    setTimeout(() => {
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: "smooth"
-        });
-    }, 40);
+    requestAnimationFrame(() => {
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth"
+    });
+	console.log("SCROLL bottom");
+});
+}
+
+function scrollToTop() {
+    requestAnimationFrame(() => {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+	console.log("SCROLL TOP");
+});
 }
 
 
@@ -1228,6 +1239,9 @@ function doReveal() {
 if (state.mode === "zh2de") {
     renderPromptWordFull(state.current);
     renderPromptSentenceFull(state.current);
+} else {
+    // ✅ DE → CH sofort alles anzeigen
+    $("#promptSent").textContent = state.current.sent.de || "—";
 }
 
 if (state.delayedSentenceTimer) {
@@ -1442,6 +1456,7 @@ if (state.current && state.current.lesson && state.idx !== null) {
 	updateLessonStatsUI();
 
     $("#solBox").classList.add("masked");
+	scrollToTop();
 }
 
 function updateTrainingBtn() {
@@ -1709,7 +1724,7 @@ function playSequence(a, aLang, b, bLang) {
 /* ============================ AUTOPLAY ============================ */
 
 function setAutoplay(on) {
-
+ console.log("setAutoplay called:", on);
     state.autoplay.on = on;
 
     if (!on) {
@@ -1717,6 +1732,7 @@ function setAutoplay(on) {
         state.autoplay.timers.forEach(x => clearTimeout(x));
         state.autoplay.timers = [];
         releaseWakeLock();
+		scrollToTop();
     }
 
     updateAutoplayBtn();
@@ -1962,14 +1978,18 @@ function releaseWakeLock() {
 /* ============================ AUTOPLAY SAFETY ============================ */
 
 function stopAutoplayOnUserAction() {
+    console.log("autoplay state:", state.autoplay.on);
+
     if (state.autoplay.on) {
+        console.log("stopping autoplay");
         setAutoplay(false);
         speechSynthesis.cancel();
         state.autoplay.timers.forEach(id => clearTimeout(id));
         state.autoplay.timers = [];
     }
+    console.log("SCROLL TOP");
+    scrollToTop();
 }
-
 
 /* ========================================================================== */
 /*                                ENDE TEIL 3                                 */
