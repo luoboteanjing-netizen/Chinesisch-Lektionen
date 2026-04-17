@@ -856,12 +856,23 @@ function syncCardHeights() {
 }
 
 function scrollToBottom() {
-    setTimeout(() => {
-        window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: "smooth"
-        });
-    }, 40);
+    requestAnimationFrame(() => {
+    window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: "smooth"
+    });
+	console.log("SCROLL bottom");
+});
+}
+
+function scrollToTop() {
+    requestAnimationFrame(() => {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+	console.log("SCROLL TOP");
+});
 }
 
 
@@ -996,47 +1007,64 @@ if (cardTitle) {
 
     if (cardLesson) cardLesson.textContent = translate("cardLessonTitle", { id: entry.id });
 
-// ----------------------------------------------------------
-// Fortschrittsbalken (Leitner) – von links nach rechts:
-// Grün (4+5) → Gelb (2+3) → Rot (1) → Grau (0)
+// NEUER Fortschrittsbalken mit 5 Farbabstufungen (Leitner)
+// Box 1 = rot
+// Box 2 = gelb
+// Box 3 = hellgrün
+// Box 4 = mittelgrün
+// Box 5 = dunkelgrün
+// Reihenfolge von links nach rechts: dunkelgrün → mittel → hell → gelb → rot → grau
 // ----------------------------------------------------------
 const stats = document.querySelector("#lessonStats");
 if (stats) {
     const cards = state.lessons.get(entry.lesson) ?? [];
     const total = cards.length;
 
-    let green = 0;   // Box 4 + 5
-    let yellow = 0;  // Box 2 + 3
-    let red   = 0;   // Box 1
-    let grey  = 0;   // Box 0
+    let red     = 0;   // Box 1
+    let yellow  = 0;   // Box 2
+    let green1  = 0;   // Box 3 → hellgrün
+    let green2  = 0;   // Box 4 → mittelgrün
+    let green3  = 0;   // Box 5 → dunkelgrün
+    let grey    = 0;   // Box 0 (neu / nie gesehen)
 
     for (const c of cards) {
         const p = state.progress.cards[c.id] ?? { box: 0 };
+        const box = p.box || 0;
 
-        if (p.box === 0) grey++;
-        else if (p.box === 1) red++;
-        else if (p.box === 2 || p.box === 3) yellow++;
-        else if (p.box === 4 || p.box === 5) green++;
+        if      (box === 0) grey++;
+        else if (box === 1) red++;
+        else if (box === 2) yellow++;
+        else if (box === 3) green1++;
+        else if (box === 4) green2++;
+        else if (box === 5) green3++;
     }
 
-    const greenPct  = total ? (green  / total) * 100 : 0;
-    const yellowPct = total ? (yellow / total) * 100 : 0;
     const redPct    = total ? (red    / total) * 100 : 0;
+    const yellowPct = total ? (yellow / total) * 100 : 0;
+    const green1Pct = total ? (green1 / total) * 100 : 0;
+    const green2Pct = total ? (green2 / total) * 100 : 0;
+    const green3Pct = total ? (green3 / total) * 100 : 0;
     const greyPct   = total ? (grey   / total) * 100 : 0;
 
-    const leftYellow = greenPct;
-    const leftRed    = greenPct + yellowPct;
-    const leftGrey   = greenPct + yellowPct + redPct;
+    // Positionen von links nach rechts berechnen
+    const leftGreen2 = green3Pct;
+    const leftGreen1 = green3Pct + green2Pct;
+    const leftYellow = green3Pct + green2Pct + green1Pct;
+    const leftRed    = green3Pct + green2Pct + green1Pct + yellowPct;
+    const leftGrey   = green3Pct + green2Pct + green1Pct + yellowPct + redPct;
 
     stats.innerHTML = `
         <div class="lesson-bar-large">
-            <div class="lesson-bar-green"  style="left:0%;           width:${greenPct}%"></div>
-            <div class="lesson-bar-yellow" style="left:${leftYellow}%;width:${yellowPct}%"></div>
-            <div class="lesson-bar-red"    style="left:${leftRed}%;   width:${redPct}%"></div>
-            <div class="lesson-bar-grey"   style="left:${leftGrey}%;  width:${greyPct}%"></div>
+            <div class="lesson-bar-green3" style="left:0%;                width:${green3Pct}%"></div>
+            <div class="lesson-bar-green2" style="left:${leftGreen2}%;   width:${green2Pct}%"></div>
+            <div class="lesson-bar-green1" style="left:${leftGreen1}%;   width:${green1Pct}%"></div>
+            <div class="lesson-bar-yellow" style="left:${leftYellow}%;   width:${yellowPct}%"></div>
+            <div class="lesson-bar-red"    style="left:${leftRed}%;      width:${redPct}%"></div>
+            <div class="lesson-bar-grey"   style="left:${leftGrey}%;     width:${greyPct}%"></div>
         </div>
     `;
 }
+
     /* -------- Karte anzeigen -------- */
     const sol = $("#solBox");
     sol.classList.add("masked");
@@ -1445,6 +1473,7 @@ if (state.current && state.current.lesson && state.idx !== null) {
 	updateLessonStatsUI();
 
     $("#solBox").classList.add("masked");
+	scrollToTop();
 }
 
 function updateTrainingBtn() {
@@ -1712,7 +1741,7 @@ function playSequence(a, aLang, b, bLang) {
 /* ============================ AUTOPLAY ============================ */
 
 function setAutoplay(on) {
-
+ console.log("setAutoplay called:", on);
     state.autoplay.on = on;
 
     if (!on) {
@@ -1720,6 +1749,7 @@ function setAutoplay(on) {
         state.autoplay.timers.forEach(x => clearTimeout(x));
         state.autoplay.timers = [];
         releaseWakeLock();
+		scrollToTop();
     }
 
     updateAutoplayBtn();
@@ -1965,14 +1995,18 @@ function releaseWakeLock() {
 /* ============================ AUTOPLAY SAFETY ============================ */
 
 function stopAutoplayOnUserAction() {
+    console.log("autoplay state:", state.autoplay.on);
+
     if (state.autoplay.on) {
+        console.log("stopping autoplay");
         setAutoplay(false);
         speechSynthesis.cancel();
         state.autoplay.timers.forEach(id => clearTimeout(id));
         state.autoplay.timers = [];
     }
+    console.log("SCROLL TOP");
+    scrollToTop();
 }
-
 
 /* ========================================================================== */
 /*                                ENDE TEIL 3                                 */
@@ -2177,7 +2211,7 @@ if (uiLangSelect) {
        STIMMEN-EINSTELLUNG
        ============================================================ */
     rateDeRange?.addEventListener("input", (e) => {
-        stopAutoplayOnUserAction();
+     
         state.rateDe = parseFloat(e.target.value);
         state.settings.rateDe = state.rateDe;
         rateDeVal.textContent = `(${state.rateDe.toFixed(2)})`;
@@ -2185,7 +2219,7 @@ if (uiLangSelect) {
     });
 
     pitchDeRange?.addEventListener("input", (e) => {
-        stopAutoplayOnUserAction();
+      
         state.pitchDe = parseFloat(e.target.value);
         state.settings.pitchDe = state.pitchDe;
         pitchDeVal.textContent = `(${state.pitchDe.toFixed(2)})`;
@@ -2193,7 +2227,7 @@ if (uiLangSelect) {
     });
 
     rateZhRange?.addEventListener("input", (e) => {
-        stopAutoplayOnUserAction();
+      
         state.rateZh = parseFloat(e.target.value);
         state.settings.rateZh = state.rateZh;
         rateZhVal.textContent = `(${state.rateZh.toFixed(2)})`;
@@ -2201,7 +2235,7 @@ if (uiLangSelect) {
     });
 
     pitchZhRange?.addEventListener("input", (e) => {
-        stopAutoplayOnUserAction();
+     
         state.pitchZh = parseFloat(e.target.value);
         state.settings.pitchZh = state.pitchZh;
         pitchZhVal.textContent = `(${state.pitchZh.toFixed(2)})`;
@@ -2209,12 +2243,12 @@ if (uiLangSelect) {
     });
 
     document.querySelector("#btnVoiceDe")?.addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+    
         openVoicesPanelFor("de");
     });
 
     document.querySelector("#btnVoiceZh")?.addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+     
         openVoicesPanelFor("zh");
     });
 
@@ -2226,7 +2260,7 @@ if (uiLangSelect) {
        MODUS, REIHENFOLGE, AUTOPLAY
        ============================================================ */
     $("#btnSwapMode").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+   
         state.mode = state.mode === "de2zh" ? "zh2de" : "de2zh";
         state.settings.mode = state.mode;
         saveSettings();
@@ -2235,7 +2269,7 @@ if (uiLangSelect) {
     });
 
     $("#btnOrderToggle").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+   
         state.order = state.order === "random" ? "seq" : "random";
         state.settings.order = state.order;
         saveSettings();
@@ -2243,7 +2277,7 @@ if (uiLangSelect) {
     });
 
     $("#btnToggleHanzi").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+     
         state.showHanzi = !state.showHanzi;
         state.settings.showHanzi = state.showHanzi;
         saveSettings();
@@ -2252,7 +2286,7 @@ if (uiLangSelect) {
     });
 
     $("#btnTogglePinyin").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+   
         state.showPinyin = !state.showPinyin;
         state.settings.showPinyin = state.showPinyin;
         saveSettings();
@@ -2265,7 +2299,7 @@ if (uiLangSelect) {
     });
 
     $("#gapRange").addEventListener("input", (e) => {
-        stopAutoplayOnUserAction();
+       
         const s = parseFloat(e.target.value) || 0.8;
         state.autoplay.gapMs = Math.round(s * 1000);
         state.settings.autoplayGap = state.autoplay.gapMs;
@@ -2283,17 +2317,17 @@ if (uiLangSelect) {
     });
 
     $("#btnNext").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+       
         nextCard();
     });
 
     $("#btnPrev").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+       
         prevCard();
     });
 
     $("#btnReveal").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+        
         doReveal();
     });
 
@@ -2301,12 +2335,12 @@ if (uiLangSelect) {
        AUDIO SPRECHER
        ============================================================ */
     $("#speakerQuestion").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+    
         playQuestion();
     });
 
     $("#speakerAnswer").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+     
         playAnswer();
     });
 
@@ -2315,12 +2349,12 @@ if (uiLangSelect) {
        ============================================================ */
 
     $("#btnRateKnown").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+      
         rate("known");
     });
 
     $("#btnRateUnknown").addEventListener("click", () => {
-        stopAutoplayOnUserAction();
+     
         rate("unknown");
     });
 

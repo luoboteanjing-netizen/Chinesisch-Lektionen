@@ -459,13 +459,35 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     overflow: hidden;
 }
 
-/* Farb-Layer (absolut positioniert) */
-.lesson-bar-green {
+/* ========================================================
+   NEUE 5-Farben Fortschrittsbalken (Box 1–5)
+   ======================================================== */
+
+.lesson-bar-green3 {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    background: var(--color-progress-strong);
+    background: #0B6614;   /* #Dunkelgrün (Box 5) */
+    z-index: 5;
+}
+
+.lesson-bar-green2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: #0D8119;     /* Mittelgrün (Box 4) */
+    z-index: 4;
+}
+
+.lesson-bar-green1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: #10971D;     /* Hellgrün (Box 3) */
+    z-index: 3;
 }
 
 .lesson-bar-yellow {
@@ -473,7 +495,8 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     top: 0;
     left: 0;
     height: 100%;
-    background: var(--color-progress-weak);
+    background: #A1920F;   /* Gelb (Box 2) */
+    z-index: 2;
 }
 
 .lesson-bar-red {
@@ -481,7 +504,8 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     top: 0;
     left: 0;
     height: 100%;
-    background: var(--color-progress-bad);
+    background: #A13B0F;    /* Rot (Box 1) */
+    z-index: 1;
 }
 
 .lesson-bar-grey {
@@ -489,15 +513,17 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     top: 0;
     left: 0;
     height: 100%;
-    background: var(--color-border);
+    background: #C9D7E5; /* Grau (Box 0) */
+    z-index: 0;
 }
+
 
 /* ================== BUTTON-KOSMETIK ================== */
 .ratebar .btn { flex: 1 1 0; max-width: none; text-align:center; }
 .card-controls .btn { flex: 1 1 0; max-width:none; text-align:center; }
 .card-controls, .ratebar { justify-content:center; display:flex; }
 .card-controls .btn, .ratebar .btn { min-width:100px; }
-.ratebar { gap:8px; }
+.ratebar { gap:28px; }
 .card-controls { gap:8px; }
 /* ================== JETZT AUFDECKEN in blau ================== */
 
@@ -607,7 +633,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 #btnPlayQ, #btnPlayA { display:none !important; }
 #promptBox .card-speaker { opacity:1 !important; }
-#speakerQuestion, #speakerAnswer { var(--text); }
+#speakerQuestion, #speakerAnswer { color: var(--text); }
 
 
 /*  ✅ FEHLEND GEWESEN: Größeres WORT‑PINYIN */
@@ -1036,11 +1062,6 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
     top: 0;
     height: 100%;
 }
-
-.lesson-bar-green  { background: var(--color-progress-strong); z-index: 4; }
-.lesson-bar-red    { background: var(--color-progress-bad); z-index: 3; }
-.lesson-bar-yellow { background: var(--color-progress-weak); z-index: 2; }
-.lesson-bar-grey   { background: var(--color-progress-neutral); z-index: 1; }
 
 /* ============================================================
    FIX: Alle Nummern in der Lektionsliste rechtsbündig ausrichten
