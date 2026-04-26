@@ -814,15 +814,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     border-left: 4px solid var(--color-selected-border) !important;
 }
 
-#menuToggle {
-    position: fixed;
-    top: 12px;
-    right: 22px;
-    font-size: 28px;
-    cursor: pointer;
-    z-index: 1000;
-}
-
 /* ============================================================
    ✅ Menübutton Animation (⋮ → ×)
    ============================================================ */
@@ -838,8 +829,8 @@ body.menu-open #menuToggle::before {
     font-size: 32px;
     color: var(--text);
     position: absolute;
-    top:6;
-	right: 24px;
+    top: 12px;
+	right: 0px;
 }
 
 .side-menu {
