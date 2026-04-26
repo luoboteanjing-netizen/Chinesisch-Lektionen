@@ -1,4 +1,4 @@
-/* Version 6.0 */
+/* Version 6.4 */
 :root{  
 	--bg: #01193C;
 	--card: #12161b;
@@ -6,20 +6,20 @@
 	--muted: #8fa1b3;
 	--accent-text: #081018;
 	--border: #283344;
-	--accent:#7aa2f7; 
+	--accent: #7aa2f7;
 	--good:#2e8b57; 
 	--bad:#cc3333; 
 	--unsure:#ffbd6b; 
-	--primary-bg: var(--accent);
+    --primary-bg: var(--accent);
     --primary-border: var(--accent);
 }
 
 :root.light-orange {
-    --bg: #F7D09D;
+    --bg: #ffbb55;
     --card: #ffffff;
     --text: #222;
     --muted: #555;
-	--accent-text: #222;    /* dunkles Textgrau für bessere Lesbarkeit */
+	--accent-text: #222;   /* dunkles Textgrau für bessere Lesbarkeit */
     --border: #bbbbbb;
 	--accent: #ffbb55;    /* z.B. warmes Orange statt blau */
     --good:   #2e8b57;
@@ -31,7 +31,7 @@
 
 /* Light-Warm (Abend, augenschonend) */
 :root.light-warm {
-    --bg: #F7D09D;
+    --bg: #c97c5d;
     --card: #F2E9DE;
     --text: #3a2f25;
     --muted: #6f5c4b;
@@ -41,13 +41,13 @@
     --good:   #5a8f6a;
     --bad:    #b05a5a;
     --unsure: #b79a55;
-	--primary-bg: var(--accent);
-	--primary-border: var(--accent);
+    --primary-bg: var(--accent);
+    --primary-border: var(--accent);
 }
 
 /* Light-Blue (modern, kühl) */
 :root.light-blue {
-    --bg: #01193C;
+    --bg: #3b82f6;
     --card: #ffffff;
     --text: #1f2a37;
     --muted: #4b5d73;
@@ -57,10 +57,9 @@
     --good:   #2e8b57;
     --bad:    #c24141;
     --unsure: #d1a22f;
-	--primary-bg: var(--accent);
+    --primary-bg: var(--accent);
     --primary-border: var(--accent);
 }
-
 
 /* ============================================================
    Header-Banner – Default (Dark Mode)
@@ -86,7 +85,7 @@ html.light-warm .header-banner {
 }
 
 html.light-blue .header-banner {
-    content: url("../img/header.png");
+    content: url("../img/header-blue.png");
 }
 
 main.container {
@@ -243,7 +242,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* NEU: Gruppe für Training + Autoplay (unter Sliders) – Flex-Row für nebeneinander */
 .training-group {
  display: flex;
- gap: 10px;
+ gap: 16px;
  align-items: center;
  justify-content: center; /* Zentriert die Gruppe */
  margin-top: 12px; /* Abstand zu Sliders oben */
@@ -260,7 +259,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  padding: 8px 10px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
  font-size: 16px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
  border-radius: 8px; /* Etwas abgerundeter für modernen Look */
- min-width: 100px; /* Minimale Breite, damit er sich ausdehnt */
+ min-width: 84px; /* Minimale Breite, damit er sich ausdehnt */
  min-height: 28px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
  flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
  display: flex; /* Flexbox für perfekte Zentrierung */
@@ -344,7 +343,14 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     border: 1px solid var(--color-border);
     color: var(--color-text);
 	border-radius:8px;
-	padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ font-weight:600; min-width:80px; min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ flex:1 1 auto; display: flex; align-items: center; justify-content: center; text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
+	padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ 
+	font-weight:600; min-width:84px; 
+	min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ 
+	flex:1 1 auto; 
+	display: flex; 
+	align-items: center; 
+	justify-content: center; 
+	text-align: center;} /* Zentrierung der Beschriftungen (z.B. "DE"/"ZH") – horizontal/vertikal perfekt */
 .btn.swap{font-weight:600;padding:8px 10px}
 .gap-row input[type=range]{width:100%}
 .two-col{display:flex; flex-wrap:wrap; gap:10px}
@@ -407,7 +413,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 @media (max-width: 480px) {
  .top-actions { margin-top: 12px; gap: 6px; }
  .training-group {
-  gap: 8px;
+  gap: 14px;
   justify-content:center;
   flex-wrap:wrap;
   flex-direction:row;
@@ -419,11 +425,11 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  }
  .btn.primary { margin-top:8px; }
  .btn.swap { padding:8px 10px; min-height:28px; font-size:16px; }
- .mode-item { padding:10px 12px; min-height:28px; min-width:70px; font-size:13px; }
- .mode-inline, .actions-inline { gap:10px; }
+ .mode-item { padding:10px 12px; min-height:28px; min-width:84px; font-size:13px; }
+ .mode-inline, .actions-inline { gap:14px; }
  .actions-inline .btn {
   flex: 0 1 auto;
-  min-width: 74px;
+  min-width: 84px;
   width: auto;
  }
  .voice-btn, .voice-config .lbl, .gap-row .lbl { font-size:13px; }
@@ -549,6 +555,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 #btnPrev, #btnNext {
  flex: 0 0 100px;
+ border-radius: 12px;
  text-align:center;
 }
 
@@ -589,6 +596,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     padding: 8px 20px;                     /* angenehme Breite */
     min-width: 120px;                      /* nicht zu klein */
     width: auto;                           /* bleibt kompakt */
+	border-radius: 12px;
     max-width: 200px;                      /* Überlauf in XS vermeiden */
 }
 
@@ -624,10 +632,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     width: 2.2rem;
     height: 2.2rem;
     display: block;
-}
-
-:root.light .card-speaker {
-    color: #444;
 }
 
 
@@ -741,12 +745,12 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 .lt-weak {
-    color: var(--color-table-weak);      /* Gelb/Orange */
+    color: var(--color-table-weak);      
     font-weight: 600;
 }
 
 .lt-strong {
-    color: var(--good);    /* Dein Grün */
+    color: var(--good);    
     font-weight: 600;
 }
 
@@ -834,11 +838,9 @@ body.menu-open #menuToggle::before {
     font-size: 32px;
     color: var(--text);
     position: absolute;
-    top: 0;
-    right: 0;
+    top:6;
+	right: 24px;
 }
-
-
 
 .side-menu {
     position: fixed;
@@ -863,49 +865,24 @@ body.menu-open #menuToggle::before {
     color: var(--text);
 }
 
-/* ========================================================= */
-/* ✅ Light Mode – Helle Fortschrittsbalken                  */
-/* ========================================================= */
-
-:root.light .lesson-bar-large {
-    background: #e0e0e0;            /* hellgrau statt dunkel */
-    border-color: #cccccc;
-}
-
-:root.light .lesson-bar-red {
-    background: #d66;               /* etwas weicheres Rot */
-}
-
-:root.light .lesson-bar-green {
-    background: #3c9f40;            /* etwas weicheres Grün */
-}
-
-/* Balken in der Lektionenliste (falls vorhanden) */
-:root.light .lt-known {
-    color: #2e8b57;                 /* dunkleres Light-Mode Grün */
-}
-
-:root.light .lt-unknown {
-    color: #cc3333;                 /* dunkles Rot */
-}
-
 /* ============================================= */
 /* ✅ Drei-Punkte-Menü Styling (statt Hamburger) */
 /* ============================================= */
 
-#menuToggle {
-    position: fixed;
-    top: 12px;
-    right: 16px;
-    font-size: 32px;      /* etwas größer für bessere Erkennung */
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 1000;
-    color: var(--text);   /* passt sich Light/Dark Mode an */
+.app-header {
+    position: relative;
 }
 
-html.light .lesson-table::-webkit-scrollbar-thumb {
-    background: #b3b3b3;
+#menuToggle {
+    position: absolute;
+    top: 6px;
+    right: 16px;
+    font-size: 44px;
+ /*   font-weight: bold;    */
+    cursor: pointer;
+    z-index: 10;
+    color: var(--text);
+	z-index: 1000;
 }
 
 /* =======================
@@ -985,10 +962,6 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
 
 .pinyin-word {
     color: var(--text);      /* Dark-Mode: schön hell */
-}
-
-:root.light .pinyin-word {
-    color: #444;             /* Light-Mode: besser lesbar */
 }
 
 .menu-version {
@@ -1097,8 +1070,8 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
    ============================================================ */
 
 .card-controls .btn {
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 14px;
+    padding-bottom: 14px;
 }
 /* ============================================================
    Navigationsbuttons: alle gleich fingerfreundlich
@@ -1107,8 +1080,8 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
 
 .card-controls .btn,
 #btnReveal {
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
 }
 /* ============================================================
    Navigationsbuttons 4px tiefer positionieren
@@ -1122,7 +1095,8 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
    ============================================================ */
 
 #rateBar {
-    margin-top: 0px;
+    margin-top: 1px;
+	margin-bottom: 0px;
 }
 
 #rateBar .btn {
@@ -1180,7 +1154,7 @@ html.light .lesson-table::-webkit-scrollbar-thumb {
    ============================================================ */
 
 .app-header {
-    margin-bottom: 16px;      /* Abstand zur Karte */
+    margin-bottom: 12px;      /* Abstand zur Karte */
     text-align: center;
 }
 
@@ -1203,22 +1177,6 @@ html, body {
 
 
 /* ============================================================
-   Antwortkarte: Wort (Hanzi / Übersetzung) fett & minimal größer
-   ============================================================ */
-
-#solWord {
-    font-weight: 600;                 /* Wort fett */
-    font-size: calc(1em + 2px);       /* Wort +1px für bessere Lesbarkeit */
-}
-/* ============================================================
-   Antwortkarte: Pinyin bewusst kleiner & ruhiger darstellen
-   ============================================================ */
-
-#solWord .zh-pinyin {
-    font-weight: 400;     /* nicht fett */
-}
-
-/* ============================================================
    ZENTRALE TYPOGRAFIE – FRAGE & ANTWORT
    Alle Schriftanpassungen für Karten an EINER Stelle
    ============================================================ */
@@ -1229,30 +1187,34 @@ html, body {
 
 /* Hauptwort auf der Fragekarte (z.B. Deutsch oder Hanzi) */
 #promptWord {
-    font-size: 24px;          /* Grundgröße */
-    font-weight: 600;         /* fett (stärker als normal) */
+    font-size: 23px;          /* Grundgröße */
+    font-weight: 400;         /* fett (stärker als normal) */
     line-height: 1.4;
 }
 
 /* Zusatz unter dem Wort (z.B. Pinyin bei ZH→DE) */
 #promptWordSub {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 400;
-    opacity: 0.9;
+    opacity: 1;
+	line-height: 1.4;
+	margin-bottom: 0px;
 }
 
 /* Wortart (POS) */
 #promptPOS {
-    font-size: 18px;
+    font-size: 17px;
     font-style: italic;
-    opacity: 0.85;
+    opacity: 0.9;
+	line-height: 1.2;
+	margin-bottom: 6px;
 }
 
 /* Beispielsatz auf der Fragekarte */
 #promptSent {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.4;
     margin-top: 8px;
 }
 
@@ -1263,21 +1225,23 @@ html, body {
 
 /* Hauptwort in der Antwort (Hanzi oder Übersetzung) */
 #solWord {
-    font-size: 24px; /* +1px für bessere Hanzi-Lesbarkeit */
-    font-weight: 600;           /* fett */
+    font-size: 22px; /* +1px für bessere Hanzi-Lesbarkeit */
+    font-weight: 400;           /* fett */
     line-height: 1.4;
+	margin-bottom: 4px;
 }
 
 /* Pinyin in der Antwort */
 #solWord .zh-pinyin {
-    font-size: 20px;          /* bewusst kleiner als Hanzi */
+    font-size: 18px;          /* bewusst kleiner als Hanzi */
     font-weight: 400;
     opacity: 1;
+	margin-bottom: 4px;
 }
 
 /* Beispielsatz in der Antwort */
 #solSent {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 400;
     line-height: 1.6;
     margin-top: 10px;

@@ -12,7 +12,12 @@
    =========================== */
 
 /* === Version manuell definieren === */
-const APP_VERSION = "6.0";   // beim nächsten Release erhöhen
+if (window.APP_VERSION) {
+  console.warn("app.js bereits geladen – Abbruch");
+} else {
+  window.APP_VERSION = "6.1.1";
+}
+
 
 // CSV-Datei dynamisch über URL-Parameter auswählen
 const params = new URLSearchParams(location.search);
@@ -39,7 +44,7 @@ async function resolveCSV() {
 
     // 2. Fallback-Reihenfolge
     const candidates = [
-        "./data/HSK-Chinesisch_Lektionen.csv",
+    //    "./data/HSK-Chinesisch_Lektionen.csv",
         "./data/Long-Chinesisch_Lektionen.csv"
     ];
 
@@ -84,10 +89,10 @@ const TRANSLATIONS = {
         settingsVersion: "Version:",
         modeSwitchTitle: "Richtung umschalten",
         orderRandom: "Zufällig",
-        autoPlay: "Autoplay ▶︎",
-        autoPlayStop: "Autoplay ■ Stop",
-        trainingStart: "Training starten ▶",
-        trainingStop: "Training stoppen ■",
+        autoPlay: "Start Autoplay ▶︎",
+        autoPlayStop: "Stop Autoplay ■",
+        trainingStart: "Start Training ▶",
+        trainingStop: "Stop Training ■",
         prev: "◀ Zurück",
         reveal: "Aufdecken",
         next: "Nächste ▶",
@@ -149,10 +154,10 @@ const TRANSLATIONS = {
         settingsVersion: "Version:",
         modeSwitchTitle: "Switch direction",
         orderRandom: "Random",
-        autoPlay: "Autoplay ▶︎",
-        autoPlayStop: "Autoplay ■ Stop",
-        trainingStart: "Start training ▶",
-        trainingStop: "Stop training ■",
+        autoPlay: "Start Autoplay ▶︎",
+        autoPlayStop: "Stop Autoplay ■",
+        trainingStart: "Start Training ▶",
+        trainingStop: "Stop Training ■",
         prev: "◀ Back",
         reveal: "Reveal",
         next: "Next ▶",
@@ -215,9 +220,9 @@ const TRANSLATIONS = {
         modeSwitchTitle: "切换方向",
         orderRandom: "随机",
         autoPlay: "自动播放 ▶︎",
-        autoPlayStop: "自动播放 ■ 停止",
-        trainingStart: "开始训练 ▶",
-        trainingStop: "停止训练 ■",
+        autoPlayStop: "停止自动播放 ■",
+        trainingStart: "开始学习 ▶",
+        trainingStop: "停止学习 ■",
         prev: "◀ 上一张",
         reveal: "显示",
         next: "下一张 ▶",
@@ -279,10 +284,10 @@ const TRANSLATIONS = {
         settingsVersion: "Version :",
         modeSwitchTitle: "Changer de direction",
         orderRandom: "Aléatoire",
-        autoPlay: "Lecture automatique ▶︎",
-        autoPlayStop: "Lecture automatique ■ Arrêter",
-        trainingStart: "Commencer l'entraînement ▶",
-        trainingStop: "Arrêter l'entraînement ■",
+        autoPlay: "lecture auto ▶︎",
+        autoPlayStop: "arrêt lecture auto ■",
+        trainingStart: "démarrer ▶",
+        trainingStop: "arrêter ■",
         prev: "◀ Précédent",
         reveal: "Révéler",
         next: "Suivant ▶",
@@ -402,6 +407,9 @@ const state = {
     trainingOn: false
 };
 
+	state.reinsertQueue = [];
+	state.cardCounter = 0;
+
 /* ============================ SETTINGS / PROGRESS ========================= */
 
 function saveSettings() {
@@ -494,6 +502,8 @@ function setUILanguage(lang) {
     saveSettings();
     translateAllUI();
 }
+
+
 
 /* ============================ CSV PARSING ================================= */
 
@@ -838,7 +848,41 @@ function setTheme(theme) {
     localStorage.setItem("theme", theme);
     state.settings.theme = theme;
     saveSettings();
+	applyTheme(theme);
 }
+
+function setTaskbarColor(color) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute("content", color);
+  }
+}
+
+
+function applyTheme(theme) {
+ 
+  switch (theme) {
+    case "dark":
+      setTaskbarColor("#000000");
+      break;
+
+    case "light-orange":
+      setTaskbarColor("#ffbb55");
+      break;
+
+    case "light-warm":
+      setTaskbarColor("#c97c5d");
+      break;
+
+    case "light-blue":
+      setTaskbarColor("#3b82f6");
+      break;
+
+    default:
+      setTaskbarColor("#000000");
+  }
+}
+
 
 /* ============================ sync & scroll ============================ */
 
@@ -934,6 +978,7 @@ function renderPromptSentence(entry) {
     }
 
     $("#promptSent").innerHTML = parts.join(parts.length > 1 ? "<br>" : " ");
+	/* ===scrollToBottom(); === */
 }
 
 function renderPromptWordFull(entry) {
@@ -965,6 +1010,7 @@ function renderPromptSentenceFull(entry) {
     }
 
     $("#promptSent").innerHTML = parts.join("<br>");
+	/* ===scrollToBottom(); === */
 }
 
 function setCard(entry, fromHistory = false) {
@@ -1154,7 +1200,7 @@ function updateNavButtons() {
 }
 
 function nextCard() {
-
+	state.cardCounter++;
     if (!state.pool.length) return;
 
     if (state.historyPos < state.history.length - 1) {
@@ -1163,7 +1209,16 @@ function nextCard() {
         syncCardHeights();
         return;
     }
+	// 🔥 NEU: Prüfen ob eine Karte wieder erscheinen soll
+	const dueIndex = state.reinsertQueue.findIndex(item => item.due <= state.cardCounter);
 
+	if (dueIndex !== -1) {
+		const item = state.reinsertQueue.splice(dueIndex, 1)[0];
+		setCard(item.card);
+		syncCardHeights();
+		return;
+	}
+	
     let next;
 
     if (state.order === "seq") {
@@ -1201,6 +1256,7 @@ function showNavButtons() {
     $("#btnPrev").style.display = "";
     $("#btnReveal").style.display = "";
     $("#btnNext").style.display = "";
+	scrollToBottom();
 }
 
 
@@ -1276,6 +1332,7 @@ if (state.delayedSentenceTimer) {
 
 function showRatingButtons() {
     $("#rateBar").style.display = "flex";
+	scrollToBottom();
 }
 
 function hideRatingButtons() {
@@ -1314,13 +1371,19 @@ function rate(mark) {
 
         p.timesCorrect++;
     }
-    else if (mark === "unsure") {
-        // unsicher → 2 oder 3
-        if (p.box < 2)      p.box = 2;   // 1 → 2
-        else if (p.box === 2) p.box = 3; // 2 → 3
+    else if (mark === "unknown") {
+    // falsch → zurück zu 1
+    p.box = 1;
+    p.timesWrong++;
 
-        p.timesWrong++;
-    }
+    // 🔥 NEU: Karte verzögert wieder einplanen
+    const delay = Math.floor(Math.random() * 6) + 3; // 3–8 Karten
+
+    state.reinsertQueue.push({
+        card: state.current,
+        due: state.cardCounter + delay
+    });
+}
     else if (mark === "unknown") {
         // falsch → zurück zu 1
         p.box = 1;
@@ -1750,9 +1813,13 @@ function setAutoplay(on) {
         state.autoplay.timers = [];
         releaseWakeLock();
 		scrollToTop();
+		
     }
-
+    state.trainingOn = false;
+	updateTrainingBtn();
     updateAutoplayBtn();
+	hideNavButtons();
+	hideRatingButtons();
 }
 
 function updateAutoplayBtn() {
@@ -2049,18 +2116,62 @@ const js  = document.querySelector("#jsMain");
 
 if (css) css.href = `assets/css/style.css?v=${APP_VERSION}`;
 if (js)  js.src  = `assets/js/app.js?v=${APP_VERSION}`;
-    console.log("[INIT] Starte Initialisierung …");
+
+console.log(`[INIT] Starte Initialisierung … (v${APP_VERSION})`);
 
     /* ============================================================
        SETTINGS + PROGRESS LADEN + THEME & DELAY INITIALISIEREN
        ============================================================ */
     loadSettings();
+	applyTheme(state.settings.theme);
     loadProgress();
     resetSessionStats();  // Session-Stats initialisieren
 	
 	// ✅ Resume-Fortschritt pro Lektion initialisieren
 if (!state.settings.resumeIndexByLesson) {
     state.settings.resumeIndexByLesson = {};
+}
+
+// ==========================================
+// PWA Install Button
+// ==========================================
+
+let deferredPrompt = null;
+
+const installButton = document.getElementById("btnInstall");
+
+if (installButton) {
+    // Button zunächst ausblenden
+    installButton.style.display = "none";
+
+    // Event abfangen, wenn der Browser die Installation anbietet
+    window.addEventListener("beforeinstallprompt", (e) => {
+        console.log("✅ beforeinstallprompt ausgelöst");
+        e.preventDefault();           // Verhindert den automatischen Prompt
+        deferredPrompt = e;           // Speichern für später
+        installButton.style.display = "block";   // Button anzeigen
+    });
+
+    // Button-Klick → Installation starten
+    installButton.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+
+        installButton.style.display = "none";   // Button verstecken
+
+        deferredPrompt.prompt();   // Install-Prompt anzeigen
+
+        const choiceResult = await deferredPrompt.userChoice;
+        console.log("Install choice:", choiceResult.outcome);
+
+        deferredPrompt = null;     // Zurücksetzen
+    });
+
+    // Optional: Button wieder verstecken, wenn App bereits installiert wurde
+    window.addEventListener("appinstalled", () => {
+        console.log("✅ App wurde installiert");
+        installButton.style.display = "none";
+        deferredPrompt = null;
+    });
 }
 
     // Theme laden
@@ -2549,9 +2660,15 @@ if (overlay) {
 console.log("[INIT] Alles bereit ✅");
 });  // ✅ schließt NUR den DOMContentLoaded – korrekt!
 
-/* ========================================================================== */
-/* ENDE TEIL 4 */
-/* ========================================================================== */
+/* ==
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js")
+      .then(reg => console.log("SW registered", reg))
+      .catch(err => console.error("SW error", err));
+  });
+}
+==== */
 /* ========================================================================== */
 /*                                ENDE TEIL 4                                 */
 /* ========================================================================== */

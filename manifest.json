@@ -1,0 +1,30 @@
+{
+  "name": "Flashcards Chinesisch",
+  "short_name": "CiLong",
+  "description": "Chinesisch Flashcards mit Leitner-System und TTS",
+  "start_url": "./index.html",
+  "scope": "/Chinesisch-Lektionen/",
+  "id": "/Chinesisch-Lektionen/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"  /* ← Tweak: Kombiniert beide – Chrome wählt "any" für voll, maskable für adaptive */
+    },
+	{
+      "src": "./icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"  /* ← Tweak: Kombiniert beide – Chrome wählt "any" für voll, maskable für adaptive */
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"  /* ← Gleiches: Priorisiert unbeschnittenes Design */
+    }
+  ]
+}

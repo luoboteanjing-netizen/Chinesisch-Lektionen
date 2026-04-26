@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="appTitle">Chinesisch Flashcards – v6.0 (Browser optimiert)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards Chinesisch</title>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#000000" id="theme-color-meta">
+    <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CiLong">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-	<link rel="icon" href="icons/favicon.png">
-
-    <!-- Deine CSS -->
-    <link rel="stylesheet" id="cssMain" href="assets/css/style.css">
+    <!-- Styles & Script mit Versionierung -->
+	<link id="cssMain" rel="stylesheet" href="./assets/css/style.css">
+    <script id="jsMain" src="./assets/js/app.js"></script>
 </head>
 
 <body>
@@ -31,7 +35,12 @@
             <button id="btnResetLessonProgress" class="btn ghost" data-i18n="progressResetLesson">Aktuelle Lektion zurücksetzen</button>
             <button id="btnResetAllProgress" class="btn ghost" data-i18n="progressResetAll">Alle Lektionen zurücksetzen</button>
         </div>
-
+		<!-- Im Side Menu, z.B. nach dem Reset-Bereich -->
+		<div class="menu-block">
+			<button id="btnInstall" class="btn">
+				📲 App installieren
+			</button>
+		</div>
         <div class="menu-block">
             <div class="menu-title" data-i18n="languageTitle">Sprache</div>
             <label class="lbl" for="uiLangSelect" data-i18n="uiLanguageLabel">UI Sprache</label>
@@ -264,8 +273,6 @@
         </div>
     </div>
 </div>
-
-<script id="jsMain" src="assets/js/app.js"></script>
 
 </main>
 </body>
