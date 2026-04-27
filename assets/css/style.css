@@ -336,6 +336,68 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #dbgVoices .voice{display:flex;gap:10px;align-items:center;border:1px solid #2b3646;border-radius:8px;padding:6px;margin-bottom:6px}
 #dbgVoices .voice .meta{font-size:12px;color:#b6c2d0}
 #dbgVoices .voice .name{font-weight:600}
+
+/* ========================================================
+   Verbessertes Voice Panel Layout
+   ======================================================== */
+
+#dbgVoices .voice {
+    display: flex;
+    flex-wrap: wrap;           /* erlaubt Umbruch bei sehr schmalen Bildschirmen */
+    gap: 12px;
+    align-items: center;
+    border: 1px solid #2b3646;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: var(--color-card);
+}
+
+#dbgVoices .voice .name {
+    font-weight: 600;
+    font-size: 15px;
+    flex: 1 1 100%;            /* nimmt volle Breite */
+    margin-bottom: 4px;
+}
+
+#dbgVoices .voice .meta {
+    font-size: 13px;
+    color: #b6c2d0;
+    flex: 1 1 100%;            /* auch volle Breite */
+    margin-bottom: 8px;
+}
+
+#dbgVoices .voice .actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;         /* schiebt Buttons nach rechts */
+    flex-shrink: 0;
+}
+
+#dbgVoices .voice .btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* Kleineres "Probehören" */
+#dbgVoices .voice .btn.ghost {
+    padding: 8px 12px;
+}
+
+/* Responsive: Auf sehr kleinen Bildschirmen Buttons untereinander */
+@media (max-width: 380px) {
+    #dbgVoices .voice .actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    #dbgVoices .voice .btn {
+        width: 100%;
+    }
+}
+
+
 .mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
 /* NEU: Gleiche Höhe wie Swap-Button für die Sprache-Items (links/rechts) – höheres Padding und min-height */
 .mode-item {
@@ -1266,4 +1328,3 @@ html, body {
 #solBox {
     border: 2px solid var(--color-border);
 }
-
