@@ -1,4 +1,4 @@
-/* Version 6.4 */
+/* Version 6.5 */
 :root{  
 	--bg: #01193C;
 	--card: #12161b;
@@ -259,7 +259,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  padding: 8px 10px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
  font-size: 16px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
  border-radius: 8px; /* Etwas abgerundeter für modernen Look */
- min-width: 84px; /* Minimale Breite, damit er sich ausdehnt */
+ min-width: 74px; /* Minimale Breite, damit er sich ausdehnt */
  min-height: 28px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
  flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
  display: flex; /* Flexbox für perfekte Zentrierung */
