@@ -399,6 +399,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 
 .mode-inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap; justify-content: center;} /* Mehr Gap für Balance mit höherem Button */
+
 /* NEU: Gleiche Höhe wie Swap-Button für die Sprache-Items (links/rechts) – höheres Padding und min-height */
 .mode-item {
     background: var(--color-card);
@@ -761,7 +762,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 #lessonSelect option {
     display: grid;
     grid-template-columns:
-         100px   /* Lektion */
+        100px   /* Lektion */
          35px   /* Karten */
          35px   /* strong (✅) */
          35px   /* weak   (🤔) */
@@ -847,13 +848,11 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
     gap: 8px;
     padding: 4px 6px;
-	font-family: inherit;
     font-size: 14px;
     align-items: center;
     background: var(--color-card);
     border-radius: 6px;
     cursor: pointer;
-
 }
 
 /* ✅ Sticky Header oben fixiert */
