@@ -701,7 +701,6 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     display: block;
 }
 
-
 #btnPlayQ, #btnPlayA { display:none !important; }
 #promptBox .card-speaker { opacity:1 !important; }
 #speakerQuestion, #speakerAnswer { color: var(--text); }
@@ -767,7 +766,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     display: grid;
     grid-template-columns:
         100px   /* Lektion */
-         25px   /* Karten */
+         30px   /* Karten */
          30px   /* strong (✅) */
          30px   /* weak   (🤔) */
          30px;  /* unknown (❌) */  
@@ -793,14 +792,11 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     gap: 4px;
 }
 
-
-
 .lt-head {
     background: var(--color-card);
     border-bottom: 2px solid var(--color-border);
     font-weight: 600;
 }
-
 
 /* ================================
    Neue Spalte: Schwach (⚠️)
