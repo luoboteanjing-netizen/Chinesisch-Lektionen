@@ -598,18 +598,8 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .card-controls .btn, .ratebar .btn { min-width:100px; }
 .ratebar { gap:28px; }
 .card-controls { gap:8px; }
-/* ================== JETZT AUFDECKEN in blau ================== */
+/* ================== JETZT AUFDECKEN ================== */
 
-#btnReveal {
-    background: var(--accent) !important;
-    border-color: var(--accent) !important;
-    color: var(--accent-text) !important;
-	 flex: 1 1 auto;
-	max-width: 100px;
-	margin: 0 auto;
-	text-align:center;
-	font-weight: 600
-}
 
 /* Flex Layout */
 .card-controls {
@@ -622,6 +612,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 #btnPrev, #btnNext {
  flex: 0 0 100px;
+ min-height: 49px;
  border-radius: 12px;
  text-align:center;
 }
@@ -659,12 +650,21 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 
 /* Mittlerer Button = kompakt, exakt zentriert */
 #btnReveal {
+	background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent-text) !important;
+	flex: 1 1 auto;
+	margin: 0 auto;
+	text-align:center;
+	font-weight: 600;
     justify-self: center;                  /* absolute Zentrierung */
-    padding: 8px 20px;                     /* angenehme Breite */
-    min-width: 120px;                      /* nicht zu klein */
+    padding: 8px 16px;                     /* angenehme Breite */
+    min-width: 80px;                      /* nicht zu klein */
     width: auto;                           /* bleibt kompakt */
 	border-radius: 12px;
-    max-width: 200px;                      /* Überlauf in XS vermeiden */
+    max-width: 100px; 		        	   /* Überlauf in XS vermeiden */
+	min-height: 49px;
+	white-space: normal;	
 }
 
 /* Rechter Button = VOLLE rechte Fläche */
@@ -674,8 +674,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 /* Falls nötig: min-width entfernen für volle Flexibilität */
-#btnPrev, #btnNext, #btnReveal {
-    min-width: 0 !important;               /* kein Überlaufen */
+#btnPrev, #btnNext {
+    min-width: 0 !important;       		   /* kein Überlaufen */
+	min-height: 49px;
     white-space: nowrap;                   /* Text bleibt auf einer Zeile */
 }
 
@@ -766,7 +767,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     display: grid;
     grid-template-columns:
         100px   /* Lektion */
-         30px   /* Karten */
+         35px   /* Karten */
          30px   /* strong (✅) */
          30px   /* weak   (🤔) */
          30px;  /* unknown (❌) */  
@@ -1134,8 +1135,9 @@ body.menu-open #menuToggle::before {
 
 .card-controls .btn,
 #btnReveal {
-    padding-top: 14px !important;
-    padding-bottom: 14px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+
 }
 /* ============================================================
    Navigationsbuttons 4px tiefer positionieren
@@ -1173,16 +1175,12 @@ body.menu-open #menuToggle::before {
 #btnRateKnown,
 #btnRateUnknown {
     min-width: 0 !important;
+	min-height: 48px !important;
 }
 
 /* Gewusst & Nicht gewusst: schmaler */
 #btnRateKnown,
 #btnRateUnknown {
-    flex: 0.8 1 0 !important;
-}
-
-/* Unsicher: darf mehr Platz haben */
-#btnRateUnsure {
     flex: 0.8 1 0 !important;
 }
 
