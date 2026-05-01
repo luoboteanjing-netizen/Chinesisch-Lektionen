@@ -44,7 +44,7 @@ async function resolveCSV() {
 
     // 2. Fallback-Reihenfolge
     const candidates = [
-    //    "./data/HSK-Chinesisch_Lektionen.csv",
+        "./data/HSK-Chinesisch_Lektionen.csv",
         "./data/Long-Chinesisch_Lektionen.csv"
     ];
 
@@ -54,7 +54,7 @@ async function resolveCSV() {
             if (res.ok) return file;
         } catch (e) {}
     }
-
+ 
     // 3. Harte Fehlerbehandlung
     throw new Error("Keine CSV-Datei gefunden");
 }
@@ -326,7 +326,6 @@ const TRANSLATIONS = {
         cardLessonTitle: "Leçon {id}"
     }
 };
-
 const $ = (s) => document.querySelector(s);
 
 /* ============================ GLOBAL STATE =============================== */
@@ -460,32 +459,51 @@ function translateAllUI() {
     document.documentElement.lang = state.settings.lang || "de";
     document.title = `${translate("appTitle")} – v${APP_VERSION}`;
 
+    // 🔧 FIX: Text setzen ohne Kinder zu zerstören
     document.querySelectorAll("[data-i18n]").forEach((node) => {
         const key = node.dataset.i18n;
         if (!key) return;
-        node.textContent = translate(key);
+
+        const text = translate(key);
+
+        // 👉 Wenn das Element KEINE Kinder hat → normal ersetzen
+        if (node.children.length === 0) {
+            node.textContent = text;
+        } else {
+            // 👉 Wenn Kinder existieren → NUR ersten Textknoten ersetzen
+            const firstTextNode = [...node.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+
+            if (firstTextNode) {
+                firstTextNode.nodeValue = text + " ";
+            } else {
+                // Falls kein Textknoten existiert → vorne einfügen
+                node.insertBefore(document.createTextNode(text + " "), node.firstChild);
+            }
+        }
     });
 
-    // Speziell für option elements in selects
+    // Option-Elemente (unverändert ok)
     document.querySelectorAll("option[data-i18n]").forEach((option) => {
         const key = option.dataset.i18n;
         if (!key) return;
         option.textContent = translate(key);
     });
 
+    // Title-Attribute
     document.querySelectorAll("[data-i18n-title]").forEach((node) => {
         const key = node.dataset.i18nTitle;
         if (!key) return;
         node.title = translate(key);
     });
 
-    // Update lesson table headers
+    // Table Headers
     const lessonHeader = document.querySelector("#lessonTableHeaderLesson");
     if (lessonHeader) lessonHeader.textContent = translate("lessonTableLesson");
 
     const cardsHeader = document.querySelector("#lessonTableHeaderCards");
     if (cardsHeader) cardsHeader.textContent = translate("lessonTableCards");
 
+    // Selects synchronisieren
     const uiLangSelect = document.querySelector("#uiLangSelect");
     if (uiLangSelect) uiLangSelect.value = state.settings.lang || "de";
 
