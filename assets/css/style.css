@@ -1,4 +1,4 @@
-/* Version 6.5 */
+/* Version 6.6 */
 :root{  
 	--bg: #01193C;
 	--card: #12161b;
@@ -254,7 +254,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 /* NEU: Autoplay als Primary (wenn Klasse hinzugefügt): Farblich identisch zum Training-Button */
 
-/* Breitere und höhere Swap/Direction-Button (mit "< Richtung >" als zentriertem Text, kein Icon) */
+/* Breitere und höhere Swap/Direction-Button */
 .btn.swap {
  background: var(--color-primary-bg);
  border: 1px solid var(--color-primary-border);
@@ -264,7 +264,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  font-size: 16px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
  border-radius: 8px; /* Etwas abgerundeter für modernen Look */
  min-width: 84px; /* Minimale Breite, damit er sich ausdehnt */
- min-height: 28px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
+ min-height: 38px; /* Höher für bessere Sichtbarkeit und Berührbarkeit */
  flex: 1 1 auto; /* Teilt Platz mit den Nachbarn */
  display: flex; /* Flexbox für perfekte Zentrierung */
  align-items: center; /* Vertikal zentriert */
@@ -410,9 +410,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     border: 1px solid var(--color-border);
     color: var(--color-text);
 	border-radius:8px;
-	padding:12px 16px; /* NEU: Höheres Padding (12px vertikal), passt zu Swap (12px) */ 
+	padding:8px 16px; /* NEU: Höheres Padding (8px vertikal), passt zu Swap (8px) */ 
 	font-weight:600; min-width:84px; 
-	min-height:28px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ 
+	min-height:38px; /* NEU: Gleiche min-height wie Swap (40px) für Balance */ 
 	flex:1 1 auto; 
 	display: flex; 
 	align-items: center; 
@@ -491,8 +491,8 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   min-width: 130px;
  }
  .btn.primary { margin-top:8px; }
- .btn.swap { padding:8px 10px; min-height:28px; font-size:16px; }
- .mode-item { padding:10px 12px; min-height:28px; min-width:84px; font-size:13px; }
+ .btn.swap { padding:8px 10px; min-height:38px; font-size:16px; }
+ .mode-item { padding:8px 12px; min-height:38px; min-width:84px; font-size:13px; }
  .mode-inline, .actions-inline { gap:14px; }
  .actions-inline .btn {
   flex: 0 1 auto;
