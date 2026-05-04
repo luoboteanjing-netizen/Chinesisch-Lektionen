@@ -71,4 +71,16 @@ Keine externen Abhängigkeiten. Alles Vanilla JS/CSS/HTML. CSV-Parser ist integr
 
 ## Lizenz
 
-MIT – siehe `LICENSE`.
+Dieses Projekt steht unter der MIT License.  
+
+Der Quellcode **und die mitgelieferten Inhalte** (z. B. CSV‑Dateien, Texte, Beispiele)
+stehen unter der **MIT License**, sofern nicht anders angegeben.
+
+Du darfst dieses Projekt frei nutzen, verändern und weiterverbreiten,
+solange der ursprüngliche Copyright‑Hinweis erhalten bleibt.
+
+Die Software und Inhalte werden ohne Garantie („as is“) bereitgestellt.
+
+Details findest du in der Datei [LICENSE](LICENSE).
+
+© 2026 Robert Ruhe
