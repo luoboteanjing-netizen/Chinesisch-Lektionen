@@ -2,18 +2,23 @@
 // Service Worker – Learning App
 // ==========================================
 
-const APP_CACHE = "learning-app-shell-v2";
+const APP_CACHE = "flashcards-v6.1.3";
 const CSV_CACHE = "learning-app-csv-v1";
 
 // ?? Statische Dateien (App-Shell)
 const STATIC_ASSETS = [
   "index.html",
+  "help.html",
   "assets/css/style.css",
   "assets/js/app.js",
   "manifest.json",
+  "assets/img/header-dark.png",
+  "assets/img/header-light.png",
+  "assets/img/header-warm.png",
+  "assets/img/header-blue.png",
   "icons/icon-192.png",
   "icons/icon-512.png"
-];
+  ];
 
 // ==========================================
 // INSTALL
