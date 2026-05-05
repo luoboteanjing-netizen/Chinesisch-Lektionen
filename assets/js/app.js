@@ -15,7 +15,7 @@
 if (window.APP_VERSION) {
   console.warn("app.js bereits geladen – Abbruch");
 } else {
-  window.APP_VERSION = "6.1.1";
+  window.APP_VERSION = "6.1.3";
 }
 
 
@@ -79,12 +79,12 @@ const TRANSLATIONS = {
         uiLanguageSelectEn: "English",
         uiLanguageSelectZh: "中文",
         uiLanguageSelectFr: "Français",
-        themeTitle: "Theme",
+        themeTitle: "🎨 Theme",
         themeDark: "Dark Mode",
         themeLightOrange: "Light‑Orange",
         themeLightWarm: "Light‑Warm",
         themeLightBlue: "Light‑Blue",
-        delayLabel: "Satz‑Delay (Sekunden):",
+        delayLabel: "⏱ Satz‑Delay (Sekunden):",
         autoplayGapLabel: "Pause zw. Karten im Autoplay:",
         settingsVersion: "Version:",
         modeSwitchTitle: "Richtung umschalten",
@@ -144,12 +144,12 @@ const TRANSLATIONS = {
         uiLanguageSelectEn: "English",
         uiLanguageSelectZh: "中文",
         uiLanguageSelectFr: "French",
-        themeTitle: "Theme",
+        themeTitle: "🎨 Theme",
         themeDark: "Dark mode",
         themeLightOrange: "Light Orange",
         themeLightWarm: "Light Warm",
         themeLightBlue: "Light Blue",
-        delayLabel: "Sentence delay (seconds):",
+        delayLabel: "⏱ Sentence delay (seconds):",
         autoplayGapLabel: "Pause between cards in autoplay:",
         settingsVersion: "Version:",
         modeSwitchTitle: "Switch direction",
@@ -209,12 +209,12 @@ const TRANSLATIONS = {
         uiLanguageSelectEn: "English",
         uiLanguageSelectZh: "中文",
         uiLanguageSelectFr: "Français",
-        themeTitle: "主题",
+        themeTitle: "🎨 主题",
         themeDark: "深色模式",
         themeLightOrange: "浅橙",
         themeLightWarm: "浅暖",
         themeLightBlue: "浅蓝",
-        delayLabel: "句子延迟（秒）：",
+        delayLabel: "⏱ 句子延迟（秒）：",
         autoplayGapLabel: "自动播放卡片之间的暂停：",
         settingsVersion: "版本：",
         modeSwitchTitle: "切换方向",
@@ -274,12 +274,12 @@ const TRANSLATIONS = {
         uiLanguageSelectEn: "English",
         uiLanguageSelectZh: "中文",
         uiLanguageSelectFr: "Französisch",
-        themeTitle: "Thème",
+        themeTitle: "🎨 Thème",
         themeDark: "Mode sombre",
         themeLightOrange: "Clair Orange",
         themeLightWarm: "Clair Chaud",
         themeLightBlue: "Clair Bleu",
-        delayLabel: "Délai de phrase (secondes) :",
+        delayLabel: "⏱ Délai de phrase (secondes) :",
         autoplayGapLabel: "Pause entre les cartes en lecture automatique :",
         settingsVersion: "Version :",
         modeSwitchTitle: "Changer de direction",
