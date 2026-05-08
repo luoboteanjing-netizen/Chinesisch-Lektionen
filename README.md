@@ -1,22 +1,64 @@
+# Vokabel-Karteikarten App – Deutsch ↔ Chinesisch
 
-# Vokabel-Karteikarten (Deutsch ↔︎ Chinesisch)
+Eine **statische, browserbasierte Flashcards‑App** zum Lernen chinesischer
+Vokabeln und Beispielsätze (Deutsch ↔ Chinesisch).
 
-Eine kleine, statische Flashcards-App für den Browser. Läuft direkt via GitHub Pages oder lokal (ohne Build-Tooling). CSV-Daten liegen in `./data/`.
+Die App läuft **ohne Build‑Tooling**, **ohne Backend** und kann direkt
+über **GitHub Pages**, lokal im Browser oder als **installierbare PWA**
+genutzt werden.  
+Alle Daten und Lernfortschritte werden **lokal im Browser** gespeichert.
 
-## Features
+---
 
-- **CSV-Import** aus `./data/…` (erste Zeile = Header; Zeilen mit `*` in Spalte A werden ignoriert)
-- **Lern-UI**: Frage oben, Lösung per Button einblendbar
-- **Text-to-Speech** (Web Speech API): Frage/Lösung vorlesen, Stimme/Pitch/Rate konfigurierbar und gespeichert (pro Sprache)
-- **Richtungswechsel** per Klick (Deutsch ↔︎ Chinesisch)
-- **Lernfortschritt** (pro Karte, lokal gespeichert), Anzeige je Lektion
-- **Navigation**: vorherige/nächste Karte, Tastaturkürzel
-- **Autoplay** mit einstellbarer Verzögerung
-- **Reihenfolge**: sequentiell oder zufällig
+## ✨ Features
+
+- **CSV‑basierte Inhalte**  
+  Import von Vokabeln und Beispielsätzen aus CSV‑Dateien (`./data/`)
+
+- **Lernmodi**
+  - Deutsch → Chinesisch
+  - Chinesisch → Deutsch
+  - Hanzi und/oder Pinyin ein‑/ausblendbar
+
+- **Leitner‑Lernsystem**
+  - jede Karte in Boxen (1–5)
+  - sichere Karten erscheinen seltener
+  - unsichere Karten häufiger
+  - Fortschritt pro Karte und pro Lektion sichtbar
+
+- **Text‑to‑Speech (Web Speech API)**
+  - getrennte Stimmen für Deutsch und Chinesisch
+  - einstellbares Sprechtempo & Tonhöhe
+  - Stimme pro Sprache speicherbar
+
+- **Autoplay‑Modus**
+  - automatisches Abspielen von Frage & Antwort
+  - einstellbare Pausen
+  - ideal zum Wiederholen oder Zuhören
+
+- **Lektionsverwaltung**
+  - Übersicht mit Karten‑Statistik
+  - Sortierung nach Fortschritt
+  - Zurücksetzen pro Lektion oder komplett
+
+- **PWA‑fähig**
+  - installierbar auf Desktop & Smartphone
+  - funktioniert auch **offline**
+
+- **Mehrsprachiges UI**
+  - Deutsch
+  - Englisch
+  - Chinesisch
+  - Französisch (UI‑Texte)
+
 
 ## CSV-Spezifikation
 
-- **Pfad**: `./data/`. Standard-Dateiname: `vocab.csv` (anpassbar über Dropdown oder URL `?csv=DATEI.csv`).
+Die zu verwendende CSV-Datei kann:
+- automatisch geladen werden (Fallback‑Reihenfolge)
+- oder per URL‑Parameter gesetzt werden:
+
+- **Pfad**: `./data/`. Standard-Dateiname: `vocab.csv`
 - **Header**: Erste Zeile ist ein Header und wird ignoriert.
 - **Ignorierte Zeilen**: Wenn die erste Zelle einer Zeile ein `*` enthält, wird die Zeile ignoriert.
 - **Spalten** (A → I):
