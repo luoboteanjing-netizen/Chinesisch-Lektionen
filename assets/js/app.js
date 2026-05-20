@@ -112,6 +112,14 @@ const TRANSLATIONS = {
         voicePanelHintTitle: "Hinweis",
         voicePanelHint: "Wähle eine Stimme für die aktuell geöffnete Sprache.",
         voiceListTitle: "Stimmenliste",
+        searchTitle: "Suche",
+        searchLabel: "Begriff suchen",
+        searchButton: "Suchen",
+        searchResultsTitle: "Ergebnisse",
+        searchPlaceholderDe: "z. B. Wort oder Satz (Deutsch)",
+        searchPlaceholderZh: "z. B. 词或句子 oder cí huò jùzi",
+        searchHint: "Tippe einen Begriff ein und drücke Enter.",
+        searchEmptyResults: "Keine Treffer gefunden.",
         noVoicesFound: "Keine passenden Stimmen gefunden.",
         namelessVoice: "(namenlos)",
         pickVoice: "Diese Stimme wählen",
@@ -177,6 +185,14 @@ const TRANSLATIONS = {
         voicePanelHintTitle: "Hint",
         voicePanelHint: "Choose a voice for the currently open language.",
         voiceListTitle: "Voice list",
+        searchTitle: "Search",
+        searchLabel: "Search term",
+        searchButton: "Search",
+        searchResultsTitle: "Results",
+        searchPlaceholderDe: "e.g. word or sentence (German)",
+        searchPlaceholderZh: "e.g. 词 or cí huò jùzi (Chinese)",
+        searchHint: "Type a term and press Enter.",
+        searchEmptyResults: "No results found.",
         noVoicesFound: "No matching voices found.",
         namelessVoice: "(nameless)",
         pickVoice: "Pick this voice",
@@ -242,6 +258,14 @@ const TRANSLATIONS = {
         voicePanelHintTitle: "提示",
         voicePanelHint: "为当前语言选择语音。",
         voiceListTitle: "语音列表",
+        searchTitle: "搜索",
+        searchLabel: "搜索词",
+        searchButton: "搜索",
+        searchResultsTitle: "结果",
+        searchPlaceholderDe: "例如：单词或句子（德语）",
+        searchPlaceholderZh: "例如：词或句子 cí huò jùzi",
+        searchHint: "输入一个词并按回车。",
+        searchEmptyResults: "未找到结果。",
         noVoicesFound: "未找到匹配语音。",
         namelessVoice: "(无名)",
         pickVoice: "选择此语音",
@@ -307,6 +331,14 @@ const TRANSLATIONS = {
         voicePanelHintTitle: "Astuce",
         voicePanelHint: "Choisissez une voix pour la langue actuellement ouverte.",
         voiceListTitle: "Liste des voix",
+        searchTitle: "Recherche",
+        searchLabel: "Rechercher",
+        searchButton: "Rechercher",
+        searchResultsTitle: "Résultats",
+        searchPlaceholderDe: "ex. mot ou phrase (allemand)",
+        searchPlaceholderZh: "ex. 词 ou cí huò jùzi (chinois)",
+        searchHint: "Tapez un terme et appuyez sur Entrée.",
+        searchEmptyResults: "Aucun résultat trouvé.",
         noVoicesFound: "Aucune voix correspondante trouvée.",
         namelessVoice: "(sans nom)",
         pickVoice: "Choisir cette voix",
@@ -496,6 +528,8 @@ function translateAllUI() {
         node.title = translate(key);
     });
 
+    updateSearchPlaceholder();
+
     // Table Headers
     const lessonHeader = document.querySelector("#lessonTableHeaderLesson");
     if (lessonHeader) lessonHeader.textContent = translate("lessonTableLesson");
@@ -512,6 +546,15 @@ function translateAllUI() {
 
     updateTrainingBtn();
     updateAutoplayBtn();
+}
+
+function updateSearchPlaceholder() {
+    const searchInput = document.querySelector("#searchInput");
+    const langDeBtn = document.querySelector('#searchLangDe');
+    const activeLang = (langDeBtn && langDeBtn.classList.contains('active')) ? 'de' : 'zh';
+    if (!searchInput) return;
+    const key = activeLang === 'de' ? 'searchPlaceholderDe' : 'searchPlaceholderZh';
+    searchInput.placeholder = translate(key);
 }
 
 function setUILanguage(lang) {
@@ -1049,109 +1092,102 @@ function setCard(entry, fromHistory = false) {
     const cardTitle  = document.querySelector("#cardTitle");
     const cardLesson = document.querySelector("#cardLesson");
 
-  
-	
-if (cardTitle) {
-    const p = ensureCardProgress(entry);
-    const ascii = getLeitnerAscii(p.box);
+    if (cardTitle) {
+        const p = ensureCardProgress(entry);
+        const ascii = getLeitnerAscii(p.box);
 
-    const revealCount = state.session.revealedCount;  // Nur aufgedeckte Karten
-    const cardsInLesson = state.lessons.get(entry.lesson) ?? [];
-    const total = cardsInLesson.length;
+        const revealCount = state.session.revealedCount;
+        const cardsInLesson = state.lessons.get(entry.lesson) ?? [];
+        const total = cardsInLesson.length;
 
-    cardTitle.innerHTML = `
-        <span class="card-title-left">
-            ${revealCount} / ${total}
-        </span>
-        <span class="card-title-right leitner-ascii">
-            ${ascii}
-        </span>
-    `;
-	}
-
-    if (cardLesson) cardLesson.textContent = translate("cardLessonTitle", { id: entry.id });
-
-// NEUER Fortschrittsbalken mit 5 Farbabstufungen (Leitner)
-// Box 1 = rot
-// Box 2 = gelb
-// Box 3 = hellgrün
-// Box 4 = mittelgrün
-// Box 5 = dunkelgrün
-// Reihenfolge von links nach rechts: dunkelgrün → mittel → hell → gelb → rot → grau
-// ----------------------------------------------------------
-const stats = document.querySelector("#lessonStats");
-if (stats) {
-    const cards = state.lessons.get(entry.lesson) ?? [];
-    const total = cards.length;
-
-    let red     = 0;   // Box 1
-    let yellow  = 0;   // Box 2
-    let green1  = 0;   // Box 3 → hellgrün
-    let green2  = 0;   // Box 4 → mittelgrün
-    let green3  = 0;   // Box 5 → dunkelgrün
-    let grey    = 0;   // Box 0 (neu / nie gesehen)
-
-    for (const c of cards) {
-        const p = state.progress.cards[c.id] ?? { box: 0 };
-        const box = p.box || 0;
-
-        if      (box === 0) grey++;
-        else if (box === 1) red++;
-        else if (box === 2) yellow++;
-        else if (box === 3) green1++;
-        else if (box === 4) green2++;
-        else if (box === 5) green3++;
+        cardTitle.innerHTML = `
+            <span class="card-title-left">
+                ${revealCount} / ${total}
+            </span>
+            <span class="card-title-right leitner-ascii">
+                ${ascii}
+            </span>
+        `;
     }
 
-    const redPct    = total ? (red    / total) * 100 : 0;
-    const yellowPct = total ? (yellow / total) * 100 : 0;
-    const green1Pct = total ? (green1 / total) * 100 : 0;
-    const green2Pct = total ? (green2 / total) * 100 : 0;
-    const green3Pct = total ? (green3 / total) * 100 : 0;
-    const greyPct   = total ? (grey   / total) * 100 : 0;
+    if (cardLesson) {
+        cardLesson.textContent = translate("cardLessonTitle", { id: entry.id });
+    }
 
-    // Positionen von links nach rechts berechnen
-    const leftGreen2 = green3Pct;
-    const leftGreen1 = green3Pct + green2Pct;
-    const leftYellow = green3Pct + green2Pct + green1Pct;
-    const leftRed    = green3Pct + green2Pct + green1Pct + yellowPct;
-    const leftGrey   = green3Pct + green2Pct + green1Pct + yellowPct + redPct;
+    /* -------- Fortschrittsbalken -------- */
+    const stats = document.querySelector("#lessonStats");
 
-    stats.innerHTML = `
-        <div class="lesson-bar-large">
-            <div class="lesson-bar-green3" style="left:0%;                width:${green3Pct}%"></div>
-            <div class="lesson-bar-green2" style="left:${leftGreen2}%;   width:${green2Pct}%"></div>
-            <div class="lesson-bar-green1" style="left:${leftGreen1}%;   width:${green1Pct}%"></div>
-            <div class="lesson-bar-yellow" style="left:${leftYellow}%;   width:${yellowPct}%"></div>
-            <div class="lesson-bar-red"    style="left:${leftRed}%;      width:${redPct}%"></div>
-            <div class="lesson-bar-grey"   style="left:${leftGrey}%;     width:${greyPct}%"></div>
-        </div>
-    `;
-}
+    if (stats) {
+        const cards = state.lessons.get(entry.lesson) ?? [];
+        const total = cards.length;
+
+        let red = 0, yellow = 0, green1 = 0, green2 = 0, green3 = 0, grey = 0;
+
+        for (const c of cards) {
+            const p = state.progress.cards[c.id] ?? { box: 0 };
+            const box = p.box || 0;
+
+            if (box === 0) grey++;
+            else if (box === 1) red++;
+            else if (box === 2) yellow++;
+            else if (box === 3) green1++;
+            else if (box === 4) green2++;
+            else if (box === 5) green3++;
+        }
+
+        const redPct    = total ? (red    / total) * 100 : 0;
+        const yellowPct = total ? (yellow / total) * 100 : 0;
+        const green1Pct = total ? (green1 / total) * 100 : 0;
+        const green2Pct = total ? (green2 / total) * 100 : 0;
+        const green3Pct = total ? (green3 / total) * 100 : 0;
+        const greyPct   = total ? (grey   / total) * 100 : 0;
+
+        const leftGreen2 = green3Pct;
+        const leftGreen1 = green3Pct + green2Pct;
+        const leftYellow = green3Pct + green2Pct + green1Pct;
+        const leftRed    = green3Pct + green2Pct + green1Pct + yellowPct;
+        const leftGrey   = green3Pct + green2Pct + green1Pct + yellowPct + redPct;
+
+        stats.innerHTML = `
+            <div class="lesson-bar-large">
+                <div class="lesson-bar-green3" style="left:0%; width:${green3Pct}%"></div>
+                <div class="lesson-bar-green2" style="left:${leftGreen2}%; width:${green2Pct}%"></div>
+                <div class="lesson-bar-green1" style="left:${leftGreen1}%; width:${green1Pct}%"></div>
+                <div class="lesson-bar-yellow" style="left:${leftYellow}%; width:${yellowPct}%"></div>
+                <div class="lesson-bar-red" style="left:${leftRed}%; width:${redPct}%"></div>
+                <div class="lesson-bar-grey" style="left:${leftGrey}%; width:${greyPct}%"></div>
+            </div>
+        `;
+    }
 
     /* -------- Karte anzeigen -------- */
     const sol = $("#solBox");
     sol.classList.add("masked");
 
-    /* Wort, Pinyin & POS werden immer sofort angezeigt */
+    /* ✅ Hilfsfunktionen */
+    const hasWordZh = entry.word?.zh && entry.word.zh.trim() !== "";
+    const hasWordDe = entry.word?.de && entry.word.de.trim() !== "";
+
     if (state.mode === "zh2de") {
         /* ---- CH → DE ---- */
 
         renderPromptWord(entry);
         $("#promptPOS").textContent = entry.pos || "";
-
-        /* ✅ Satz NICHT sofort anzeigen */
         $("#promptSent").innerHTML = "";
 
-        /* ✅ Lösungskarte sofort setzen */
         $("#solWord").textContent = entry.word.de;
         $("#solSent").textContent = entry.sent.de;
 
-        /* ✅ Verzögertes Einblenden des Satzes */
-        state.delayedSentenceTimer = setTimeout(() => {
+        /* ✅ KEIN Wort → kein Delay */
+        if (!hasWordZh && !hasWordDe) {
             renderPromptSentence(entry);
             syncCardHeights();
-        }, state.sentenceDelay);
+        } else {
+            state.delayedSentenceTimer = setTimeout(() => {
+                renderPromptSentence(entry);
+                syncCardHeights();
+            }, state.sentenceDelay);
+        }
 
     } else {
         /* ---- DE → CH ---- */
@@ -1159,21 +1195,24 @@ if (stats) {
         $("#promptWord").textContent = entry.word.de || "—";
         $("#promptWordSub").innerHTML = "";
         $("#promptPOS").textContent = entry.pos || "";
-
-        /* ✅ Satz NICHT sofort anzeigen */
         $("#promptSent").textContent = "";
 
-        /* ✅ Lösungskarte: CH + Pinyin */
         $("#solWord").innerHTML =
             `${entry.word.zh}<br><span class="zh-pinyin">${entry.word.py}</span>`;
+
         $("#solSent").innerHTML =
             `${entry.sent.zh}<br><span class="zh-pinyin">${entry.sent.py}</span>`;
 
-        /* ✅ Verzögertes Einblenden des Satzes (Deutsch) */
-        state.delayedSentenceTimer = setTimeout(() => {
+        /* ✅ KEIN Wort → kein Delay */
+        if (!hasWordDe) {
             $("#promptSent").textContent = entry.sent.de || "—";
             syncCardHeights();
-        }, state.sentenceDelay);
+        } else {
+            state.delayedSentenceTimer = setTimeout(() => {
+                $("#promptSent").textContent = entry.sent.de || "—";
+                syncCardHeights();
+            }, state.sentenceDelay);
+        }
     }
 
     /* -------- Buttons setzen -------- */
@@ -1185,7 +1224,6 @@ if (stats) {
 
     syncCardHeights();
 }
-
 // =====================================================
 // LEITNER: pro-Karte Status sicherstellen
 // =====================================================
@@ -1673,6 +1711,201 @@ function openVoicesPanelFor(target) {
 
 function closeVoices() {
     $("#voicePanel").classList.add("hidden");
+}
+
+function openSearchPanel() {
+    closeVoices();
+    const panel = $("#searchPanel");
+    const overlay = $("#searchOverlay");
+    if (!panel) return;
+    panel.classList.remove("hidden");
+    overlay?.classList.add("active");
+    setTimeout(() => {
+        $("#searchInput")?.focus();
+    }, 60);
+}
+
+function closeSearchPanel() {
+    $("#searchPanel").classList.add("hidden");
+    $("#searchOverlay")?.classList.remove("active");
+}
+
+function getAllCards() {
+    const cards = [];
+    for (const lessonCards of state.lessons.values()) {
+        cards.push(...lessonCards);
+    }
+    return cards;
+}
+function normalizeRemoveDiacritics(s){
+    if (!s) return "";
+    return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/[0-9]/g,'').replace(/[^\p{L}\s]/gu,'').toLowerCase();
+}
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function highlightNormalized(original, query) {
+    if (!original || !query) return escapeHtml(original || '');
+
+    const originalChars = Array.from(original);
+    const normChars = [];
+    const mapping = [];
+
+    originalChars.forEach((char, i) => {
+        const parts = char.normalize('NFD');
+        for (const part of parts) {
+            if (!/\p{Diacritic}/u.test(part)) {
+                normChars.push(part.toLowerCase());
+                mapping.push(i);
+            }
+        }
+    });
+
+    const normText = normChars.join('');
+    const normQuery = normalizeRemoveDiacritics(query).replace(/\s+/g, ' ').trim();
+    if (!normQuery) return escapeHtml(original);
+
+    let start = 0;
+    const ranges = [];
+    while (start < normText.length) {
+        const idx = normText.indexOf(normQuery, start);
+        if (idx === -1) break;
+        const endMapIndex = idx + normQuery.length - 1;
+        const origStart = mapping[idx];
+        const origEnd = mapping[endMapIndex] + 1;
+        ranges.push([origStart, origEnd]);
+        start = idx + normQuery.length;
+    }
+
+    if (!ranges.length) return escapeHtml(original);
+
+    let last = 0;
+    const result = [];
+    ranges.forEach(([from, to]) => {
+        if (from > last) result.push(escapeHtml(original.slice(last, from)));
+        result.push(`<mark>${escapeHtml(original.slice(from, to))}</mark>`);
+        last = to;
+    });
+    if (last < original.length) result.push(escapeHtml(original.slice(last)));
+
+    return result.join('');
+}
+
+function highlightSimple(original, query) {
+    if (!original || !query) return escapeHtml(original || '');
+    const escapedQuery = escapeHtml(query);
+    const regex = new RegExp(escapedQuery.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
+    return escapeHtml(original).replace(regex, match => `<mark>${match}</mark>`);
+}
+
+function searchCSV(query) {
+    query = (query || "").trim();
+    const resultsBox = $("#searchResults");
+    if (!resultsBox) return;
+    if (!query) {
+        resultsBox.innerHTML = `<div class="search-hint">${translate('searchHint')}</div>`;
+        return;
+    }
+
+    // Bestimme gewählte Suche-Language (DE oder ZH)
+    const langDeBtn = document.querySelector('#searchLangDe');
+    const lang = (langDeBtn && langDeBtn.classList.contains('active')) ? 'de' : 'zh';
+
+    const qRaw = query.toLowerCase();
+    const qNorm = normalizeRemoveDiacritics(query).replace(/\s+/g, ' ').trim();
+    const qNormNoSpace = qNorm.replace(/\s+/g, '');
+
+    const matched = getAllCards().filter((entry) => {
+        if (lang === 'de') {
+            // Nur deutsche Wörter und deutsche Sätze durchsuchen (case-insensitive)
+            return [entry.word.de, entry.sent.de]
+                .filter(Boolean)
+                .some(value => value.toLowerCase().includes(qRaw));
+        } else {
+            // Chinesisch: match on zh characters, pinyin (normalize), or chinese sentence
+            const zhWord = (entry.word.zh || '').toLowerCase();
+            const py = entry.word.py || '';
+            const sentZh = (entry.sent.zh || '').toLowerCase();
+            const sentPy = entry.sent.py || '';
+
+            if ((zhWord && zhWord.includes(qRaw)) || (sentZh && sentZh.includes(qRaw))) return true;
+
+            const pyNorm = normalizeRemoveDiacritics(py).replace(/\s+/g, ' ').trim();
+            const sentPyNorm = normalizeRemoveDiacritics(sentPy).replace(/\s+/g, ' ').trim();
+            const pyNormNoSpace = pyNorm.replace(/\s+/g, '');
+
+            const queryTokens = qNorm.split(' ').filter(Boolean);
+            const tokenMatch = queryTokens.length > 0 && queryTokens.every(token =>
+                pyNorm.includes(token) || pyNormNoSpace.includes(token) || (sentPyNorm && sentPyNorm.includes(token))
+            );
+
+            if (queryTokens.length && tokenMatch) return true;
+            if (pyNorm && qNorm && (pyNorm.includes(qNorm) || pyNormNoSpace.includes(qNormNoSpace))) return true;
+            if (sentPyNorm && qNorm && (sentPyNorm.includes(qNorm) || sentPyNorm.replace(/\s+/g, '').includes(qNormNoSpace))) return true;
+
+            return false;
+        }
+    });
+
+    if (!matched.length) {
+        resultsBox.innerHTML = `<div class="search-empty">${translate('searchEmptyResults')}</div>`;
+        return;
+    }
+
+    resultsBox.innerHTML = matched.map((entry) => {
+        const deWordRaw = entry.word.de || '-';
+        const pyWordRaw = entry.word.py || '-';
+        const zhWordRaw = entry.word.zh || '-';
+
+        const deSentRaw = entry.sent.de || '';
+        const pySentRaw = entry.sent.py || '';
+        const zhSentRaw = entry.sent.zh || '';
+
+        const deWord = lang === 'de' ? highlightSimple(deWordRaw, qRaw) : escapeHtml(deWordRaw);
+        const deSent = lang === 'de' ? highlightSimple(deSentRaw, qRaw) : escapeHtml(deSentRaw);
+        const pyWord = highlightNormalized(pyWordRaw, query);
+        const pySent = highlightNormalized(pySentRaw, query);
+        const zhWord = highlightSimple(zhWordRaw, qRaw);
+        const zhSent = highlightSimple(zhSentRaw, qRaw);
+
+        return `
+            <div class="search-result" data-entry-id="${escapeHtml(entry.id)}">
+                <div class="search-result-main">
+                    <strong>${deWord}</strong>
+                    <span class="search-result-lesson">${escapeHtml(entry.lesson || '–')}</span>
+                </div>
+
+                <div class="search-result-row">
+                    <div class="search-result-col"><span class="search-result-label">DE:</span> ${deWord}</div>
+                    <div class="search-result-col"><span class="search-result-label">PY:</span> ${pyWord}</div>
+                    <div class="search-result-col"><span class="search-result-label">ZH:</span> ${zhWord}</div>
+                </div>
+
+                <div class="search-sentences">
+                    <div class="search-sent-de">${deSent}</div>
+                    <div class="search-sent-py">${pySent}</div>
+                    <div class="search-sent-zh">${zhSent}</div>
+                </div>
+            </div>`;
+    }).join("");
+
+    resultsBox.querySelectorAll(".search-result").forEach((node) => {
+        node.addEventListener("click", () => {
+            const id = node.dataset.entryId;
+            const selected = matched.find((entry) => entry.id === id);
+            if (selected) {
+                setCard(selected);
+                closeSearchPanel();
+            }
+        });
+    });
 }
 
 
@@ -2373,6 +2606,56 @@ if (uiLangSelect) {
 
     document.querySelector("#btnCloseVoices")?.addEventListener("click", () => {
         closeVoices();
+    });
+
+    document.querySelector("#searchToggle")?.addEventListener("click", () => {
+        const panel = $("#searchPanel");
+        if (panel && !panel.classList.contains("hidden")) {
+            closeSearchPanel();
+            return;
+        }
+        openSearchPanel();
+    });
+
+    document.querySelector("#btnCloseSearch")?.addEventListener("click", () => {
+        closeSearchPanel();
+    });
+
+    document.querySelector("#searchOverlay")?.addEventListener("click", () => {
+        closeSearchPanel();
+    });
+
+    const searchInput = document.querySelector("#searchInput");
+    // Suchsprache Umschalter (DE / ZH)
+    const searchLangDeBtn = document.querySelector("#searchLangDe");
+    const searchLangZhBtn = document.querySelector("#searchLangZh");
+    const setSearchLang = (lang) => {
+        if (lang === 'de') {
+            searchLangDeBtn?.classList.add('active');
+            searchLangZhBtn?.classList.remove('active');
+            if (searchInput) searchInput.placeholder = translate('searchPlaceholderDe');
+        } else {
+            searchLangZhBtn?.classList.add('active');
+            searchLangDeBtn?.classList.remove('active');
+            if (searchInput) searchInput.placeholder = translate('searchPlaceholderZh');
+        }
+    };
+
+    // Default bleibt DE
+    setSearchLang('de');
+
+    searchLangDeBtn?.addEventListener('click', () => setSearchLang('de'));
+    searchLangZhBtn?.addEventListener('click', () => setSearchLang('zh'));
+
+    searchInput?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            searchCSV(searchInput.value);
+        }
+    });
+
+    document.querySelector("#searchButton")?.addEventListener("click", () => {
+        searchCSV(searchInput?.value || "");
     });
 
     /* ============================================================
