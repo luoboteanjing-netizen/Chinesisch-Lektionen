@@ -321,7 +321,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .stats-bar{margin-top:8px;color:#a7b5c5;font-size:13px;text-align:center}
 .debug {
   position: fixed;
-  inset: 5% 5% auto 5%;
+  inset: 80px 5% auto 5%;
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 12px;
@@ -1001,11 +1001,12 @@ body.menu-open #menuToggle::before {
 #searchPanel {
     max-width: 520px;
     left: 50%;
-    top: 10%;
+    top: 80px; /* Align with voice panel */
     transform: translateX(-50%);
     right: auto;
     bottom: auto;
     width: calc(100% - 32px);
+    z-index: 1000;
 }
 
 .search-input-row {
@@ -1079,6 +1080,13 @@ body.menu-open #menuToggle::before {
     color: var(--muted);
     font-size: 13px;
 }
+/* Make lesson title occupy its own row and align left */
+.search-result-lesson {
+    display: block;
+    text-align: left;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
 
 .search-result-sub,
 .search-result-sent {
@@ -1088,6 +1096,7 @@ body.menu-open #menuToggle::before {
 }
 
 .search-result-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.search-result-line{display:block;margin-top:8px}
 .search-result-col{flex:1 1 120px}
 .search-sentences{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .search-sent-de,.search-sent-py,.search-sent-zh{font-size:14px}

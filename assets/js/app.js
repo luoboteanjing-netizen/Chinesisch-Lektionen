@@ -15,7 +15,7 @@
 if (window.APP_VERSION) {
   console.warn("app.js bereits geladen – Abbruch");
 } else {
-  window.APP_VERSION = "6.1.3";
+  window.APP_VERSION = "6.2.1";
 }
 
 
@@ -1822,37 +1822,62 @@ function searchCSV(query) {
     const qNorm = normalizeRemoveDiacritics(query).replace(/\s+/g, ' ').trim();
     const qNormNoSpace = qNorm.replace(/\s+/g, '');
 
-    const matched = getAllCards().filter((entry) => {
+    const matchedWord = [];
+    const matchedSentence = [];
+
+    getAllCards().forEach((entry) => {
+        let isWordMatch = false;
+        let isSentenceMatch = false;
+
         if (lang === 'de') {
-            // Nur deutsche Wörter und deutsche Sätze durchsuchen (case-insensitive)
-            return [entry.word.de, entry.sent.de]
-                .filter(Boolean)
-                .some(value => value.toLowerCase().includes(qRaw));
+            const wordDe = (entry.word.de || '').toLowerCase();
+            const sentDe = (entry.sent.de || '').toLowerCase();
+
+            isWordMatch = wordDe.includes(qRaw);
+            isSentenceMatch = !isWordMatch && sentDe.includes(qRaw);
         } else {
-            // Chinesisch: match on zh characters, pinyin (normalize), or chinese sentence
             const zhWord = (entry.word.zh || '').toLowerCase();
-            const py = entry.word.py || '';
             const sentZh = (entry.sent.zh || '').toLowerCase();
-            const sentPy = entry.sent.py || '';
+            const pyWordRaw = entry.word.py || '';
+            const pySentRaw = entry.sent.py || '';
+            const pyWord = normalizeRemoveDiacritics(pyWordRaw).replace(/\s+/g, ' ').trim();
+            const pySent = normalizeRemoveDiacritics(pySentRaw).replace(/\s+/g, ' ').trim();
+            const pyWordNoSpace = pyWord.replace(/\s+/g, '');
+            const pySentNoSpace = pySent.replace(/\s+/g, '');
 
-            if ((zhWord && zhWord.includes(qRaw)) || (sentZh && sentZh.includes(qRaw))) return true;
+            isWordMatch = (zhWord && zhWord.includes(qRaw)) ||
+                (pyWord && (pyWord.includes(qNorm) || pyWordNoSpace.includes(qNormNoSpace)));
 
-            const pyNorm = normalizeRemoveDiacritics(py).replace(/\s+/g, ' ').trim();
-            const sentPyNorm = normalizeRemoveDiacritics(sentPy).replace(/\s+/g, ' ').trim();
-            const pyNormNoSpace = pyNorm.replace(/\s+/g, '');
+            if (!isWordMatch) {
+                const queryTokens = qNorm.split(' ').filter(Boolean);
+                const tokenMatch = queryTokens.length > 0 && queryTokens.every(token =>
+                    pyWord.includes(token) || pyWordNoSpace.includes(token)
+                );
+                if (tokenMatch) isWordMatch = true;
+            }
 
-            const queryTokens = qNorm.split(' ').filter(Boolean);
-            const tokenMatch = queryTokens.length > 0 && queryTokens.every(token =>
-                pyNorm.includes(token) || pyNormNoSpace.includes(token) || (sentPyNorm && sentPyNorm.includes(token))
-            );
+            if (!isWordMatch) {
+                isSentenceMatch = (sentZh && sentZh.includes(qRaw)) ||
+                    (pySent && (pySent.includes(qNorm) || pySentNoSpace.includes(qNormNoSpace)));
 
-            if (queryTokens.length && tokenMatch) return true;
-            if (pyNorm && qNorm && (pyNorm.includes(qNorm) || pyNormNoSpace.includes(qNormNoSpace))) return true;
-            if (sentPyNorm && qNorm && (sentPyNorm.includes(qNorm) || sentPyNorm.replace(/\s+/g, '').includes(qNormNoSpace))) return true;
+                if (!isSentenceMatch) {
+                    const queryTokens = qNorm.split(' ').filter(Boolean);
+                    const tokenMatch = queryTokens.length > 0 && queryTokens.every(token =>
+                        pySent.includes(token) || pySentNoSpace.includes(token)
+                    );
+                    if (tokenMatch) isSentenceMatch = true;
+                }
+            }
+        }
 
-            return false;
+        if (isWordMatch) {
+            matchedWord.push(entry);
+        } else if (isSentenceMatch) {
+            matchedSentence.push(entry);
         }
     });
+
+    const matched = [...matchedWord, ...matchedSentence];
 
     if (!matched.length) {
         resultsBox.innerHTML = `<div class="search-empty">${translate('searchEmptyResults')}</div>`;
@@ -1864,35 +1889,35 @@ function searchCSV(query) {
         const pyWordRaw = entry.word.py || '-';
         const zhWordRaw = entry.word.zh || '-';
 
-        const deSentRaw = entry.sent.de || '';
-        const pySentRaw = entry.sent.py || '';
-        const zhSentRaw = entry.sent.zh || '';
+        const deSentRaw = entry.sent.de || '-';
+        const pySentRaw = entry.sent.py || '-';
+        const zhSentRaw = entry.sent.zh || '-';
 
-        const deWord = lang === 'de' ? highlightSimple(deWordRaw, qRaw) : escapeHtml(deWordRaw);
-        const deSent = lang === 'de' ? highlightSimple(deSentRaw, qRaw) : escapeHtml(deSentRaw);
+        const deWord = highlightSimple(deWordRaw, qRaw);
+        const deSent = highlightSimple(deSentRaw, qRaw);
         const pyWord = highlightNormalized(pyWordRaw, query);
         const pySent = highlightNormalized(pySentRaw, query);
         const zhWord = highlightSimple(zhWordRaw, qRaw);
         const zhSent = highlightSimple(zhSentRaw, qRaw);
 
+        const wordLine = lang === 'de' ? `<strong>${deWord}</strong>` : deWord;
+        const sentLine = lang === 'de' ? `<strong>${deSent}</strong>` : deSent;
+        const wordLineZh = lang === 'zh' ? `<strong>${zhWord}</strong>` : zhWord;
+        const sentLineZh = lang === 'zh' ? `<strong>${zhSent}</strong>` : zhSent;
+
         return `
             <div class="search-result" data-entry-id="${escapeHtml(entry.id)}">
+                <div class="search-result-lesson">${escapeHtml(entry.lesson || '–')}</div>
+
                 <div class="search-result-main">
-                    <strong>${deWord}</strong>
-                    <span class="search-result-lesson">${escapeHtml(entry.lesson || '–')}</span>
+                    <div>${wordLine}</div>
                 </div>
 
-                <div class="search-result-row">
-                    <div class="search-result-col"><span class="search-result-label">DE:</span> ${deWord}</div>
-                    <div class="search-result-col"><span class="search-result-label">PY:</span> ${pyWord}</div>
-                    <div class="search-result-col"><span class="search-result-label">ZH:</span> ${zhWord}</div>
-                </div>
-
-                <div class="search-sentences">
-                    <div class="search-sent-de">${deSent}</div>
-                    <div class="search-sent-py">${pySent}</div>
-                    <div class="search-sent-zh">${zhSent}</div>
-                </div>
+                <div class="search-result-line">${sentLine}</div>
+                <div class="search-result-line">${pyWord}</div>
+                <div class="search-result-line">${pySent}</div>
+                <div class="search-result-line">${wordLineZh}</div>
+                <div class="search-result-line">${sentLineZh}</div>
             </div>`;
     }).join("");
 
