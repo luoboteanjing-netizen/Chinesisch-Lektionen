@@ -1076,16 +1076,25 @@ body.menu-open #menuToggle::before {
     font-size: 15px;
 }
 
-.search-result-lesson {
+.search-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.search-result-lesson,
+.search-result-id {
     color: var(--muted);
     font-size: 13px;
-}
-/* Make lesson title occupy its own row and align left */
-.search-result-lesson {
-    display: block;
-    text-align: left;
     font-weight: 600;
-    margin-bottom: 8px;
+}
+
+.search-result-id {
+    text-align: right;
+    white-space: nowrap;
 }
 
 .search-result-sub,
