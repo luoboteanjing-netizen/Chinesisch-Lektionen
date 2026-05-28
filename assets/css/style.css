@@ -802,17 +802,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     font-weight: 600;
 }
 
-.lesson-table {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
 
-.lt-head {
-    background: var(--color-card);
-    border-bottom: 2px solid var(--color-border);
-    font-weight: 600;
-}
 
 /* ================================
    Neue Spalte: Schwach (⚠️)
@@ -1057,7 +1047,7 @@ body.menu-open #menuToggle::before {
 
 .search-result mark,
 .search-result mark {
-    background: #ffd54f;
+    background: #4fd54f;
     color: inherit;
     padding: 0 2px;
     border-radius: 3px;
