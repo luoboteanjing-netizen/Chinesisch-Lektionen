@@ -21,20 +21,20 @@ Bedeutung;yìsi;Subst.;zhè shì shén me yìsi?;Was bedeutet das?;意思;这是
 Satz;jù zi;Subst.;qǐng jiě shì zhè ge jù zi.;Bitte erklären Sie diesen Satz.;句子;请解释这个句子。;L00-1-19;L00 - Vokabeln Unterricht
 Schriftzeichen;zì;Subst.;qǐng jiě shì zhè ge zì.;Bitte erklären Sie dieses Schriftzeichen.;字;请解释这个字。;L00-1-20;L00 - Vokabeln Unterricht
 richtig;duì;Adjektiv;duì bù duì?;Ist  das richtig? Stimmt das?;对;对不对?;L00-1-21;L00 - Vokabeln Unterricht
-Ja, richtig.;duì;Satz;duì.;Ja, richtig. ;对;对;L00-1-22;L00 - Vokabeln Unterricht
-Nein, nicht richtig.;bù duì;Satz;bù duì.;Nein, nicht richtig.;不对;不对;L00-1-23;L00 - Vokabeln Unterricht
+Ja, richtig.;duì;Satz;duì.;Ja, richtig. ;对;对。;L00-1-22;L00 - Vokabeln Unterricht
+Nein, nicht richtig.;bù duì;Satz;bù duì.;Nein, nicht richtig.;不对;不对。;L00-1-23;L00 - Vokabeln Unterricht
 sagen;shuō;Verb;wǒ shuō de duì ma?;Habe ich das richtig gesagt?;说;我说得对吗？;L00-1-24;L00 - Vokabeln Unterricht
 schreiben;xiě;Verb;wǒ xiě de duì ma?;Habe ich das richtig geschrieben?;写;我写得对吗？;L00-1-25;L00 - Vokabeln Unterricht
 Frage;wèn tí;Subst.;Lǎoshī, wǒ yǒu yī gè wèntí.;Lehrer, ich habe eine Frage.;问题;老师，我有一个问题。;L00-1-28;L00 - Vokabeln Unterricht
 Grammatik;yǔ fǎ;Subst.;Zhè shì yǔfǎ.;Das ist Grammatik.;语法;这是语法。;L00-1-29;L00 - Vokabeln Unterricht
 * Lektion 1;*Lektion 1;* Lektion 1;*Lektion 1;*Lektion 1;*Lektion 1;*Lektion 1;L01-1-00;L01 - Vokabeln Begrüßung
-nicht, nein;bù;Adverb;Wǒ bù hěn hǎo.;Mir geht es nicht so gut.;不;我不太好。;L01-1-01;L01 - Vokabeln Begrüßung
-hungrig;è;Adjektiv;Wǒ hěn è.;Ich bin sehr hungrig.;饿; 我很高兴见到你。;L01-1-02;L01 - Vokabeln Begrüßung
+nicht, nein;bù;Adverb;Wǒ bù hěn hǎo.;Mir geht es nicht so gut.;不;我不很好。;L01-1-01;L01 - Vokabeln Begrüßung
+hungrig;è;Adjektiv;Wǒ hěn è.;Ich bin sehr hungrig.;饿;我很饿。;L01-1-02;L01 - Vokabeln Begrüßung
 gut;hǎo;Adjektiv;Wǒ hěn hǎo.;Mir geht es sehr gut.;好;我很好。;L01-1-03;L01 - Vokabeln Begrüßung
 sehr;hěn;Adverb;Wǒ hěn gāoxìng jiàn dào nǐ.;Es freut mich sehr dich zu sehen.;很;我很高兴见到你。;L01-1-04;L01 - Vokabeln Begrüßung
 durstig;kě;Adjektiv;Tā hěn kě.;Sie ist sehr durstig.;渴;她很渴。;L01-1-05;L01 - Vokabeln Begrüßung
 erschöpft, müde;lèi;Adjektiv;Wǒ hěn lèi.;Ich bin sehr müde.;累;我很累。;L01-1-06;L01 - Vokabeln Begrüßung
- Lǐ Lì; Lǐ Lì;Name;Lǐ lì shì zhōngguórén.;Lily ist Chinesein.;李莉;丽丽是中国人。;L01-1-07;L01 - Vokabeln Begrüßung
+ Lǐ Lì; Lǐ Lì;Name;Lǐ lì shì zhōngguórén.;Lily ist Chinesin.;李莉;李莉是中国人。;L01-1-07;L01 - Vokabeln Begrüßung
 Fragepartikel;ma;Partikel;Nǐ hǎo ma?;Geht es dir gut?;吗;你好吗？;L01-1-08;L01 - Vokabeln Begrüßung
 Es geht so.;mǎmǎhūhū;Adjektiv;Wǒ de Hànyǔ mǎmǎhūhū.;Mein Chinesisch ist durchschnittlich.;马马虎虎;我的汉语马马虎虎。;L01-1-09;L01 - Vokabeln Begrüßung
 beschäftigt sein, viel zu tun haben;máng;Adjektiv;Wǒ hěn máng.;Ich bin sehr beschäftigt.;忙;我很忙。;L01-1-10;L01 - Vokabeln Begrüßung
@@ -60,9 +60,9 @@ Hallo;Nǐ hǎo!;Phrase;Nǐ hǎo!;Guten Tag!;;你好！;L01-1-17;L01 - Vokabeln B
 ;;;Wǒ hěn kě.;Ich bin durstig.;;我很渴。;LD01-1-12;L01 - Dialog   Begrüßung
 ;;;Wǒ bù kě.;Ich bin nicht durstig.;;我不渴。;LD01-1-13;L01 - Dialog   Begrüßung
 ;;;Nǐ kě ma?;Bist du durstig?;;你渴吗？;LD01-1-14;L01 - Dialog   Begrüßung
-;;;Wǒ hěn mǎng.;Ich bin beschäftigt.;;我很忙。;LD01-1-15;L01 - Dialog   Begrüßung
-;;;Wǒ bù mǎng.;Ich bin nicht beschäftigt.;;我不忙。;LD01-1-16;L01 - Dialog   Begrüßung
-;;;Nǐ mǎng ma?;Bist du beschäftigt?;;你忙吗？;LD01-1-17;L01 - Dialog   Begrüßung
+;;;Wǒ hěn máng.;Ich bin beschäftigt.;;我很忙。;LD01-1-15;L01 - Dialog   Begrüßung
+;;;Wǒ bù máng.;Ich bin nicht beschäftigt.;;我不忙。;LD01-1-16;L01 - Dialog   Begrüßung
+;;;Nǐ máng ma?;Bist du beschäftigt?;;你忙吗？;LD01-1-17;L01 - Dialog   Begrüßung
 * Lektion 2;*Lektion 2;* Lektion 2;*Lektion 2;*Lektion 2;*Lektion 2;*Lektion 2;L02-1-00;L02 - Vokabeln sich vorstellen
 er, sie, es;tā;Pronomen;Tā shì wǒ de péngyou.;Er ist mein Freund.;他;他是我的朋友。;L02-1-01;L02 - Vokabeln sich vorstellen
 heißen, rufen, nennen;jiào;Verb;Wǒ jiào Lǐ Míng.;Mein Name ist Ming Li.;叫;我叫李明。;L02-1-02;L02 - Vokabeln sich vorstellen
