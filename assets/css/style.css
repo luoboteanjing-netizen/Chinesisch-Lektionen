@@ -181,9 +181,9 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     padding: 7px 10px;
 }
 .btn.toggle.active {
-    background: var(--primary-bg, var(--accent));
-    border-color: var(--primary-border, var(--accent));
-    color: var(--accent-text);
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-accent-text) !important;
 }
 
 .actions-inline {
@@ -200,6 +200,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .actions-inline .btn {
     flex: 1 1 0;                  /* wichtig: gleichmäßig wachsen + schrumpfen */
     min-width: 0;                 /* erlaubt Schrumpfen unter Inhaltsbreite */
+    background: color-mix(in srgb, var(--color-text) 10%, var(--color-card));
     padding: 8px 8px;            /* etwas mehr vertikales Padding für bessere Höhe */
     font-weight: 600;
     font-size: 14px;
@@ -210,15 +211,14 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 
 .training-group .btn {
- flex: 0 0 170px;
- min-width: 170px;
- width: 170px;
- white-space: nowrap;
+ flex: 1 1 0;
+ min-width: 110px;
+ white-space: normal;
+ background: color-mix(in srgb, var(--color-text) 10%, var(--color-card));
+ line-height: 1.2;
+ padding: 10px;
  text-align: center;
- display: inline-flex;
- align-items: center;
- justify-content: center;
- box-sizing: border-box;
+ font-weight: 600;
 }
 
 .training-group .btn:active {
@@ -231,34 +231,22 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  border-color: var(--primary-border, var(--accent));
 }
 
-#btnAutoplay {
- background: var(--primary-bg, var(--accent)) !important;
- border-color: var(--primary-border, var(--accent)) !important;
- color: var(--accent-text) !important;
-}
-
-#btnAutoplay.primary {
- background: var(--primary-bg, var(--accent)) !important;
- border-color: var(--primary-border, var(--accent)) !important;
- color: var(--accent-text) !important;
-}
-
 /* NEU: Gruppe für Training + Autoplay (unter Sliders) – Flex-Row für nebeneinander */
 .training-group {
- display: flex;
- gap: 16px;
- align-items: center;
- justify-content: center; /* Zentriert die Gruppe */
- margin-top: 1px; /* Abstand zu Sliders oben */
- flex-wrap: nowrap; /* NEU: Immer single-line auf Desktop (kein Wrap für die beiden Buttons) */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-top: 1px;
+    align-items: stretch;
 }
 /* NEU: Autoplay als Primary (wenn Klasse hinzugefügt): Farblich identisch zum Training-Button */
 
 /* Breitere und höhere Swap/Direction-Button */
 .btn.swap {
- background: var(--color-primary-bg);
- border: 1px solid var(--color-primary-border);
- color: var(--color-accent-text);
+ background: color-mix(in srgb, var(--color-text) 10%, var(--color-card));
+ border: 1px solid var(--color-border);
+ color: var(--color-text);
  font-weight: 600; /* Bold für den Text */
  padding: 8px 10px; /* Höheres Padding (vertikal mehr für Zentrierung und Präsenz) */
  font-size: 16px; /* Geändert: Größere Schrift für den gesamten Text ("< Richtung >") */
@@ -272,6 +260,13 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
  text-align: center; /* Text zentriert (Fallback) */
  line-height: 1.2; /* Etwas mehr Zeilenhöhe für den Text */
  white-space: nowrap; /* Verhindert Umbruch des Texts */
+ transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.btn.swap.active {
+ background: var(--color-primary) !important;
+ border-color: var(--color-primary) !important;
+ color: var(--color-accent-text) !important;
 }
 
 .card{
@@ -425,7 +420,16 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-.voice-btn{width:100%}
+.voice-btn {
+    width: 100%;
+    background: color-mix(in srgb, var(--color-text) 10%, var(--color-card));
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+.voice-btn.active {
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-accent-text) !important;
+}
 .voice-config{display:flex;flex-direction:column;gap:10px}
 .voice-range{width:100%}
 .ratebar{
@@ -494,17 +498,23 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* Responsive: Mobile-Anpassungen */
 @media (max-width: 480px) {
  .top-actions { margin-top: 10px; gap: 6px; }
- .training-group {
-  gap: 14px;
-  justify-content:center;
-  flex-wrap:wrap;
-  flex-direction:row;
- }
- .training-group .btn {
-  flex: 0 0 130px;
-  width: 130px;
-  min-width: 130px;
- }
+.training-group {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.training-group .btn {
+    width: 100%;
+    min-width: 0;
+   
+
+    font-size: 13px;
+
+    white-space: normal;
+    line-height: 1.2;
+
+    padding: 8px;
+}
+
  .btn.primary { margin-top:8px; }
  .btn.swap { padding:8px 10px; min-height:38px; font-size:16px; }
  .mode-item { padding:8px 12px; min-height:38px; min-width:84px; font-size:13px; }
@@ -948,10 +958,10 @@ body.menu-open #menuToggle::before {
 
 #searchToggle {
     position: absolute;
-    top: -10px;
-    right: 11px;
-    width: 100px;
-    height: 100px;
+    top: 12px;   /* Angepasst, um die visuelle Position zu halten */
+    right: 33px; /* Angepasst, um die visuelle Position zu halten */
+    width: 56px; /* Reduziert auf eine fingerfreundliche Größe um das 40px SVG */
+    height: 56px; /* Reduziert auf eine fingerfreundliche Größe um das 40px SVG */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1500,4 +1510,25 @@ html, body {
 #promptBox,
 #solBox {
     border: 2px solid var(--color-border);
+}
+
+
+/* ============================================================
+   Aktiver Modus-Button
+   ============================================================ */
+
+.training-group .btn.active-mode {
+
+    background: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-accent-text) !important;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.25);
+    transform: translateY(1px);
+}
+
+/* ============================================================
+   Swipe-Unterstützung für den Lernbereich
+   ============================================================ */
+#learnSection {
+    touch-action: pan-y; /* Erlaubt vertikales Scrollen, blockiert horizontales Browser-Wischen */
 }

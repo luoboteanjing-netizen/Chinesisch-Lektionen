@@ -15,7 +15,7 @@
 if (window.APP_VERSION) {
   console.warn("app.js bereits geladen – Abbruch");
 } else {
-  window.APP_VERSION = "6.2.1";
+  window.APP_VERSION = "6.3.6";
 }
 
 
@@ -89,10 +89,12 @@ const TRANSLATIONS = {
         settingsVersion: "Version:",
         modeSwitchTitle: "Richtung umschalten",
         orderRandom: "Zufällig",
-        autoPlay: "Start Autoplay ▶︎",
-        autoPlayStop: "Stop Autoplay ■",
-        trainingStart: "Start Training ▶",
-        trainingStop: "Stop Training ■",
+		browseStart: "Lernen︎",
+		browseStop: "lernen",
+        autoPlay: "Autoplay︎",
+        autoPlayStop: "Autoplay",
+        trainingStart: "Training︎",
+        trainingStop: "Training",
         prev: "◀ Zurück",
         reveal: "Antwort zeigen",
         next: "Nächste ▶",
@@ -136,7 +138,8 @@ const TRANSLATIONS = {
         alertImportInvalid: "Ungültiges Format.",
         alertImportError: "Fehler beim Import.",
         csvLoadError: "Fehler beim Laden der CSV.",
-        cardLessonTitle: "Lektion {id}"
+        cardLessonTitle: "Lektion {id}",
+
     },
     en: {
         appTitle: "Chinese Flashcards",
@@ -209,7 +212,10 @@ const TRANSLATIONS = {
         alertImportInvalid: "Invalid format.",
         alertImportError: "Import failed.",
         csvLoadError: "Error loading CSV.",
-        cardLessonTitle: "Lesson {id}"
+        cardLessonTitle: "Lesson {id}",
+		browseStart: "📖 Browse Cards",
+		browseStop: "📖 Stop Browse",
+
     },
     zh: {
         appTitle: "中文抽认卡",
@@ -282,7 +288,10 @@ const TRANSLATIONS = {
         alertImportInvalid: "格式无效。",
         alertImportError: "导入失败。",
         csvLoadError: "加载 CSV 时出错。",
-        cardLessonTitle: "课程 {id}"
+        cardLessonTitle: "课程 {id}",
+		browseStart: "📖 浏览卡片",
+		browseStop: "📖 结束浏览",
+		
     },
     fr: {
         appTitle: "Cartes Mémoire Chinois",
@@ -355,10 +364,249 @@ const TRANSLATIONS = {
         alertImportInvalid: "Format invalide.",
         alertImportError: "Échec de l'importation.",
         csvLoadError: "Erreur lors du chargement du CSV.",
-        cardLessonTitle: "Leçon {id}"
+        cardLessonTitle: "Leçon {id}",
+		browseStart: "📖 Parcourir",
+		browseStop: "📖 Arrêter",
+
     }
 };
 const $ = (s) => document.querySelector(s);
+
+/* ============================ GITHUB AUDIO CONFIG ======================== */
+
+const AUDIO_BASE = './data/audio';
+const AUDIO_BASE_DE = './data/audio_de';
+const GITHUB_VOICES = ['xiaoxiao', 'yunjian'];
+const GITHUB_VOICES_DE = ['katja', 'conrad'];
+const GITHUB_SPEEDS = ['slow'];
+const GITHUB_SPEEDS_DE = ['normal'];
+const CACHE_PREFIX = 'fc-audio-';
+
+const RELEASE_BASE = 'https://pub-368b54c806bb458385aedf5cd96ac804.r2.dev';
+
+function buildZipUrl(voice) {
+    return `${RELEASE_BASE}/${voice}_slow.zip`;
+}
+
+function sanitizeFileName(fn) {
+    if (!fn) return null;
+    let name = fn.trim();
+    name = name.replace(/^\/+/, '');
+    if (!/\.mp3$/i.test(name)) name += '.mp3';
+    return name;
+}
+
+function buildAudioUrl(entry, voice, speed, kind) {
+    if (!entry || !entry.audio) return null;
+    let raw = kind === 'words' ? entry.audio.wordFile : entry.audio.sentFile;
+    if (!raw) return null;
+    raw = raw.trim();
+    let filename = raw;
+    if (!/\.mp3$/i.test(raw)) {
+        const suffix = kind === 'words' ? '_wrd.mp3' : '_snt.mp3';
+        filename = raw + suffix;
+    }
+    filename = sanitizeFileName(filename);
+    if (!filename) return null;
+    return `${AUDIO_BASE}/${voice}/${speed}/${encodeURIComponent(filename)}`;
+}
+
+function buildAudioUrlDe(entry, voice, speed, kind) {
+    if (!entry || !entry.audio) return null;
+    let raw = kind === 'words' ? entry.audio.wordFile : entry.audio.sentFile;
+    if (!raw) return null;
+    raw = raw.trim();
+    let filename = raw;
+    if (!/\.mp3$/i.test(raw)) {
+        const suffix = kind === 'words' ? '_wrd.mp3' : '_snt.mp3';
+        filename = raw + suffix;
+    }
+    filename = sanitizeFileName(filename);
+    if (!filename) return null;
+    return `${AUDIO_BASE_DE}/${voice}/${speed}/${encodeURIComponent(filename)}`;
+}
+
+function playPreviewAudio(voice, speed, kind) {
+    const previewEntry = {
+        audio: { wordFile: 'L01-1-04_wrd.mp3', sentFile: 'L01-1-04_snt.mp3' }
+    };
+    const url = buildAudioUrl(previewEntry, voice, speed, kind);
+    if (!url) return;
+    const a = new Audio(url);
+    a.play().catch(e => console.warn('Play preview failed', e));
+}
+
+function playPreviewAudioDe(voice, speed, kind) {
+    const previewEntry = {
+        audio: { wordFile: 'L01-1-04_wrd.mp3', sentFile: 'L01-1-04_snt.mp3' }
+    };
+    const url = buildAudioUrlDe(previewEntry, voice, speed, kind);
+    if (!url) return;
+    const a = new Audio(url);
+    a.play().catch(e => console.warn('Play DE preview failed', e));
+}
+
+async function isVoiceCached(voice) {
+    try {
+        const cache = await caches.open(CACHE_PREFIX + voice);
+        const keys = await cache.keys();
+        return keys.length > 0;
+    } catch (e) { return false; }
+}
+
+async function deleteVoiceCache(voice) {
+    try {
+        await caches.delete(CACHE_PREFIX + voice);
+    } catch (e) { console.warn('Cache löschen fehlgeschlagen', e); }
+}
+
+async function downloadVoiceZip(voice, onProgress) {
+    const zipUrl = buildZipUrl(voice);
+    onProgress && onProgress(0, 'Verbinde…');
+    let response;
+    try { response = await fetch(zipUrl); }
+    catch (e) { throw new Error('Netzwerkfehler: ' + e.message); }
+    if (!response.ok) throw new Error('ZIP nicht gefunden (' + response.status + '): ' + zipUrl);
+
+    const contentLength = response.headers.get('Content-Length');
+    const total = contentLength ? parseInt(contentLength, 10) : null;
+    let received = 0;
+    const chunks = [];
+    const reader = response.body.getReader();
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        const mb = Math.round(received / 1024 / 1024 * 10) / 10;
+        if (total) onProgress && onProgress(Math.round(received / total * 60), 'Herunterladen… ' + mb + ' MB');
+        else onProgress && onProgress(10, 'Herunterladen… ' + mb + ' MB');
+    }
+    const zipBuffer = new Uint8Array(received);
+    let offset = 0;
+    for (const chunk of chunks) { zipBuffer.set(chunk, offset); offset += chunk.length; }
+    onProgress && onProgress(62, 'Entpacke ZIP…');
+
+    if (!window._fflate) {
+        await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js';
+            s.onload = resolve;
+            s.onerror = () => reject(new Error('fflate konnte nicht geladen werden'));
+            document.head.appendChild(s);
+        });
+        window._fflate = fflate;
+    }
+    const unzipped = await new Promise((resolve, reject) => {
+        window._fflate.unzip(zipBuffer, (err, result) => { if (err) reject(err); else resolve(result); });
+    });
+    const cache = await caches.open(CACHE_PREFIX + voice);
+    const files = Object.entries(unzipped).filter(([name]) => /\.mp3$/i.test(name));
+    const fileCount = files.length;
+    let done = 0;
+    for (const [zipPath, data] of files) {
+        const filename = zipPath.split('/').pop();
+        const cacheUrl = AUDIO_BASE + '/' + voice + '/slow/' + encodeURIComponent(filename);
+        const blob = new Blob([data], { type: 'audio/mpeg' });
+        await cache.put(cacheUrl, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+        done++;
+        if (done % 100 === 0 || done === fileCount) {
+            onProgress && onProgress(62 + Math.round(done / fileCount * 38), 'Speichere… ' + done + ' / ' + fileCount + ' Dateien');
+        }
+    }
+    onProgress && onProgress(100, 'Fertig! ' + fileCount + ' Dateien gespeichert.');
+    return fileCount;
+}
+
+async function downloadVoiceZipDe(voice, onProgress) {
+    const zipUrl = `${RELEASE_BASE}/${voice}_normal.zip`;
+    onProgress && onProgress(0, 'Verbinde…');
+    let response;
+    try { response = await fetch(zipUrl); }
+    catch (e) { throw new Error('Netzwerkfehler: ' + e.message); }
+    if (!response.ok) throw new Error('ZIP nicht gefunden (' + response.status + '): ' + zipUrl);
+
+    const contentLength = response.headers.get('Content-Length');
+    const total = contentLength ? parseInt(contentLength, 10) : null;
+    let received = 0;
+    const chunks = [];
+    const reader = response.body.getReader();
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        const mb = Math.round(received / 1024 / 1024 * 10) / 10;
+        if (total) onProgress && onProgress(Math.round(received / total * 60), 'Herunterladen… ' + mb + ' MB');
+        else onProgress && onProgress(10, 'Herunterladen… ' + mb + ' MB');
+    }
+    const zipBuffer = new Uint8Array(received);
+    let offset = 0;
+    for (const chunk of chunks) { zipBuffer.set(chunk, offset); offset += chunk.length; }
+    onProgress && onProgress(62, 'Entpacke ZIP…');
+
+    if (!window._fflate) {
+        await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js';
+            s.onload = resolve;
+            s.onerror = () => reject(new Error('fflate konnte nicht geladen werden'));
+            document.head.appendChild(s);
+        });
+        window._fflate = fflate;
+    }
+    const unzipped = await new Promise((resolve, reject) => {
+        window._fflate.unzip(zipBuffer, (err, result) => { if (err) reject(err); else resolve(result); });
+    });
+    const cache = await caches.open(CACHE_PREFIX + 'de-' + voice);
+    const files = Object.entries(unzipped).filter(([name]) => /\.mp3$/i.test(name));
+    const fileCount = files.length;
+    let done = 0;
+    for (const [zipPath, data] of files) {
+        const filename = zipPath.split('/').pop();
+        const cacheUrl = AUDIO_BASE_DE + '/' + voice + '/normal/' + encodeURIComponent(filename);
+        const blob = new Blob([data], { type: 'audio/mpeg' });
+        await cache.put(cacheUrl, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+        done++;
+        if (done % 100 === 0 || done === fileCount) {
+            onProgress && onProgress(62 + Math.round(done / fileCount * 38), 'Speichere… ' + done + ' / ' + fileCount + ' Dateien');
+        }
+    }
+    onProgress && onProgress(100, 'Fertig! ' + fileCount + ' Dateien gespeichert.');
+    return fileCount;
+}
+
+async function isVoiceCachedDe(voice) {
+    try {
+        const cache = await caches.open(CACHE_PREFIX + 'de-' + voice);
+        const keys = await cache.keys();
+        return keys.length > 0;
+    } catch (e) { return false; }
+}
+
+async function deleteVoiceCacheDe(voice) {
+    try {
+        await caches.delete(CACHE_PREFIX + 'de-' + voice);
+    } catch (e) { console.warn('DE Cache löschen fehlgeschlagen', e); }
+}
+
+async function playAudioResource(url) {
+    function playBlob(blob) {
+        return new Promise((resolve) => {
+            const obj = URL.createObjectURL(blob);
+            const a = new Audio(obj);
+            a.onended = () => { URL.revokeObjectURL(obj); resolve(); };
+            a.onerror = () => { URL.revokeObjectURL(obj); resolve(); };
+            a.play().catch(() => resolve());
+        });
+    }
+    try {
+        const cached = await caches.match(url);
+        if (cached) { await playBlob(await cached.blob()); return; }
+        const res = await fetch(url);
+        if (res.ok) await playBlob(await res.blob());
+    } catch (e) { console.warn('playAudioResource error', e); }
+}
 
 /* ============================ GLOBAL STATE =============================== */
 
@@ -410,7 +658,11 @@ const state = {
         browserVoiceZh: null,
         browserVoiceDe: null,
         autoplayGap: 800,
-        resumeIndexByLesson: {}
+        resumeIndexByLesson: {},
+        githubVoiceZh: null,
+        githubSpeedZh: 'slow',
+        githubVoiceDe: null,
+        githubSpeedDe: 'normal'
     },
 
     session: {
@@ -435,7 +687,8 @@ const state = {
     },
 
     wakeLock: null,
-    trainingOn: false
+    trainingOn: false,
+	browseMode: false
 };
 
 	state.reinsertQueue = [];
@@ -645,7 +898,11 @@ function parseCSV(text) {
                 zh: (cols[6] || "").trim()
             },
             id: (cols[7] || "").trim(),
-            lesson
+            lesson,
+            audio: {
+                wordFile: (cols[9] || "").trim() || ((cols[7] || "").trim() + '_wrd.mp3'),
+                sentFile: (cols[10] || "").trim() || ((cols[7] || "").trim() + '_snt.mp3')
+            }
         };
 
         // ✅ Insert lesson & entry into the map
@@ -866,6 +1123,13 @@ function gatherPoolFromSettings() {
 }
 
 /* ============================ UTILS =============================== */
+
+function hapticFeedback() {
+    // Prüft, ob das Gerät Vibration unterstützt
+    if ("vibrate" in navigator) {
+        navigator.vibrate(60); // Kurzer 40ms Impuls
+    }
+}
 
 function formatZh(hz, py) {
     hz = (hz || "").trim();
@@ -1161,8 +1425,13 @@ function setCard(entry, fromHistory = false) {
     }
 
     /* -------- Karte anzeigen -------- */
-    const sol = $("#solBox");
-    sol.classList.add("masked");
+	const sol = $("#solBox");
+
+	if (state.browseMode) {
+		sol.classList.remove("masked");
+	} else {
+		sol.classList.add("masked");
+	}
 
     /* ✅ Hilfsfunktionen */
     const hasWordZh = entry.word?.zh && entry.word.zh.trim() !== "";
@@ -1223,6 +1492,24 @@ function setCard(entry, fromHistory = false) {
     updateNavButtons();
 
     syncCardHeights();
+	if (state.browseMode) {
+    hideRatingButtons();
+	}
+	
+	if (state.browseMode) {
+
+    if (state.mode === "zh2de") {
+
+        renderPromptWordFull(entry);
+        renderPromptSentenceFull(entry);
+
+    } else {
+
+        $("#promptSent").textContent = entry.sent.de || "—";
+    }
+
+    syncCardHeights();
+	}
 }
 // =====================================================
 // LEITNER: pro-Karte Status sicherstellen
@@ -1256,6 +1543,7 @@ function updateNavButtons() {
 }
 
 function nextCard() {
+    hapticFeedback();
 	state.cardCounter++;
     if (!state.pool.length) return;
 
@@ -1290,6 +1578,7 @@ function nextCard() {
 }
 
 function prevCard() {
+    hapticFeedback();
     if (state.historyPos > 0) {
         state.historyPos--;
         setCard(state.history[state.historyPos], true);
@@ -1308,17 +1597,33 @@ function hideNavButtons() {
 }
 
 function showNavButtons() {
-    if (!state.trainingOn || state.autoplay.on) return;  // Nur im Training UND nicht im Autoplay zeigen!
-    $("#btnPrev").style.display = "";
-    $("#btnReveal").style.display = "";
-    $("#btnNext").style.display = "";
-	scrollToBottom();
-}
 
+    if ((!state.trainingOn && !state.browseMode) || state.autoplay.on) {
+        return;
+    }
+
+    $("#btnPrev").style.display = "";
+
+	if (state.browseMode) {
+		$("#btnReveal").style.display = "";
+		$("#btnReveal").style.visibility = "hidden";
+		$("#btnReveal").style.pointerEvents = "none";
+
+	} else {
+
+		$("#btnReveal").style.display = "";
+
+	}
+
+    $("#btnNext").style.display = "";
+
+    scrollToBottom();
+}
 
 /* ============================ REVEAL / RATING ============================ */
 
 function doReveal() {
+    hapticFeedback();
     $("#solBox").classList.remove("masked");
     state.revealedAt = Date.now();
 	
@@ -1409,6 +1714,7 @@ function disableRating() {
 
 function rate(mark) {
     if (!state.current) return;
+    hapticFeedback();
 
     // -----------------------------------------
     // LEITNER: Bewertung
@@ -1562,7 +1868,14 @@ function startTraining() {
         // ✅ Training aktivieren
         // ----------------------------
         state.trainingOn = true;
-        updateTrainingBtn();
+		
+		state.browseMode = false;
+
+		$("#btnReveal").style.visibility = "visible";
+		$("#btnReveal").style.pointerEvents = "";
+		$("#btnReveal").style.opacity = "1";
+		
+        updateModeButtons();
         showNavButtons();  // Buttons anzeigen beim Training-Start
         scrollToBottom();
 
@@ -1570,6 +1883,52 @@ function startTraining() {
         stopTraining();
     }
 }
+
+function startBrowse() {
+
+    if (!state.browseMode) {
+
+        stopAutoplayOnUserAction();
+        state.trainingOn = false;
+        state.browseMode = true;
+
+        state.history = [];
+        state.historyPos = -1;
+
+        state.selectedLessons.clear();
+
+        const sel = $("#lessonSelect");
+        const picked = [];
+
+        for (const o of sel.selectedOptions) {
+            state.selectedLessons.add(o.value);
+            picked.push(o.value);
+        }
+
+        state.settings.lessons = picked;
+        saveSettings();
+
+        gatherPool();
+
+        if (!state.pool.length) {
+            alert(translate("selectLessonAlert"));
+            return;
+        }
+
+        state.idx = 0;
+
+        setCard(state.pool[state.idx]);
+
+        updateModeButtons();
+
+        showNavButtons();
+
+    } else {
+
+        stopBrowse();
+    }
+}
+
 
 function stopTraining() {
     state.trainingOn = false;
@@ -1590,9 +1949,24 @@ if (state.current && state.current.lesson && state.idx !== null) {
     disableRating();
     hideRatingButtons();
 	updateLessonStatsUI();
+	updateModeButtons();
 
     $("#solBox").classList.add("masked");
 	scrollToTop();
+}
+
+function stopBrowse() {
+
+    state.browseMode = false;
+
+    hideNavButtons();
+    hideRatingButtons();
+
+    $("#solBox").classList.add("masked");
+
+    updateModeButtons();
+
+    scrollToTop();
 }
 
 function updateTrainingBtn() {
@@ -1600,7 +1974,24 @@ function updateTrainingBtn() {
         state.trainingOn ? translate("trainingStop") : translate("trainingStart");
 }
 
+function updateModeButtons() {
 
+    $("#btnStart").classList.remove("active-mode");
+    $("#btnBrowse").classList.remove("active-mode");
+    $("#btnAutoplay").classList.remove("active-mode");
+
+    if (state.trainingOn) {
+        $("#btnStart").classList.add("active-mode");
+    }
+
+    if (state.browseMode) {
+        $("#btnBrowse").classList.add("active-mode");
+    }
+
+    if (state.autoplay.on) {
+        $("#btnAutoplay").classList.add("active-mode");
+    }
+}
 
 /* ========================================================================== */
 /*                                ENDE TEIL 2                                 */
@@ -1711,6 +2102,7 @@ function openVoicesPanelFor(target) {
 
 function closeVoices() {
     $("#voicePanel").classList.add("hidden");
+    document.querySelectorAll(".voice-btn").forEach(btn => btn.classList.remove("active"));
 }
 
 function openSearchPanel() {
@@ -1900,7 +2292,9 @@ function searchCSV(query) {
         const zhWord = highlightSimple(zhWordRaw, qRaw);
         const zhSent = highlightSimple(zhSentRaw, qRaw);
 
-        const wordLine = lang === 'de' ? `<strong>${deWord}</strong>` : deWord;
+        const posTag = entry.pos ? ` <span style="color: var(--muted); font-size: 0.9em; font-weight: normal;">(${escapeHtml(entry.pos)})</span>` : "";
+
+        const wordLine = lang === 'de' ? `<strong>${deWord}</strong>${posTag}` : `${deWord}${posTag}`;
         const sentLine = lang === 'de' ? `<strong>${deSent}</strong>` : deSent;
         const wordLineZh = lang === 'zh' ? `<strong>${zhWord}</strong>` : zhWord;
         const sentLineZh = lang === 'zh' ? `<strong>${zhSent}</strong>` : zhSent;
@@ -1945,77 +2339,250 @@ function updateVoiceList() {
 
     box.innerHTML = "";
 
+    // ── GitHub MP3-Stimmen (DE) ───────────────────────────────
+    if (state.voicePanelTarget !== "zh") {
+        const deHeader = document.createElement('div');
+        deHeader.className = 'dbg-section';
+        deHeader.innerHTML = '<div class="h">GitHub Stimmen DE (MP3)</div>';
+        box.appendChild(deHeader);
+
+        GITHUB_VOICES_DE.forEach((voiceName) => {
+            const row = document.createElement('div');
+            row.className = 'voice';
+            const name = document.createElement('div');
+            name.className = 'name';
+            name.textContent = voiceName + ' (MP3)';
+            if (state.settings.githubVoiceDe === voiceName) name.textContent += ' ' + translate('voiceActiveSuffix');
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            meta.textContent = 'Prüfe Cache…';
+            isVoiceCachedDe(voiceName).then(cached => {
+                meta.textContent = cached ? '✅ Lokal gespeichert' : '☁️ Noch nicht heruntergeladen';
+            });
+            const progress = document.createElement('div');
+            progress.className = 'meta';
+            progress.style.display = 'none';
+            progress.style.color = 'var(--accent)';
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+
+            const btnPreview = document.createElement('button');
+            btnPreview.className = 'btn ghost';
+            btnPreview.textContent = '▶ Probehören';
+            btnPreview.onclick = () => playPreviewAudioDe(voiceName, 'normal', 'sentences');
+
+            const btnDownload = document.createElement('button');
+            btnDownload.className = 'btn ghost';
+            btnDownload.textContent = '⬇ Herunterladen';
+            btnDownload.onclick = async () => {
+                [btnDownload, btnDelete, btnPick, btnPreview].forEach(b => b.disabled = true);
+                progress.style.display = '';
+                try {
+                    const count = await downloadVoiceZipDe(voiceName, (pct, text) => {
+                        progress.textContent = pct + '% – ' + text;
+                    });
+                    meta.textContent = '✅ Lokal gespeichert (' + count + ' Dateien)';
+                    progress.style.display = 'none';
+                } catch (e) {
+                    progress.textContent = '❌ Fehler: ' + e.message;
+                } finally {
+                    [btnDownload, btnDelete, btnPick, btnPreview].forEach(b => b.disabled = false);
+                }
+            };
+
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn ghost';
+            btnDelete.textContent = '🗑 Cache löschen';
+            btnDelete.onclick = async () => {
+                await deleteVoiceCacheDe(voiceName);
+                meta.textContent = '☁️ Noch nicht heruntergeladen';
+            };
+
+            const btnPick = document.createElement('button');
+            btnPick.className = 'btn';
+            btnPick.textContent = '✓ Übernehmen';
+            btnPick.onclick = () => {
+                state.settings.githubVoiceDe = voiceName;
+                state.settings.githubSpeedDe = 'normal';
+                saveSettings();
+                closeVoices();
+            };
+
+            actions.appendChild(btnPreview);
+            actions.appendChild(btnDownload);
+            actions.appendChild(btnDelete);
+            actions.appendChild(btnPick);
+            row.appendChild(name);
+            row.appendChild(meta);
+            row.appendChild(progress);
+            row.appendChild(actions);
+            box.appendChild(row);
+        });
+
+        // Trennlinie vor Browser-Stimmen
+        const sep = document.createElement('div');
+        sep.className = 'dbg-section';
+        sep.innerHTML = '<div class="h">Browser Stimmen DE</div>';
+        box.appendChild(sep);
+    }
+
+    // ── GitHub MP3-Stimmen (ZH) ───────────────────────────────
+    if (state.voicePanelTarget === "zh") {
+        const zhHeader = document.createElement('div');
+        zhHeader.className = 'dbg-section';
+        zhHeader.innerHTML = '<div class="h">GitHub Stimmen ZH (MP3)</div>';
+        box.appendChild(zhHeader);
+
+        GITHUB_VOICES.forEach((voiceName) => {
+            const row = document.createElement('div');
+            row.className = 'voice';
+            const name = document.createElement('div');
+            name.className = 'name';
+            name.textContent = voiceName + ' (MP3)';
+            if (state.settings.githubVoiceZh === voiceName) name.textContent += ' ' + translate('voiceActiveSuffix');
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            meta.textContent = 'Prüfe Cache…';
+            isVoiceCached(voiceName).then(cached => {
+                meta.textContent = cached ? '✅ Lokal gespeichert' : '☁️ Noch nicht heruntergeladen';
+            });
+            const progress = document.createElement('div');
+            progress.className = 'meta';
+            progress.style.display = 'none';
+            progress.style.color = 'var(--accent)';
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+
+            const btnPreview = document.createElement('button');
+            btnPreview.className = 'btn ghost';
+            btnPreview.textContent = '▶ Probehören';
+            btnPreview.onclick = () => playPreviewAudio(voiceName, 'slow', 'sentences');
+
+            const btnDownload = document.createElement('button');
+            btnDownload.className = 'btn ghost';
+            btnDownload.textContent = '⬇ Herunterladen';
+            btnDownload.onclick = async () => {
+                [btnDownload, btnDelete, btnPick, btnPreview].forEach(b => b.disabled = true);
+                progress.style.display = '';
+                try {
+                    const count = await downloadVoiceZip(voiceName, (pct, text) => {
+                        progress.textContent = pct + '% – ' + text;
+                    });
+                    meta.textContent = '✅ Lokal gespeichert (' + count + ' Dateien)';
+                    progress.style.display = 'none';
+                } catch (e) {
+                    progress.textContent = '❌ Fehler: ' + e.message;
+                } finally {
+                    [btnDownload, btnDelete, btnPick, btnPreview].forEach(b => b.disabled = false);
+                }
+            };
+
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn ghost';
+            btnDelete.textContent = '🗑 Cache löschen';
+            btnDelete.onclick = async () => {
+                await deleteVoiceCache(voiceName);
+                meta.textContent = '☁️ Noch nicht heruntergeladen';
+            };
+
+            const btnPick = document.createElement('button');
+            btnPick.className = 'btn';
+            btnPick.textContent = '✓ Übernehmen';
+            btnPick.onclick = () => {
+                state.settings.githubVoiceZh = voiceName;
+                state.settings.githubSpeedZh = 'slow';
+                saveSettings();
+                closeVoices();
+            };
+
+            actions.appendChild(btnPreview);
+            actions.appendChild(btnDownload);
+            actions.appendChild(btnDelete);
+            actions.appendChild(btnPick);
+            row.appendChild(name);
+            row.appendChild(meta);
+            row.appendChild(progress);
+            row.appendChild(actions);
+            box.appendChild(row);
+        });
+
+        // Trennlinie vor Browser-Stimmen
+        const sep = document.createElement('div');
+        sep.className = 'dbg-section';
+        sep.innerHTML = '<div class="h">Browser Stimmen ZH</div>';
+        box.appendChild(sep);
+    }
+
+    // ── Browser-Stimmen (wie bisher) ─────────────────────────
     const list = (state.voices || []).filter(v =>
         state.voicePanelTarget === "zh" ? isZhVoice(v) : isDeVoice(v)
     );
 
     if (!list.length) {
-        box.innerHTML = `<div>${translate("noVoicesFound")}</div>`;
+        const noVoices = document.createElement('div');
+        noVoices.textContent = translate("noVoicesFound");
+        box.appendChild(noVoices);
         return;
     }
 
-list.forEach(v => {
-    const row = document.createElement("div");
-    row.className = "voice";
+    list.forEach(v => {
+        const row = document.createElement("div");
+        row.className = "voice";
 
-    const name = document.createElement("div");
-    name.className = "name";
-    name.textContent = v.name || translate("namelessVoice");
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = v.name || translate("namelessVoice");
 
-    const meta = document.createElement("div");
-    meta.className = "meta";
-    meta.textContent = `${v.lang}${v.default ? " · default" : ""}`;
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `${v.lang}${v.default ? " · default" : ""}`;
 
-    const actions = document.createElement("div");
-    actions.className = "actions";
+        const actions = document.createElement("div");
+        actions.className = "actions";
 
-    const btnPick = document.createElement("button");
-    btnPick.className = "btn";
-    btnPick.textContent = translate("pickVoice");
+        const btnPick = document.createElement("button");
+        btnPick.className = "btn";
+        btnPick.textContent = translate("pickVoice");
+		btnPick.onclick = () => {
+			if (state.voicePanelTarget === "zh") {
+				state.browserVoice.zh = v;
+				state.settings.browserVoiceZh = v.name || v.voiceURI;
+				state.settings.githubVoiceZh = null;   // ← NEU: MP3-Stimme deaktivieren
+			} else {
+				state.browserVoice.de = v;
+				state.settings.browserVoiceDe = v.name || v.voiceURI;
+				state.settings.githubVoiceDe = null;   // ← NEU: MP3-Stimme deaktivieren
+			}
+			saveSettings();
+			closeVoices();
+		};
 
-    btnPick.onclick = () => {
-        if (state.voicePanelTarget === "zh") {
-            state.browserVoice.zh = v;
-            state.settings.browserVoiceZh = v.name || v.voiceURI;
-        } else {
-            state.browserVoice.de = v;
-            state.settings.browserVoiceDe = v.name || v.voiceURI;
+        const btnTest = document.createElement("button");
+        btnTest.className = "btn ghost";
+        btnTest.textContent = translate("testVoice");
+        btnTest.onclick = () => {
+            const u = new SpeechSynthesisUtterance(
+                state.voicePanelTarget === "zh" ? "这是一个测试。" : "Dies ist ein Test."
+            );
+            u.lang = state.voicePanelTarget === "zh" ? "zh-CN" : "de-DE";
+            u.voice = v;
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
+        };
+
+        const active = state.voicePanelTarget === "zh" ? state.browserVoice.zh : state.browserVoice.de;
+        if (active && (active.name === v.name || active.voiceURI === v.voiceURI)) {
+            name.textContent += ` ${translate("voiceActiveSuffix")}`;
         }
-        saveSettings();
-        closeVoices();
-    };
 
-    const btnTest = document.createElement("button");
-    btnTest.className = "btn ghost";
-    btnTest.textContent = translate("testVoice");
-
-    btnTest.onclick = () => {
-        const u = new SpeechSynthesisUtterance(
-            state.voicePanelTarget === "zh" ? "这是一个测试。" : "Dies ist ein Test."
-        );
-        u.lang = state.voicePanelTarget === "zh" ? "zh-CN" : "de-DE";
-        u.voice = v;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(u);
-    };
-
-    // Aktive Stimme markieren
-    const active = state.voicePanelTarget === "zh" ? state.browserVoice.zh : state.browserVoice.de;
-    if (active && (active.name === v.name || active.voiceURI === v.voiceURI)) {
-        name.textContent += ` ${translate("voiceActiveSuffix")}`;
-    }
-
-    actions.appendChild(btnPick);
-    actions.appendChild(btnTest);
-
-    row.appendChild(name);
-    row.appendChild(meta);
-    row.appendChild(actions);
-
-    box.appendChild(row);
-});
+        actions.appendChild(btnPick);
+        actions.appendChild(btnTest);
+        row.appendChild(name);
+        row.appendChild(meta);
+        row.appendChild(actions);
+        box.appendChild(row);
+    });
 }
-
 
 /* ============================ PLAY QUESTION / ANSWER ============================ */
 
@@ -2023,16 +2590,36 @@ function playQuestion() {
     if (!state.current) return;
 
     if (state.mode === "de2zh") {
-        playSequence(
-            state.current.word.de, "de",
-            state.current.sent.de, "de"
-        );
+        speechSynthesis.cancel();
+        const ghVoiceDe = state.settings.githubVoiceDe;
+        const ghSpeedDe = state.settings.githubSpeedDe || 'normal';
+        if (ghVoiceDe) {
+            const wUrl = buildAudioUrlDe(state.current, ghVoiceDe, ghSpeedDe, 'words');
+            const sUrl = buildAudioUrlDe(state.current, ghVoiceDe, ghSpeedDe, 'sentences');
+            (async () => {
+                if (wUrl) await playAudioResource(wUrl);
+                if (sUrl) await new Promise(r => setTimeout(r, 400));
+                if (sUrl) await playAudioResource(sUrl);
+            })();
+            return;
+        }
+        playSequence(state.current.word.de, "de", state.current.sent.de, "de");
     } else {
         speechSynthesis.cancel();
+        const ghVoice = state.settings.githubVoiceZh;
+        const ghSpeed = state.settings.githubSpeedZh || 'slow';
+        if (ghVoice) {
+            const wUrl = buildAudioUrl(state.current, ghVoice, ghSpeed, 'words');
+            const sUrl = buildAudioUrl(state.current, ghVoice, ghSpeed, 'sentences');
+            (async () => {
+                if (wUrl) await playAudioResource(wUrl);
+                if (sUrl) await new Promise(r => setTimeout(r, 400));
+                if (sUrl) await playAudioResource(sUrl);
+            })();
+            return;
+        }
         ttsSpeak(state.current.word.zh, "zh");
-        setTimeout(() =>
-            ttsSpeak(state.current.sent.zh, "zh"),
-        600);
+        setTimeout(() => ttsSpeak(state.current.sent.zh, "zh"), 600);
     }
 }
 
@@ -2040,15 +2627,35 @@ function playAnswer() {
     if (!state.current) return;
 
     if (state.mode === "de2zh") {
+        const ghVoice = state.settings.githubVoiceZh;
+        const ghSpeed = state.settings.githubSpeedZh || 'slow';
+        if (ghVoice) {
+            const wUrl = buildAudioUrl(state.current, ghVoice, ghSpeed, 'words');
+            const sUrl = buildAudioUrl(state.current, ghVoice, ghSpeed, 'sentences');
+            (async () => {
+                if (wUrl) await playAudioResource(wUrl);
+                if (sUrl) await new Promise(r => setTimeout(r, 400));
+                if (sUrl) await playAudioResource(sUrl);
+            })();
+            return;
+        }
         ttsSpeak(state.current.word.zh, "zh");
-        setTimeout(() =>
-            ttsSpeak(state.current.sent.zh, "zh"),
-        600);
+        setTimeout(() => ttsSpeak(state.current.sent.zh, "zh"), 600);
     } else {
-        playSequence(
-            state.current.word.de, "de",
-            state.current.sent.de, "de"
-        );
+        speechSynthesis.cancel();
+        const ghVoiceDe = state.settings.githubVoiceDe;
+        const ghSpeedDe = state.settings.githubSpeedDe || 'normal';
+        if (ghVoiceDe) {
+            const wUrl = buildAudioUrlDe(state.current, ghVoiceDe, ghSpeedDe, 'words');
+            const sUrl = buildAudioUrlDe(state.current, ghVoiceDe, ghSpeedDe, 'sentences');
+            (async () => {
+                if (wUrl) await playAudioResource(wUrl);
+                if (sUrl) await new Promise(r => setTimeout(r, 400));
+                if (sUrl) await playAudioResource(sUrl);
+            })();
+            return;
+        }
+        playSequence(state.current.word.de, "de", state.current.sent.de, "de");
     }
 }
 
@@ -2075,7 +2682,7 @@ function playSequence(a, aLang, b, bLang) {
 function setAutoplay(on) {
  console.log("setAutoplay called:", on);
     state.autoplay.on = on;
-
+	updateModeButtons()
     if (!on) {
         speechSynthesis.cancel();
         state.autoplay.timers.forEach(x => clearTimeout(x));
@@ -2136,47 +2743,105 @@ function ensurePoolForAutoplay() {
 
 function speakPair(word, sent, langKey, done) {
 
-    if (!state.autoplay.on) return;
+    if (!state.autoplay.on) { done && done(); return; }
 
-    const u1 = buildUtterance(word, langKey);
+    const ghVoice = state.settings.githubVoiceZh;
+    const ghSpeed = state.settings.githubSpeedZh || 'slow';
 
-    u1.onend = () => {
-
-        if (!state.autoplay.on) return;
-
-        const t = setTimeout(() => {
-
+    // ── MP3-Zweig: GitHub-Stimme Chinesisch ──────────────────
+    if (ghVoice && langKey === 'zh') {
+        (async () => {
+            const wUrl = buildAudioUrl(state.current, ghVoice, ghSpeed, 'words');
+            const sUrl = buildAudioUrl(state.current, ghVoice, ghSpeed, 'sentences');
+            if (wUrl) await playAudioResource(wUrl);
             if (!state.autoplay.on) return;
-
-            const u2 = buildUtterance(sent, langKey);
-
-            u2.onend = () => {
+            if (sUrl) {
+                await new Promise(r => setTimeout(r, 400));
                 if (!state.autoplay.on) return;
-                done && done();
-            };
+                await playAudioResource(sUrl);
+            }
+            if (!state.autoplay.on) return;
+            done && done();
+        })();
+        return;
+    }
 
+    // ── MP3-Zweig: GitHub-Stimme Deutsch ─────────────────────
+    const ghVoiceDe = state.settings.githubVoiceDe;
+    const ghSpeedDe = state.settings.githubSpeedDe || 'normal';
+    if (ghVoiceDe && langKey === 'de') {
+        (async () => {
+            const wUrl = buildAudioUrlDe(state.current, ghVoiceDe, ghSpeedDe, 'words');
+            const sUrl = buildAudioUrlDe(state.current, ghVoiceDe, ghSpeedDe, 'sentences');
+            if (wUrl) await playAudioResource(wUrl);
+            if (!state.autoplay.on) return;
+            if (sUrl) {
+                await new Promise(r => setTimeout(r, 400));
+                if (!state.autoplay.on) return;
+                await playAudioResource(sUrl);
+            }
+            if (!state.autoplay.on) return;
+            done && done();
+        })();
+        return;
+    }
+
+    // ── Fallback: Browser-TTS ─────────────────────────────────
+    const u1 = buildUtterance(word, langKey);
+    u1.onend = () => {
+        if (!state.autoplay.on) return;
+        const t = setTimeout(() => {
+            if (!state.autoplay.on) return;
+            const u2 = buildUtterance(sent, langKey);
+            u2.onend = () => { if (!state.autoplay.on) return; done && done(); };
             speechSynthesis.speak(u2);
-
         }, 650);
-
         state.autoplay.timers.push(t);
     };
-
     speechSynthesis.speak(u1);
 }
 
-function playChineseOnReveal(entry) {
+// Spielt beim Aufdecken die Antwort-Sprache ab:
+// DE→ZH: Chinesisch | ZH→DE: Deutsch
+function playOnReveal(entry) {
     if (!entry) return;
-
     speechSynthesis.cancel();
 
-    // Wort zuerst
-    ttsSpeak(entry.word.zh, "zh");
+    if (state.mode === "de2zh") {
+        const ghVoice = state.settings.githubVoiceZh;
+        const ghSpeed = state.settings.githubSpeedZh || 'slow';
+        if (ghVoice) {
+            const wUrl = buildAudioUrl(entry, ghVoice, ghSpeed, 'words');
+            const sUrl = buildAudioUrl(entry, ghVoice, ghSpeed, 'sentences');
+            (async () => {
+                if (wUrl) await playAudioResource(wUrl);
+                if (sUrl) await new Promise(r => setTimeout(r, 600));
+                if (sUrl) await playAudioResource(sUrl);
+            })();
+            return;
+        }
+        ttsSpeak(entry.word.zh, "zh");
+        setTimeout(() => ttsSpeak(entry.sent.zh, "zh"), 600);
+    } else {
+        const ghVoiceDe = state.settings.githubVoiceDe;
+        const ghSpeedDe = state.settings.githubSpeedDe || 'normal';
+        if (ghVoiceDe) {
+            const wUrl = buildAudioUrlDe(entry, ghVoiceDe, ghSpeedDe, 'words');
+            const sUrl = buildAudioUrlDe(entry, ghVoiceDe, ghSpeedDe, 'sentences');
+            (async () => {
+                if (wUrl) await playAudioResource(wUrl);
+                if (sUrl) await new Promise(r => setTimeout(r, 600));
+                if (sUrl) await playAudioResource(sUrl);
+            })();
+            return;
+        }
+        ttsSpeak(entry.word.de, "de");
+        setTimeout(() => ttsSpeak(entry.sent.de, "de"), 600);
+    }
+}
 
-    // Satz leicht verzögert danach
-    setTimeout(() => {
-        ttsSpeak(entry.sent.zh, "zh");
-    }, 600);
+function playChineseOnReveal(entry) {
+    playOnReveal(entry);
 }
 
 function autoplayStep() {
@@ -2473,8 +3138,12 @@ if (installButton) {
     state.rateZh  = state.settings.rateZh;
     state.pitchZh = state.settings.pitchZh;
 
-    renderModeUI();
-    hideNavButtons();  // Buttons initial unsichtbar beim App-Start
+	renderModeUI();
+
+	updateTrainingBtn();
+	updateModeButtons();
+
+	hideNavButtons();  // Buttons initial unsichtbar beim App-Start
 
     /* ============================================================
        CSV LADEN
@@ -2512,28 +3181,6 @@ if (installButton) {
     if (rateZhVal)  rateZhVal.textContent  = `(${state.rateZh.toFixed(2)})`;
     if (pitchZhVal) pitchZhVal.textContent = `(${state.pitchZh.toFixed(2)})`;
 
-    /* ============================================================
-       AUTOPLAY BUTTON In TRAINING-GRUPPE SETZEN
-       ============================================================ */
-    (function placeAutoplayButton() {
-        const trainingBtn = document.querySelector("#btnStart");
-        const autoplayBtn = document.querySelector("#btnAutoplay");
-
-        if (!trainingBtn || !autoplayBtn) return;
-
-        const parent = trainingBtn.parentNode;
-        let group = parent.querySelector(".training-group");
-
-        if (!group) {
-            group = document.createElement("div");
-            group.className = "training-group";
-            parent.insertBefore(group, trainingBtn);
-            group.appendChild(trainingBtn);
-        }
-
-        group.appendChild(autoplayBtn);
-        autoplayBtn.classList.add("primary");
-    })();
 
  
  /* ============================================================
@@ -2622,14 +3269,18 @@ if (uiLangSelect) {
         saveSettings();
     });
 
-    document.querySelector("#btnVoiceDe")?.addEventListener("click", () => {
-    
-        openVoicesPanelFor("de");
+    document.querySelector("#btnVoiceDe")?.addEventListener("click", function() {
+        this.classList.add("active");
+        setTimeout(() => {
+            openVoicesPanelFor("de");
+        }, 300);
     });
 
-    document.querySelector("#btnVoiceZh")?.addEventListener("click", () => {
-     
-        openVoicesPanelFor("zh");
+    document.querySelector("#btnVoiceZh")?.addEventListener("click", function() {
+        this.classList.add("active");
+        setTimeout(() => {
+            openVoicesPanelFor("zh");
+        }, 300);
     });
 
     document.querySelector("#btnCloseVoices")?.addEventListener("click", () => {
@@ -2689,16 +3340,24 @@ if (uiLangSelect) {
     /* ============================================================
        MODUS, REIHENFOLGE, AUTOPLAY
        ============================================================ */
-    $("#btnSwapMode").addEventListener("click", () => {
-   
+    $("#btnSwapMode").addEventListener("click", function() {
+        hapticFeedback();
+        const btn = this;
+        btn.classList.add("active");
+
         state.mode = state.mode === "de2zh" ? "zh2de" : "de2zh";
         state.settings.mode = state.mode;
         saveSettings();
         renderModeUI();
         if (state.current) setCard(state.current);
+
+        setTimeout(() => {
+            btn.classList.remove("active");
+        }, 500);
     });
 
     $("#btnOrderToggle").addEventListener("click", () => {
+        hapticFeedback();
    
         state.order = state.order === "random" ? "seq" : "random";
         state.settings.order = state.order;
@@ -2707,6 +3366,7 @@ if (uiLangSelect) {
     });
 
     $("#btnToggleHanzi").addEventListener("click", () => {
+        hapticFeedback();
      
         state.showHanzi = !state.showHanzi;
         state.settings.showHanzi = state.showHanzi;
@@ -2716,6 +3376,7 @@ if (uiLangSelect) {
     });
 
     $("#btnTogglePinyin").addEventListener("click", () => {
+        hapticFeedback();
    
         state.showPinyin = !state.showPinyin;
         state.settings.showPinyin = state.showPinyin;
@@ -2725,6 +3386,7 @@ if (uiLangSelect) {
     });
 
     $("#btnAutoplay").addEventListener("click", () => {
+        hapticFeedback();
         toggleAutoplay();
     });
 
@@ -2742,10 +3404,14 @@ if (uiLangSelect) {
        ============================================================ */
 
     $("#btnStart").addEventListener("click", () => {
+        hapticFeedback();
         stopAutoplayOnUserAction();
         startTraining();
     });
-
+	$("#btnBrowse").addEventListener("click", () => {
+        hapticFeedback();
+		startBrowse();
+	});
     $("#btnNext").addEventListener("click", () => {
        
         nextCard();
@@ -2964,6 +3630,48 @@ if (uiLangSelect) {
     window.addEventListener("mouseup", onEnd);
 })();
 
+/* ============================================================
+   SWIPE-NAVIGATION FÜR KARTEN (Browse & Training)
+   ============================================================ */
+(function enableSwipeNavigation() {
+    const card = document.querySelector("#learnSection");
+    if (!card) return;
+
+    let startX = 0;
+    let startY = 0;
+    const threshold = 60; // Mindestdistanz für einen Swipe
+
+    card.addEventListener("touchstart", (e) => {
+        // Nur reagieren, wenn Training oder Browse-Modus aktiv ist
+        if (!state.trainingOn && !state.browseMode) return;
+        if (state.autoplay.on) return; // Autoplay nicht stören
+
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    card.addEventListener("touchend", (e) => {
+        if (!state.trainingOn && !state.browseMode) return;
+        if (state.autoplay.on) return;
+
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = endX - startX;
+        const diffY = endY - startY;
+
+        // Sicherstellen, dass die horizontale Bewegung dominiert und weit genug ist
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > threshold) {
+            if (diffX > 0) {
+                // Swipe nach Rechts -> Vorherige Karte
+                if (state.historyPos > 0) prevCard();
+            } else {
+                // Swipe nach Links -> Nächste Karte
+                if (state.pool.length > 0) nextCard();
+            }
+        }
+    }, { passive: true });
+})();
+
 /* ============================================
    Overlay tap-to-close
    ============================================ */
@@ -2979,7 +3687,7 @@ if (overlay) {
 console.log("[INIT] Alles bereit ✅");
 });  // ✅ schließt NUR den DOMContentLoaded – korrekt!
 
-/* ==
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js")
@@ -2987,7 +3695,7 @@ if ("serviceWorker" in navigator) {
       .catch(err => console.error("SW error", err));
   });
 }
-==== */
+
 /* ========================================================================== */
 /*                                ENDE TEIL 4                                 */
 /* ========================================================================== */
