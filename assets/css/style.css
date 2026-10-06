@@ -237,7 +237,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     grid-template-columns: repeat(3, 1fr);
     gap: 12px;
     width: 100%;
-    margin-top: 1px;
+    margin-top: 14px;
     align-items: stretch;
 }
 /* NEU: Autoplay als Primary (wenn Klasse hinzugefügt): Farblich identisch zum Training-Button */
@@ -466,6 +466,14 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 }
 .voice-config > *:first-child { /* Erstes Element in der Config (z.B. Label "ZH Tempo") */
  margin-top: 12px; /* Mehr Abstand zum Button darüber – das macht den Unterschied */
+}
+/* Kein Extra-Abstand in der Timing-Zeile (Gap/Delay) – dort ist kein Button darüber */
+.two-col:not(.voice-grids) > .voice-config > *:first-child {
+ margin-top: 0;
+}
+/* Slider in der Timing-Zeile immer auf gleicher Höhe ausrichten */
+.two-col:not(.voice-grids) > .voice-config > input {
+ margin-top: auto;
 }
 /* Kleinerer Abstand der Labels zu den Sliders (ZH und DE) */
 .voice-config .lbl { /* Überschreibt den globalen .lbl-Margin */
@@ -856,11 +864,11 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .lt-row {
     display: grid;
     grid-template-columns:
-       105px   /* Lektion */
-        30px   /* Karten */
-        30px   /* strong (✅) */
-        30px   /* weak   (🤔) */
-        30px;  /* unknown (❌) */
+        var(--lt-c1, 115px)
+        var(--lt-c2, 25px)
+        var(--lt-c3, 25px)
+        var(--lt-c4, 30px)
+        var(--lt-c5, 30px);
 
     gap: 8px;
     padding: 4px 6px;
@@ -870,6 +878,21 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     background: var(--color-card);
     border-radius: 6px;
     cursor: pointer;
+}
+
+/* Header: eigenes, unabhängiges Grid */
+.lt-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--color-card);
+    font-weight: 600;
+    padding: 6px;
+    border-bottom: 2px solid var(--color-border);
+
+    display: grid;
+    grid-template-columns: 105px 35px 30px 30px 30px;  /* bleibt fix */
+    gap: 8px;
 }
 
 /* ✅ Sticky Header oben fixiert */
@@ -1531,4 +1554,23 @@ html, body {
    ============================================================ */
 #learnSection {
     touch-action: pan-y; /* Erlaubt vertikales Scrollen, blockiert horizontales Browser-Wischen */
+}
+#patchBanner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: #2e7d32;
+    color: #fff;
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+    pointer-events: none;
+}
+
+#patchBanner.visible {
+    transform: translateY(0);
 }
