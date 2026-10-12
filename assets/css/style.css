@@ -234,7 +234,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 /* NEU: Gruppe für Training + Autoplay (unter Sliders) – Flex-Row für nebeneinander */
 .training-group {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     width: 100%;
     margin-top: 14px;
@@ -311,6 +311,126 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 .sol .sol-part{margin-bottom:10px}
 .sol .sol-text{font-size:20px;white-space:pre-wrap}
 .sol.masked .sol-text{filter:blur(10px); opacity:0.05; user-select:none}
+.choice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+.choice-list[hidden] { display: none !important; }
+.choice-btn {
+    width: 100%;
+    min-height: 44px;
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    font-size: 16px;
+    line-height: 1.2;
+    white-space: normal;
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--color-text) 8%, var(--color-card));
+    color: var(--color-text);
+    cursor: pointer;
+}
+.choice-btn.selected,
+.choice-btn.correct,
+.choice-btn.wrong {
+    border-width: 2px;
+    font-weight: 700;
+}
+.choice-btn.selected {
+    box-shadow: inset 0 0 0 2px var(--color-text);
+}
+.choice-btn.correct {
+    box-shadow: inset 0 0 0 3px var(--color-positive);
+    background: color-mix(in srgb, var(--color-positive) 24%, var(--color-card));
+}
+.choice-btn.wrong {
+    box-shadow: inset 0 0 0 3px var(--color-negative);
+    background: color-mix(in srgb, var(--color-negative) 24%, var(--color-card));
+}
+.choice-btn:disabled { cursor: default; }
+
+#learnSection.choice-active #choiceBox {
+  flex: 0 0 auto;
+}
+#learnSection.choice-active #promptBox {
+  height: 28vh;
+  min-height: 28vh;
+  max-height: 28vh;
+  overflow: auto;
+}
+#learnSection.choice-active #solBox {
+  height: 42.4vh;
+  min-height: 42.4vh;
+  max-height: 42.4vh;
+  overflow: auto;
+}
+/* Antwort nicht noch einmal unter den Buttons zeigen; Lautsprecher bleibt. */
+#learnSection.choice-active #solBox .sol-part {
+  display: contents;
+}
+#learnSection.choice-active #solBox .sol-text {
+  display: none;
+}
+.choice-btn.expanded {
+  position: relative;
+  height: auto;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 3.4rem 10px 12px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  cursor: default;
+}
+.choice-btn.expanded #speakerAnswer {
+  top: 4px !important;
+  right: 4px !important;
+  bottom: auto !important;
+  width: 2.6rem;
+  height: 2.6rem;
+  z-index: 2;
+  cursor: pointer;
+}
+.choice-btn.expanded #speakerAnswer svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+.choice-btn .choice-answer,
+.choice-btn .choice-pos,
+.choice-btn .choice-sent {
+  display: block;
+  width: 100%;
+}
+.choice-btn .choice-answer {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.choice-btn .choice-pos {
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 400;
+  opacity: 0.9;
+  line-height: 1.2;
+}
+.choice-btn .choice-sent {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+.choice-btn .zh-pinyin {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.3;
+}
 .card-controls{display:flex;gap:12px;justify-content:center;margin-top:10px}
 .card-controls.second{margin-top:6px}
 .stats-bar{margin-top:8px;color:#a7b5c5;font-size:13px;text-align:center}
@@ -431,6 +551,23 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
     color: var(--color-accent-text) !important;
 }
 .voice-config{display:flex;flex-direction:column;gap:10px}
+.voice-tts-config {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 0 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+.voice-tts-slider .lbl {
+    margin-bottom: 2px;
+    font-size: 14px;
+}
+.voice-tts-slider .hint {
+    font-size: 12px;
+    font-weight: 500;
+}
 .voice-range{width:100%}
 .ratebar{
   display:flex;
@@ -507,7 +644,7 @@ header h1{margin:0 0 2px 0;font-size:26px;line-height:1.1}
 @media (max-width: 480px) {
  .top-actions { margin-top: 10px; gap: 6px; }
 .training-group {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
 }
 .training-group .btn {

@@ -1,8 +1,8 @@
 // ==========================================
-// Service Worker - Learning App v6.4.3
+// Service Worker - Learning App v7.0.1
 // ==========================================
 
-const APP_CACHE = "flashcards-v6.4.3";
+const APP_CACHE = "flashcards-v7.0.1";
 const CSV_CACHE = "learning-app-csv-v1";
 
 // Statische Dateien (App-Shell)
@@ -12,6 +12,13 @@ const STATIC_ASSETS = [
   "./help.html",
   "./assets/css/style.css",
   "./assets/js/app.js",
+  "./assets/js/state.js",
+  "./assets/js/csv.js",
+  "./assets/js/leitner.js",
+  "./assets/js/card.js",
+  "./assets/js/tts.js",
+  "./assets/js/autoplay.js",
+  "./assets/js/ui.js",
   "./manifest.json",
   "./assets/img/header.png",
   "./assets/img/header.webp",
