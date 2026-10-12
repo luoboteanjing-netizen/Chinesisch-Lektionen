@@ -1,5 +1,5 @@
 ﻿Wort Deutsch;Wort Pinyin ;Wortart;Satz Pinyin;Satz Deutsch;Wort Hanyu;Satz Hanyu;ID;Lektion;;;;;;;;;;;
-* Lektion 0 -2026-10-06;*Lektion 0;* Lektion 0;*Lektion 0;*Lektion 0;*Lektion 0;*Lektion 0;L00-1-00;L00 - Vokabeln Unterricht;;;;;;;;;;;
+* Lektion 0 -2026-10-12;*Lektion 0;* Lektion 0;*Lektion 0;*Lektion 0;*Lektion 0;*Lektion 0;L00-1-00;L00 - Vokabeln Unterricht;;;;;;;;;;;
 öffnen;dǎkāi;Verb;qǐng dǎkāi shū.;Bitte öffnen Sie das Buch.;打开;请打开书。;L00-1-01;L00 - Vokabeln Unterricht;;;;;;;;;;;
 sprechen (vorlesen);niàn;Verb;gēn wǒ niàn.;Sprechen Sie mir nach.;念;跟我念。;L00-1-02;L00 - Vokabeln Unterricht;;;;;;;;;;;
 Text / Lektionstext;kè wén;Nomen.;qǐng niàn kè wén.;Lesen Sie den Text.;课文;请念课文。;L00-1-03;L00 - Vokabeln Unterricht;;;;;;;;;;;
@@ -644,7 +644,7 @@ Jacke, Oberteil;shàngyī;Nomen; Zhè jiàn shàngyī tài dà le. ; Diese Jacke
 Jeans;niúzǎikù;Nomen; Wǒ yào mǎi yì tiáo niúzǎikù. ; Ich möchte eine Jeans kaufen. ;牛仔裤; 我要买一条牛仔裤 ;L09-1-07;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 kaufen;mǎi;Verb; Wǒ xiǎng mǎi yìxiē shuǐguǒ. ; Ich möchte etwas Obst kaufen. ;买; 我想买一些水果 ;L09-1-08;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 Kleidung;yīfu;Nomen; Zhèxiē yīfu hěn guì. ; Diese Kleidung ist sehr teuer. ;衣服; 这些衣服很贵 ;L09-1-09;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
-wollen, brauchen;yào;Verb; Wǒ yào liǎng jīn píngguǒ. ; Ich möchte zwei Jin Äpfel. ;要; 我要两斤苹果 ;L09-1-10;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
+wollen, brauchen;yào;Verb; Wǒ yào liǎng jīn píngguǒ. ; Ich möchte zwei Pfund Äpfel. ;要; 我要两斤苹果 ;L09-1-10;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 Pullover;máoyī;Nomen; Zhè jiàn máoyī shì hēisè de. ; Dieser Pullover ist schwarz. ;毛衣; 这件毛衣是黑色的 ;L09-1-11;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 Rock;qúnzi;Nomen; Tā chuānzhe yì tiáo báisè de qúnzi. ; Sie trägt einen weißen Rock. ;裙子; 她穿着一条白色的裙子 ;L09-1-12;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 rot;hóngsè;Nomen; Wǒ hěn xǐhuān hóngsè. ; Ich mag Rot sehr. ;红色; 我很喜欢红色 ;L09-1-13;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
@@ -669,7 +669,7 @@ Milch;niúnǎi;Nomen; Wǒ měitiān hē niúnǎi. ; Ich trinke jeden Tag Milch. 
 Obst;shuǐguǒ;Nomen; Wǒ xǐhuān chī shuǐguǒ. ; Ich esse gerne Obst. ;水果; 我喜欢吃水果 ;L09-1-32;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 grüne Paprika;qīngjiāo;Nomen; Zhège qīngjiāo shì lǜsè de. ; Diese Paprika ist grün. ;青椒; 这个青椒是绿色的 ;L09-1-33;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 passend, geeignet;héshì;Adjektiv; Zhè jiàn máoyī hěn héshì. ; Dieser Pullover passt gut. ;合适; 这件毛衣很合适 ;L09-1-34;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
-chinesisches Pfund (500 Gramm);jīn;Nomen; Yì jīn pútao duōshǎo qián? ; Was kostet ein Jin Trauben? ;斤; 一斤葡萄多少钱 ;L09-1-35;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
+chinesisches Pfund (500 Gramm);jīn;Nomen; Yì jīn pútao duōshǎo qián? ; Was kostet ein Pfund Trauben? ;斤; 一斤葡萄多少钱 ;L09-1-35;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 Dinge, Sachen;dōngxi;Nomen; Wǒ yào mǎi yìxiē dōngxi. ; Ich möchte ein paar Sachen kaufen. ;东西; 我要买一些东西 ;L09-1-36;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 suchen;zhǎo;Verb; Wǒ zhǎo yí jiàn chènshān. ; Ich suche ein Hemd. ;找; 我找一件衬衫 ;L09-1-37;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
 Tomate;xīhóngshì;Nomen; Wǒ xǐhuān chī xīhóngshì. ; Ich esse gerne Tomaten. ;西红柿; 我喜欢吃西红柿 ;L09-1-38;L09 - Vokabeln Lebensmittel, Kleidung;;;;;;;;;;;
