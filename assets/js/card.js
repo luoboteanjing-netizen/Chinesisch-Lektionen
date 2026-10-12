@@ -391,50 +391,87 @@ function setCard(entry, fromHistory = false) {
     renderChoices(entry);
 }
 
-function choiceAnswerText(entry) {
+function choiceUsesSentence(entry) {
+    if (!entry) return false;
+    const wordDe = (entry.word?.de || "").trim();
+    const wordZh = (entry.word?.zh || "").trim();
+    const wordPy = (entry.word?.py || "").trim();
+    if (state.mode === "zh2de") return !wordDe;
+    return !wordDe || (!wordZh && !wordPy);
+}
+
+function choiceZhText(hanzi, pinyin) {
+    const parts = [];
+    if (state.showHanzi !== false && hanzi) parts.push(hanzi);
+    if (state.showPinyin !== false && pinyin) parts.push(pinyin);
+    return parts.join(" ") || hanzi || pinyin || "";
+}
+
+function choiceAnswerText(entry, asSentence = false) {
     if (!entry) return "—";
+    const useSentence = asSentence || choiceUsesSentence(entry);
     if (state.mode === "zh2de") {
-        return (entry.word?.de || "").trim() || (entry.sent?.de || "").trim() || "—";
+        const sentence = (entry.sent?.de || "").trim();
+        const word = (entry.word?.de || "").trim();
+        return (useSentence ? sentence || word : word || sentence) || "—";
+    }
+
+    if (useSentence) {
+        return choiceZhText((entry.sent?.zh || "").trim(), (entry.sent?.py || "").trim())
+            || choiceZhText((entry.word?.zh || "").trim(), (entry.word?.py || "").trim())
+            || "—";
     }
 
     const wordZh = (entry.word?.zh || "").trim();
     const wordPy = (entry.word?.py || "").trim();
-    const hanzi = wordZh || (entry.sent?.zh || "").trim();
-    const pinyin = wordZh ? wordPy : (entry.sent?.py || "").trim();
-    const parts = [];
-    if (state.showHanzi !== false && hanzi) parts.push(hanzi);
-    if (state.showPinyin !== false && pinyin) parts.push(pinyin);
-    return parts.join(" ") || hanzi || pinyin || "—";
+    return choiceZhText(wordZh || (entry.sent?.zh || "").trim(), wordZh ? wordPy : (entry.sent?.py || "").trim()) || "—";
+}
+
+function lessonPrefix(lesson) {
+    const match = (lesson || "").trim().match(/^([A-Za-z]+)/);
+    return match ? match[1].toUpperCase() : "";
+}
+
+function shuffleCards(list) {
+    for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
 }
 
 function buildChoiceOptions(entry) {
-    const correctText = choiceAnswerText(entry);
-    const sameLesson = state.lessons.get(entry.lesson) || [];
-    const rest = [];
-    for (const cards of state.lessons.values()) {
-        if (cards !== sameLesson) rest.push(...cards);
-    }
-    const candidates = [...sameLesson, ...rest].filter((card) => card.id !== entry.id);
-    for (let i = candidates.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-    }
-
+    const asSentence = choiceUsesSentence(entry);
+    const correctText = choiceAnswerText(entry, asSentence);
     const used = new Set([correctText]);
     const picked = [entry];
-    for (const card of candidates) {
-        const text = choiceAnswerText(card);
-        if (!text || text === "—" || used.has(text)) continue;
-        used.add(text);
-        picked.push(card);
-        if (picked.length === 4) break;
+
+    const takeFrom = (cards) => {
+        for (const card of shuffleCards(cards.filter((item) => item.id !== entry.id))) {
+            const text = choiceAnswerText(card, asSentence);
+            if (!text || text === "—" || used.has(text)) continue;
+            used.add(text);
+            picked.push(card);
+            if (picked.length === 4) return;
+        }
+    };
+
+    takeFrom(state.lessons.get(entry.lesson) || []);
+
+    if (picked.length < 4) {
+        const prefix = lessonPrefix(entry.lesson);
+        const extra = [];
+        if (prefix) {
+            for (const [lesson, cards] of state.lessons) {
+                if (lesson === entry.lesson) continue;
+                if (lessonPrefix(lesson) !== prefix) continue;
+                extra.push(...cards);
+            }
+        }
+        takeFrom(extra);
     }
 
-    for (let i = picked.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [picked[i], picked[j]] = [picked[j], picked[i]];
-    }
-    return picked;
+    return shuffleCards(picked);
 }
 
 function setChoiceLayout(on) {
@@ -480,13 +517,14 @@ function renderChoices(entry) {
     setChoiceLayout(true);
     box.hidden = false;
     const speaker = parkAnswerSpeaker();
+    const asSentence = choiceUsesSentence(entry);
     box.innerHTML = "";
     buildChoiceOptions(entry).forEach((card) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "choice-btn";
         btn.dataset.choiceId = card.id;
-        btn.textContent = choiceAnswerText(card);
+        btn.textContent = choiceAnswerText(card, asSentence);
         btn.addEventListener("click", () => selectChoice(card.id));
         box.appendChild(btn);
     });
